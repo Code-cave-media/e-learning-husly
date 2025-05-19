@@ -1,0 +1,6 @@
+DATABASE_URL=postgresql://postgres:irshad1213@localhost:5432/husly
+SECRET_KEY=bfiegdfhiebf93839302^&%$^$*$&bhjbfehvdwfhvu&*@(@*@)
+ALGORITHM=HS256
+ACCESS_TOKEN_EXPIRE_DAYS=30
+
+
