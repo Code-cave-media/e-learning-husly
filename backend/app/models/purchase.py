@@ -7,7 +7,8 @@ class Purchase(Base):
     __tablename__ = "purchase"
     id = Column(Integer, primary_key=True, index=True)
     purchased_user_id = Column(Integer, ForeignKey("user.id"))
-    course_id = Column(Integer, ForeignKey("course.id"))
+    item_id = Column(Integer, ForeignKey("course.id"))
+    item_type = Column(String)
     affiliate_user_id = Column(Integer, ForeignKey("user.id"),nullable=True)
 
 class Transaction(TimestampMixin,Base):

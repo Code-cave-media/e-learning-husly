@@ -6,30 +6,36 @@ import { ScrollArea } from "@/components/ui/scroll-area";
 import { Sheet, SheetContent, SheetTrigger } from "@/components/ui/sheet";
 import {
   Menu,
-  X,
   Home,
   BookOpen,
   FileText,
   Users,
   LogOut,
   Shield,
+  Wallet,
+  BarChart3,
+  Receipt,
+  ShoppingCart,
 } from "lucide-react";
 import { cn } from "@/lib/utils";
 
 const navigation = [
-  { name: "Dashboard", href: "/dashboard", icon: Home },
-  { name: "Courses", href: "/dashboard/courses", icon: BookOpen },
-  { name: "Ebooks", href: "/dashboard/ebooks", icon: FileText },
-  { name: "Affiliate", href: "/dashboard/affiliate", icon: Users },
+  { name: "Overview", href: "/admin", icon: BarChart3 },
+  { name: "Ebooks", href: "/admin/ebooks", icon: FileText },
+  { name: "Courses", href: "/admin/courses", icon: BookOpen },
+  { name: "Transactions", href: "/admin/transactions", icon: Receipt },
+  { name: "Purchases", href: "/admin/purchases", icon: ShoppingCart },
+  { name: "Withdrawals", href: "/admin/withdrawals", icon: Wallet },
+  { name: "Users", href: "/admin/users", icon: Users },
 ];
 
-export default function DashboardLayout({
+export default function AdminLayout({
   children,
 }: {
   children: React.ReactNode;
 }) {
   const navigate = useNavigate();
-  const { logout, isAdmin } = useAuth();
+  const { logout } = useAuth();
   const [isMobileMenuOpen, setIsMobileMenuOpen] = useState(false);
 
   const handleLogout = () => {
@@ -41,7 +47,7 @@ export default function DashboardLayout({
     <div className="flex flex-col h-full">
       {/* Logo */}
       <div className="flex items-center h-16 px-4 border-b">
-        <h1 className="text-xl font-bold">Learn & Grow</h1>
+        <h1 className="text-xl font-bold">Admin Panel</h1>
       </div>
 
       {/* Navigation */}
@@ -68,20 +74,18 @@ export default function DashboardLayout({
             );
           })}
 
-          {/* Admin Dashboard Button */}
-          {isAdmin && (
-            <Button
-              variant="ghost"
-              className="w-full justify-start gap-2 text-purple-600 hover:text-purple-700 hover:bg-purple-50"
-              onClick={() => {
-                navigate("/admin");
-                setIsMobileMenuOpen(false);
-              }}
-            >
-              <Shield className="w-5 h-5" />
-              Admin Dashboard
-            </Button>
-          )}
+          {/* Back to User Dashboard */}
+          <Button
+            variant="ghost"
+            className="w-full justify-start gap-2 text-blue-600 hover:text-blue-700 hover:bg-blue-50"
+            onClick={() => {
+              navigate("/dashboard");
+              setIsMobileMenuOpen(false);
+            }}
+          >
+            <Home className="w-5 h-5" />
+            User Dashboard
+          </Button>
         </nav>
       </ScrollArea>
 
@@ -113,7 +117,7 @@ export default function DashboardLayout({
             <NavContent />
           </SheetContent>
         </Sheet>
-        <h1 className="text-xl font-bold">Learn & Grow</h1>
+        <h1 className="text-xl font-bold">Admin Panel</h1>
         <div className="w-10" /> {/* Spacer for balance */}
       </header>
 
