@@ -1,3 +1,4 @@
+/* eslint-disable @typescript-eslint/no-explicit-any */
 import { useState, useEffect } from "react";
 import { useParams, useSearchParams, useNavigate } from "react-router-dom";
 import { Button } from "@/components/ui/button";
@@ -15,6 +16,16 @@ import {
 } from "lucide-react";
 import RegistrationForm from "@/components/shared/RegistrationForm";
 import { toast } from "sonner";
+import { useAPICall } from "@/hooks/useApiCall";
+import { useAuth } from "@/contexts/AuthContext";
+import { API_ENDPOINT } from "@/config/backend";
+
+// Add Razorpay type to window
+declare global {
+  interface Window {
+    Razorpay: any;
+  }
+}
 
 // Mock data - In a real app, this would come from an API
 const courseData = {
@@ -81,22 +92,56 @@ export default function EbookAffiliateLandingPage() {
   const affiliateId = searchParams.get("ref");
   const loggedUser = false;
   const [isVideoPlaying, setIsVideoPlaying] = useState(false);
+  const { fetching, makeApiCall } = useAPICall();
+  const { isAuthenticated } = useAuth();
 
   useEffect(() => {
     if (affiliateId) {
       console.log(`Affiliate visit from ID: ${affiliateId}`);
     }
   }, [affiliateId]);
-
-  const handlePurchaseSuccess = () => {
-    navigate(`/course/${id}`);
+  const handlePurchaseSuccess = async (data: {
+    email: string;
+    password: string;
+  }) => {
+    console.log("Purchase data:", data, isAuthenticated);
+    const response = await makeApiCall("POST", API_ENDPOINT.PURCHASE_NEW_USER, {
+      item_id: 1,
+      item_type: "course",
+      ...data,
+      // affiliate_user_id: affiliateId,
+    });
+    console.log("Purchase response:", response);
+    if (response.status === 200) {
+      const data = response.data;
+      const options = {
+        key: "rzp_test_vXnn0IOMPtsYg0", // Replace with your public key
+        amount: data.amount,
+        currency: data.currency,
+        name: "My Company",
+        description: "Test Transaction",
+        order_id: data.id,
+        handler: function (response) {
+        },
+        prefill: {
+          name: "John Doe",
+          email: "john@example.com",
+          contact: "9999999999",
+        },
+        theme: {
+          color: "#3399cc",
+        },
+      };
+      const rzp = new window.Razorpay(options);
+      rzp.open();
+    }
   };
 
   return (
     <div className="min-h-screen bg-background">
       {/* Hero Section */}
       <section className="relative py-20 bg-gradient-to-b from-primary/10 to-background">
-        <div className="container px-4 mx-auto px-4">
+        <div className="container px-4 mx-auto ">
           <div className="grid grid-cols-1 lg:grid-cols-2 gap-12 items-center">
             <div className="space-y-6">
               <div className="flex items-center gap-4">
@@ -150,7 +195,7 @@ export default function EbookAffiliateLandingPage() {
       </section>
 
       {/* Content Section */}
-      <div className="container px-4 mx-auto px-4 py-12">
+      <div className="container px-4 mx-auto py-12">
         <div className="grid grid-cols-1 lg:grid-cols-3 gap-8">
           {/* Main Content */}
           <div className="lg:col-span-2 space-y-8">
@@ -248,7 +293,9 @@ export default function EbookAffiliateLandingPage() {
                         <Button
                           className="w-full"
                           size="lg"
-                          onClick={handlePurchaseSuccess}
+                          onClick={() =>
+                            handlePurchaseSuccess({ email: "", password: "" })
+                          }
                         >
                           Buy Now
                         </Button>

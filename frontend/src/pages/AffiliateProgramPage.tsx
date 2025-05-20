@@ -6,8 +6,6 @@ import {
   Users,
   BarChart3,
   Gift,
-  Clock,
-  CheckCircle2,
   ArrowRight,
   BookOpen,
   Video,

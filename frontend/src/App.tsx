@@ -1,7 +1,6 @@
-import { Toaster } from "@/components/ui/toaster";
-import { Toaster as Sonner } from "@/components/ui/sonner";
 import { TooltipProvider } from "@/components/ui/tooltip";
 import { QueryClient, QueryClientProvider } from "@tanstack/react-query";
+
 import {
   BrowserRouter as Router,
   Routes,
@@ -25,6 +24,9 @@ import { LoadingScreen } from "@/components/ui/LoadingScreen";
 import AffiliateProgramPage from "./pages/AffiliateProgramPage";
 import CourseWatchPage from "./pages/CourseWatchPage";
 import EbookViewPage from "./pages/EbookViewPage";
+import { Toast } from "@radix-ui/react-toast";
+import toast, { Toaster } from "react-hot-toast";
+import { useEffect } from "react";
 
 const queryClient = new QueryClient();
 
@@ -40,6 +42,12 @@ const ProtectedRoute = ({ children }: { children: React.ReactNode }) => {
 };
 
 const AppRoutes = () => {
+  useEffect(() => {
+    const script = document.createElement("script");
+    script.src = "https://checkout.razorpay.com/v1/checkout.js";
+    script.async = true;
+    document.body.appendChild(script);
+  }, []);
   return (
     <Routes>
       {/* Public Routes */}
@@ -170,11 +178,9 @@ const AppRoutes = () => {
 const App = () => (
   <QueryClientProvider client={queryClient}>
     <TooltipProvider>
-      <Toaster />
-      <Sonner />
+      <Toaster position="top-center"  />
       <AuthProvider>
         <Router>
-          <Toaster position="top-right" />
           <LoadingScreen />
           <AppRoutes />
         </Router>

@@ -1,3 +1,4 @@
+/* eslint-disable @typescript-eslint/no-explicit-any */
 import { useState } from 'react';
 import { Button } from '@/components/ui/button';
 import { Input } from '@/components/ui/input';
@@ -10,7 +11,7 @@ interface RegistrationFormProps {
   itemId: string;
   price: number;
   affiliateId?: string;
-  onSuccess?: () => void;
+  onSuccess?: (data:any) => void;
 }
 
 export default function RegistrationForm({ type, itemId, price, affiliateId, onSuccess }: RegistrationFormProps) {
@@ -23,36 +24,14 @@ export default function RegistrationForm({ type, itemId, price, affiliateId, onS
 
   const handleSubmit = async (e: React.FormEvent) => {
     e.preventDefault();
-    setIsLoading(true);
 
     // Validate form
     if (formData.password !== formData.confirmPassword) {
       toast.error("Passwords don't match");
-      setIsLoading(false);
       return;
     }
-
-    try {
-      // In a real app, this would be an API call to register the user
-      // and process the purchase
-      console.log('Processing purchase:', {
-        type,
-        itemId,
-        price,
-        affiliateId,
-        email: formData.email,
-      });
-
-      // Simulate API call
-      await new Promise(resolve => setTimeout(resolve, 1000));
-
-      toast.success('Registration successful!');
-      onSuccess?.();
-    } catch (error) {
-      toast.error('Something went wrong. Please try again.');
-    } finally {
-      setIsLoading(false);
-    }
+    onSuccess({email:formData.email,password:formData.password})
+    
   };
 
   return (
