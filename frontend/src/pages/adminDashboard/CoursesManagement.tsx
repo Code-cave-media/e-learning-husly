@@ -168,8 +168,7 @@ export default function CoursesManagement() {
   };
 
   const handleEdit = (course: Course) => {
-    setEditingCourse(course);
-    setIsEditDialogOpen(true);
+    navigate(`/admin/dashboard/course/${course.id}`);
   };
 
   const handleUpdateCourse = () => {
@@ -200,7 +199,7 @@ export default function CoursesManagement() {
   };
 
   const handleView = (courseId: number) => {
-    navigate(`/course/${courseId}?admin=true`);
+    navigate(`/user/dashboard/course/${courseId}`);
   };
 
   return (
@@ -219,7 +218,7 @@ export default function CoursesManagement() {
               <TableHead>Title</TableHead>
               <TableHead>Type</TableHead>
               <TableHead>Level</TableHead>
-              <TableHead>Duration</TableHead>
+              <TableHead>Hours</TableHead>
               <TableHead>Price</TableHead>
               <TableHead>Commission</TableHead>
               <TableHead>Status</TableHead>
@@ -239,7 +238,7 @@ export default function CoursesManagement() {
                 </TableCell>
                 <TableCell>{course.type}</TableCell>
                 <TableCell>{course.level}</TableCell>
-                <TableCell>{course.total_hours} hours</TableCell>
+                <TableCell>{course.total_hours}</TableCell>
                 <TableCell>{formatCurrency(course.price)}</TableCell>
                 <TableCell>{course.commission}%</TableCell>
                 <TableCell>

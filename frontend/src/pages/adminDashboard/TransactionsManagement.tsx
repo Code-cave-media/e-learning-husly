@@ -15,6 +15,25 @@ import {
   DialogTitle,
 } from "@/components/ui/dialog";
 import { formatCurrency } from "@/lib/utils";
+import { Card, CardContent, CardHeader, CardTitle } from "@/components/ui/card";
+import { Badge } from "@/components/ui/badge";
+import {
+  Receipt,
+  User,
+  CreditCard,
+  Calendar,
+  Package,
+  Users,
+  Mail,
+  Phone,
+  Filter,
+} from "lucide-react";
+import {
+  DropdownMenu,
+  DropdownMenuContent,
+  DropdownMenuItem,
+  DropdownMenuTrigger,
+} from "@/components/ui/dropdown-menu";
 
 // Dummy data
 const dummyTransactions = [
@@ -107,10 +126,37 @@ interface Transaction {
 export default function TransactionsManagement() {
   const [selectedTransaction, setSelectedTransaction] =
     useState<Transaction | null>(null);
+  const [statusFilter, setStatusFilter] = useState<string | null>(null);
+
+  const filteredTransactions = dummyTransactions.filter((transaction) => {
+    if (!statusFilter) return true;
+    return transaction.status === statusFilter;
+  });
 
   return (
     <div className="container mx-auto py-6">
-      <h1 className="text-2xl font-bold mb-6">Transactions Management</h1>
+      <div className="flex justify-between items-center mb-6">
+        <h1 className="text-2xl font-bold">Transactions Management</h1>
+        <DropdownMenu>
+          <DropdownMenuTrigger asChild>
+            <Button variant="outline" className="flex items-center gap-2">
+              <Filter className="w-4 h-4" />
+              {statusFilter ? `Status: ${statusFilter}` : "Filter by Status"}
+            </Button>
+          </DropdownMenuTrigger>
+          <DropdownMenuContent>
+            <DropdownMenuItem onClick={() => setStatusFilter(null)}>
+              All Transactions
+            </DropdownMenuItem>
+            <DropdownMenuItem onClick={() => setStatusFilter("captured")}>
+              Success
+            </DropdownMenuItem>
+            <DropdownMenuItem onClick={() => setStatusFilter("failed")}>
+              Failed
+            </DropdownMenuItem>
+          </DropdownMenuContent>
+        </DropdownMenu>
+      </div>
 
       <div className="bg-white rounded-lg shadow">
         <Table>
@@ -126,7 +172,7 @@ export default function TransactionsManagement() {
             </TableRow>
           </TableHeader>
           <TableBody>
-            {dummyTransactions.map((transaction) => (
+            {filteredTransactions.map((transaction) => (
               <TableRow key={transaction.id}>
                 <TableCell>{transaction.transaction_id}</TableCell>
                 <TableCell>{transaction.order_id}</TableCell>
@@ -167,49 +213,189 @@ export default function TransactionsManagement() {
         open={!!selectedTransaction}
         onOpenChange={() => setSelectedTransaction(null)}
       >
-        <DialogContent className="max-w-2xl">
-          <DialogHeader>
-            <DialogTitle>Transaction Details</DialogTitle>
+        <DialogContent className="max-w-3xl max-h-[90vh] flex flex-col">
+          <DialogHeader className="flex-shrink-0">
+            <DialogTitle className="text-2xl font-bold flex items-center gap-2">
+              <Receipt className="w-6 h-6" />
+              Transaction Details
+            </DialogTitle>
           </DialogHeader>
           {selectedTransaction && (
-            <div className="space-y-4">
-              <div className="grid grid-cols-2 gap-4">
-                <div>
-                  <h3 className="font-semibold">Transaction Information</h3>
-                  <p>ID: {selectedTransaction.transaction_id}</p>
-                  <p>Order ID: {selectedTransaction.order_id}</p>
-                  <p>Status: {selectedTransaction.status}</p>
-                  <p>Method: {selectedTransaction.method}</p>
-                  <p>
-                    Amount: {formatCurrency(selectedTransaction.amount / 100)}
-                  </p>
-                </div>
-                <div>
-                  <h3 className="font-semibold">Customer Information</h3>
-                  <p>Email: {selectedTransaction.email}</p>
-                  <p>Contact: {selectedTransaction.contact}</p>
-                </div>
-              </div>
+            <div className="space-y-6 overflow-y-auto pr-2">
+              {/* Transaction Status Card */}
+              <Card>
+                <CardHeader className="pb-2">
+                  <CardTitle className="text-lg flex items-center gap-2">
+                    <CreditCard className="w-5 h-5" />
+                    Transaction Information
+                  </CardTitle>
+                </CardHeader>
+                <CardContent>
+                  <div className="grid grid-cols-2 gap-4">
+                    <div className="space-y-2">
+                      <p className="text-sm text-muted-foreground">
+                        Transaction ID
+                      </p>
+                      <p className="font-medium">
+                        {selectedTransaction.transaction_id}
+                      </p>
+                    </div>
+                    <div className="space-y-2">
+                      <p className="text-sm text-muted-foreground">Order ID</p>
+                      <p className="font-medium">
+                        {selectedTransaction.order_id}
+                      </p>
+                    </div>
+                    <div className="space-y-2">
+                      <p className="text-sm text-muted-foreground">Status</p>
+                      <Badge
+                        variant={
+                          selectedTransaction.status === "captured"
+                            ? "default"
+                            : "destructive"
+                        }
+                        className={`capitalize ${
+                          selectedTransaction.status === "captured"
+                            ? "bg-green-100 text-green-800 hover:bg-green-100"
+                            : ""
+                        }`}
+                      >
+                        {selectedTransaction.status}
+                      </Badge>
+                    </div>
+                    <div className="space-y-2">
+                      <p className="text-sm text-muted-foreground">
+                        Payment Method
+                      </p>
+                      <p className="font-medium capitalize">
+                        {selectedTransaction.method}
+                      </p>
+                    </div>
+                    <div className="space-y-2">
+                      <p className="text-sm text-muted-foreground">Amount</p>
+                      <p className="font-medium text-lg">
+                        {formatCurrency(selectedTransaction.amount / 100)}
+                      </p>
+                    </div>
+                    <div className="space-y-2">
+                      <p className="text-sm text-muted-foreground">Date</p>
+                      <p className="font-medium">
+                        {new Date(
+                          selectedTransaction.created_at
+                        ).toLocaleString()}
+                      </p>
+                    </div>
+                  </div>
+                </CardContent>
+              </Card>
 
-              <div className="border-t pt-4">
-                <h3 className="font-semibold mb-2">Purchase Details</h3>
-                <p>Item Type: {selectedTransaction.purchase.item_type}</p>
-                <p>Item Title: {selectedTransaction.purchase.item.title}</p>
-                <p>
-                  Price:{" "}
-                  {formatCurrency(selectedTransaction.purchase.item.price)}
-                </p>
-                <p>
-                  Purchased By:{" "}
-                  {selectedTransaction.purchase.purchased_user.name}
-                </p>
-                {selectedTransaction.purchase.affiliate_user && (
-                  <p>
-                    Affiliate:{" "}
-                    {selectedTransaction.purchase.affiliate_user.name}
-                  </p>
-                )}
-              </div>
+              {/* Customer Information Card */}
+              <Card>
+                <CardHeader className="pb-2">
+                  <CardTitle className="text-lg flex items-center gap-2">
+                    <Mail className="w-5 h-5" />
+                    Customer Information
+                  </CardTitle>
+                </CardHeader>
+                <CardContent>
+                  <div className="grid grid-cols-2 gap-4">
+                    <div className="space-y-2">
+                      <p className="text-sm text-muted-foreground flex items-center gap-2">
+                        Email
+                      </p>
+                      <p className="font-medium">{selectedTransaction.email}</p>
+                    </div>
+                    <div className="space-y-2">
+                      <p className="text-sm text-muted-foreground flex items-center gap-2">
+                        Contact
+                      </p>
+                      <p className="font-medium">
+                        {selectedTransaction.contact}
+                      </p>
+                    </div>
+                  </div>
+                </CardContent>
+              </Card>
+
+              {/* Purchase Details Card */}
+              <Card>
+                <CardHeader className="pb-2">
+                  <CardTitle className="text-lg flex items-center gap-2">
+                    <Package className="w-5 h-5" />
+                    Purchase Details
+                  </CardTitle>
+                </CardHeader>
+                <CardContent>
+                  <div className="space-y-4">
+                    <div className="grid grid-cols-2 gap-4">
+                      <div className="space-y-2">
+                        <p className="text-sm text-muted-foreground">
+                          Item Type
+                        </p>
+                        <Badge variant="outline" className="capitalize">
+                          {selectedTransaction.purchase.item_type}
+                        </Badge>
+                      </div>
+                      <div className="space-y-2">
+                        <p className="text-sm text-muted-foreground">Price</p>
+                        <p className="font-medium">
+                          {formatCurrency(
+                            selectedTransaction.purchase.item.price
+                          )}
+                        </p>
+                      </div>
+                    </div>
+                    <div className="space-y-2">
+                      <p className="text-sm text-muted-foreground">
+                        Item Title
+                      </p>
+                      <p className="font-medium">
+                        {selectedTransaction.purchase.item.title}
+                      </p>
+                    </div>
+                  </div>
+                </CardContent>
+              </Card>
+
+              {/* User Information Card */}
+              <Card>
+                <CardHeader className="pb-2">
+                  <CardTitle className="text-lg flex items-center gap-2">
+                    <Users className="w-5 h-5" />
+                    User Information
+                  </CardTitle>
+                </CardHeader>
+                <CardContent>
+                  <div className="space-y-4">
+                    <div className="space-y-2">
+                      <p className="text-sm text-muted-foreground">
+                        Purchased By
+                      </p>
+                      <div className="flex items-center gap-2">
+                        <User className="w-4 h-4 text-muted-foreground" />
+                        <p className="font-medium">
+                          {selectedTransaction.purchase.purchased_user.name} (
+                          {selectedTransaction.purchase.purchased_user.email})
+                        </p>
+                      </div>
+                    </div>
+                    {selectedTransaction.purchase.affiliate_user && (
+                      <div className="space-y-2">
+                        <p className="text-sm text-muted-foreground">
+                          Affiliate
+                        </p>
+                        <div className="flex items-center gap-2">
+                          <User className="w-4 h-4 text-muted-foreground" />
+                          <p className="font-medium">
+                            {selectedTransaction.purchase.affiliate_user.name} (
+                            {selectedTransaction.purchase.affiliate_user.email})
+                          </p>
+                        </div>
+                      </div>
+                    )}
+                  </div>
+                </CardContent>
+              </Card>
             </div>
           )}
         </DialogContent>

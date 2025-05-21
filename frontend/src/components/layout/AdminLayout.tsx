@@ -20,13 +20,17 @@ import {
 import { cn } from "@/lib/utils";
 
 const navigation = [
-  { name: "Overview", href: "/admin", icon: BarChart3 },
-  { name: "Ebooks", href: "/admin/ebooks", icon: FileText },
-  { name: "Courses", href: "/admin/courses", icon: BookOpen },
-  { name: "Transactions", href: "/admin/transactions", icon: Receipt },
-  { name: "Purchases", href: "/admin/purchases", icon: ShoppingCart },
-  { name: "Withdrawals", href: "/admin/withdrawals", icon: Wallet },
-  { name: "Users", href: "/admin/users", icon: Users },
+  { name: "Overview", href: "/admin/dashboard", icon: BarChart3 },
+  { name: "Ebooks", href: "/admin/dashboard/ebooks", icon: FileText },
+  { name: "Courses", href: "/admin/dashboard/courses", icon: BookOpen },
+  {
+    name: "Transactions",
+    href: "/admin/dashboard/transactions",
+    icon: Receipt,
+  },
+  { name: "Purchases", href: "/admin/dashboard/purchases", icon: ShoppingCart },
+  { name: "Withdrawals", href: "/admin/dashboard/withdrawals", icon: Wallet },
+  { name: "Users", href: "/admin/dashboard/users", icon: Users },
 ];
 
 export default function AdminLayout({
@@ -79,7 +83,7 @@ export default function AdminLayout({
             variant="ghost"
             className="w-full justify-start gap-2 text-blue-600 hover:text-blue-700 hover:bg-blue-50"
             onClick={() => {
-              navigate("/dashboard");
+              navigate("/user/dashboard");
               setIsMobileMenuOpen(false);
             }}
           >

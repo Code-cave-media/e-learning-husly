@@ -25,7 +25,7 @@ import { AuthProvider, useAuth } from "@/contexts/AuthContext";
 import { LoadingScreen } from "@/components/ui/LoadingScreen";
 import AffiliateProgramPage from "./pages/AffiliateProgramPage";
 import CourseWatchPage from "./pages/userDashboard/CourseWatchPage";
-import EbookViewPage from "./pages/EbookViewPage";
+import EbookViewPage from "./pages/userDashboard/EbookViewPage";
 import { Toast } from "@radix-ui/react-toast";
 import toast, { Toaster } from "react-hot-toast";
 import { useEffect } from "react";
@@ -36,6 +36,8 @@ import WithdrawalsManagement from "./pages/adminDashboard/WithdrawalsManagement"
 import UsersManagement from "./pages/adminDashboard/UsersManagement";
 import TransactionsManagement from "./pages/adminDashboard/TransactionsManagement";
 import PurchasesManagement from "./pages/adminDashboard/PurchasesManagement";
+import UserCourseDetailPage from "./pages/userDashboard/CourseDetailPage";
+import AdminEbookDetailPage from "./pages/adminDashboard/EbookDetailPage";
 
 const queryClient = new QueryClient();
 
@@ -55,7 +57,7 @@ const AdminRoute = ({ children }: { children: React.ReactNode }) => {
   const { isAuthenticated, isAdmin } = useAuth();
 
   if (!isAuthenticated || !isAdmin) {
-    return <Navigate to="/dashboard" replace />;
+    return <Navigate to="/user/dashboard" replace />;
   }
 
   return <>{children}</>;
@@ -66,7 +68,7 @@ const PublicRoute = ({ children }: { children: React.ReactNode }) => {
   const { isAuthenticated } = useAuth();
 
   if (isAuthenticated) {
-    return <Navigate to="/dashboard" replace />;
+    return <Navigate to="/user/dashboard" replace />;
   }
 
   return <>{children}</>;
@@ -164,7 +166,7 @@ const AppRoutes = () => {
         path="/user/dashboard/course/:id"
         element={
           <ProtectedRoute>
-            <CourseDetailPage />
+            <UserCourseDetailPage />
           </ProtectedRoute>
         }
       />
@@ -252,9 +254,7 @@ const AppRoutes = () => {
         path="/admin/dashboard/course/:id"
         element={
           <AdminRoute>
-            <AdminLayout>
-              <AdminCourseDetailPage />
-            </AdminLayout>
+            <AdminCourseDetailPage />
           </AdminRoute>
         }
       />
@@ -265,6 +265,14 @@ const AppRoutes = () => {
             <AdminLayout>
               <EbooksManagement />
             </AdminLayout>
+          </AdminRoute>
+        }
+      />
+      <Route
+        path="/admin/dashboard/ebook/:id"
+        element={
+          <AdminRoute>
+            <AdminEbookDetailPage />
           </AdminRoute>
         }
       />

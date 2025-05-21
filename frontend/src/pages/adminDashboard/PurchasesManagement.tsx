@@ -24,6 +24,17 @@ import {
 } from "@/components/ui/select";
 import { formatCurrency } from "@/lib/utils";
 import { toast } from "react-hot-toast";
+import { Card, CardContent, CardHeader, CardTitle } from "@/components/ui/card";
+import { Badge } from "@/components/ui/badge";
+import {
+  Package,
+  User,
+  Users,
+  Calendar,
+  BookOpen,
+  FileText,
+  Mail,
+} from "lucide-react";
 
 // Dummy data
 const dummyCourses = [
@@ -199,33 +210,115 @@ export default function PurchasesManagement() {
         open={!!selectedPurchase}
         onOpenChange={() => setSelectedPurchase(null)}
       >
-        <DialogContent className="max-w-2xl">
-          <DialogHeader>
-            <DialogTitle>Purchase Details</DialogTitle>
+        <DialogContent className="max-w-3xl max-h-[90vh] flex flex-col">
+          <DialogHeader className="flex-shrink-0">
+            <DialogTitle className="text-2xl font-bold flex items-center gap-2">
+              <Package className="w-6 h-6" />
+              Purchase Details
+            </DialogTitle>
           </DialogHeader>
           {selectedPurchase && (
-            <div className="space-y-4">
-              <div className="grid grid-cols-2 gap-4">
-                <div>
-                  <h3 className="font-semibold">Item Information</h3>
-                  <p>Type: {selectedPurchase.item_type}</p>
-                  <p>Title: {selectedPurchase.item.title}</p>
-                  <p>Price: {formatCurrency(selectedPurchase.item.price)}</p>
-                </div>
-                <div>
-                  <h3 className="font-semibold">User Information</h3>
-                  <p>Purchased By: {selectedPurchase.purchased_user.name}</p>
-                  <p>Email: {selectedPurchase.purchased_user.email}</p>
-                  {selectedPurchase.affiliate_user && (
-                    <>
-                      <p>Affiliate: {selectedPurchase.affiliate_user.name}</p>
-                      <p>
-                        Affiliate Email: {selectedPurchase.affiliate_user.email}
+            <div className="space-y-6 overflow-y-auto pr-2">
+              {/* Item Information Card */}
+              <Card>
+                <CardHeader className="pb-2">
+                  <CardTitle className="text-lg flex items-center gap-2">
+                    {selectedPurchase.item_type === "course" ? (
+                      <BookOpen className="w-5 h-5" />
+                    ) : (
+                      <FileText className="w-5 h-5" />
+                    )}
+                    Item Information
+                  </CardTitle>
+                </CardHeader>
+                <CardContent>
+                  <div className="grid grid-cols-2 gap-4">
+                    <div className="space-y-2">
+                      <p className="text-sm text-muted-foreground">Item Type</p>
+                      <Badge variant="outline" className="capitalize">
+                        {selectedPurchase.item_type}
+                      </Badge>
+                    </div>
+                    <div className="space-y-2">
+                      <p className="text-sm text-muted-foreground">Price</p>
+                      <p className="font-medium text-lg">
+                        {formatCurrency(selectedPurchase.item.price)}
                       </p>
-                    </>
-                  )}
-                </div>
-              </div>
+                    </div>
+                    <div className="space-y-2 col-span-2">
+                      <p className="text-sm text-muted-foreground">Title</p>
+                      <p className="font-medium">
+                        {selectedPurchase.item.title}
+                      </p>
+                    </div>
+                  </div>
+                </CardContent>
+              </Card>
+
+              {/* Purchaser Information Card */}
+              <Card>
+                <CardHeader className="pb-2">
+                  <CardTitle className="text-lg flex items-center gap-2">
+                    <User className="w-5 h-5" />
+                    Purchaser Information
+                  </CardTitle>
+                </CardHeader>
+                <CardContent>
+                  <div className="space-y-4">
+                    <div className="space-y-2">
+                      <p className="text-sm text-muted-foreground">Name</p>
+                      <div className="flex items-center gap-2">
+                        <User className="w-4 h-4 text-muted-foreground" />
+                        <p className="font-medium">
+                          {selectedPurchase.purchased_user.name}
+                        </p>
+                      </div>
+                    </div>
+                    <div className="grid grid-cols-2 gap-4">
+                      <div className="space-y-2">
+                        <p className="text-sm text-muted-foreground flex items-center gap-2">
+                          <Mail className="w-4 h-4" />
+                          Purchaser Email
+                        </p>
+                        <p className="font-medium">
+                          {selectedPurchase.purchased_user.email}
+                        </p>
+                      </div>
+                      {selectedPurchase.affiliate_user && (
+                        <div className="space-y-2">
+                          <p className="text-sm text-muted-foreground flex items-center gap-2">
+                            <Mail className="w-4 h-4" />
+                            Affiliate Email
+                          </p>
+                          <p className="font-medium">
+                            {selectedPurchase.affiliate_user.email}
+                          </p>
+                        </div>
+                      )}
+                    </div>
+                  </div>
+                </CardContent>
+              </Card>
+
+              {/* Purchase Details Card */}
+              <Card>
+                <CardHeader className="pb-2">
+                  <CardTitle className="text-lg flex items-center gap-2">
+                    <Calendar className="w-5 h-5" />
+                    Purchase Details
+                  </CardTitle>
+                </CardHeader>
+                <CardContent>
+                  <div className="space-y-2">
+                    <p className="text-sm text-muted-foreground">
+                      Purchase Date
+                    </p>
+                    <p className="font-medium">
+                      {new Date(selectedPurchase.created_at).toLocaleString()}
+                    </p>
+                  </div>
+                </CardContent>
+              </Card>
             </div>
           )}
         </DialogContent>

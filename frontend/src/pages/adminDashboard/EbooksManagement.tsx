@@ -1,17 +1,5 @@
 import { useState } from "react";
-import { Card, CardContent, CardHeader, CardTitle } from "@/components/ui/card";
 import { Button } from "@/components/ui/button";
-import { Input } from "@/components/ui/input";
-import { Textarea } from "@/components/ui/textarea";
-import { Label } from "@/components/ui/label";
-import {
-  Select,
-  SelectContent,
-  SelectItem,
-  SelectTrigger,
-  SelectValue,
-} from "@/components/ui/select";
-import { Switch } from "@/components/ui/switch";
 import {
   Table,
   TableBody,
@@ -25,391 +13,139 @@ import {
   DialogContent,
   DialogHeader,
   DialogTitle,
-  DialogTrigger,
-  DialogFooter,
 } from "@/components/ui/dialog";
-import { Plus, Pencil, Trash2, Eye } from "lucide-react";
+import { Input } from "@/components/ui/input";
+import { Label } from "@/components/ui/label";
+import { Textarea } from "@/components/ui/textarea";
+import {
+  Select,
+  SelectContent,
+  SelectItem,
+  SelectTrigger,
+  SelectValue,
+} from "@/components/ui/select";
 import { useNavigate } from "react-router-dom";
-import { toast } from "sonner";
+import { Plus, Pencil, Trash2, Eye } from "lucide-react";
+import { Badge } from "@/components/ui/badge";
 import { formatCurrency } from "@/lib/utils";
 
-interface Chapter {
-  id: number;
-  title: string;
-  description: string;
-}
-
-interface Feature {
-  id: number;
-  text: string;
-}
-
 interface Ebook {
-  id: string;
+  id: number;
+  type: string;
   title: string;
   description: string;
+  number_of_pages: number;
   price: number;
-  originalPrice: number;
+  commission: number;
+  content: File | null;
+  contentUrl: string;
   thumbnail: File | null;
   thumbnailUrl: string;
-  introVideo: File | null;
-  introVideoUrl: string;
-  author: string;
-  authorPosition: string;
-  authorDescription: string;
-  pages: number;
-  format: string;
-  chapters: Chapter[];
-  features: Feature[];
-  isPurchased: boolean;
   visible: boolean;
+  originalPrice: number;
+  isPurchased: boolean;
 }
 
-const ebookFormats = ["PDF", "EPUB", "MOBI", "PDF, EPUB", "PDF, EPUB, MOBI"];
-
-const dummyEbooks: Ebook[] = [
-  {
-    id: "1",
-    title: "The Complete Guide to Digital Marketing",
-    description:
-      "A comprehensive guide to mastering digital marketing strategies, tools, and techniques for business growth.",
-    price: 49.99,
-    originalPrice: 99.99,
-    thumbnail: null,
-    thumbnailUrl:
-      "https://www.hostinger.in/tutorials/wp-content/uploads/sites/2/2022/07/the-structure-of-a-url.png",
-    introVideo: null,
-    introVideoUrl: "",
-    author: "Jane Smith",
-    authorPosition: "Digital Marketing Expert",
-    authorDescription:
-      "With over 15 years of experience in digital marketing, Jane has helped numerous businesses achieve their marketing goals and grow their online presence.",
-    pages: 250,
-    format: "PDF, EPUB, MOBI",
-    chapters: [
-      {
-        id: 1,
-        title: "Introduction to Digital Marketing",
-        description: "Understanding the digital marketing landscape",
-      },
-      {
-        id: 2,
-        title: "Content Marketing Strategy",
-        description: "Creating and distributing valuable content",
-      },
-    ],
-    features: [
-      { id: 1, text: "Comprehensive digital marketing strategies" },
-      { id: 2, text: "Step-by-step implementation guides" },
-    ],
-    isPurchased: false,
-    visible: true,
-  },
-  {
-    id: "2",
-    title: "Web Development Fundamentals",
-    description:
-      "Learn the basics of web development including HTML, CSS, and JavaScript.",
-    price: 39.99,
-    originalPrice: 79.99,
-    thumbnail: null,
-    thumbnailUrl:
-      "https://www.hostinger.in/tutorials/wp-content/uploads/sites/2/2022/07/the-structure-of-a-url.png",
-    introVideo: null,
-    introVideoUrl: "",
-    author: "John Doe",
-    authorPosition: "Senior Web Developer",
-    authorDescription:
-      "John has been developing web applications for over a decade and has worked with major tech companies.",
-    pages: 300,
-    format: "PDF, EPUB",
-    chapters: [
-      {
-        id: 1,
-        title: "HTML Basics",
-        description: "Introduction to HTML structure and elements",
-      },
-      {
-        id: 2,
-        title: "CSS Styling",
-        description: "Learn how to style your web pages",
-      },
-    ],
-    features: [
-      { id: 1, text: "Hands-on coding exercises" },
-      { id: 2, text: "Real-world project examples" },
-    ],
-    isPurchased: false,
-    visible: true,
-  },
+const ebookTypes = [
+  "Programming",
+  "Design",
+  "Business",
+  "Marketing",
+  "Personal Development",
 ];
 
-const EbooksManagement = () => {
+export default function EbookManagement() {
   const navigate = useNavigate();
-  const [ebooks, setEbooks] = useState<Ebook[]>(dummyEbooks);
-  const [isDialogOpen, setIsDialogOpen] = useState(false);
-  const [editingEbook, setEditingEbook] = useState<Ebook | null>(null);
-  const [formData, setFormData] = useState<Partial<Ebook>>({});
-  const [isDeleteDialogOpen, setIsDeleteDialogOpen] = useState(false);
-  const [ebookToDelete, setEbookToDelete] = useState<string | null>(null);
+  const [isCreateDialogOpen, setIsCreateDialogOpen] = useState(false);
+  const [newEbook, setNewEbook] = useState<Partial<Ebook>>({
+    type: "",
+    title: "",
+    description: "",
+    number_of_pages: 0,
+    price: 0,
+    commission: 0,
+    content: null,
+    contentUrl: "",
+    thumbnail: null,
+    thumbnailUrl: "",
+    visible: true,
+    originalPrice: 0,
+  });
 
-  const handleSubmit = (e: React.FormEvent) => {
-    e.preventDefault();
-    if (editingEbook) {
-      setEbooks(
-        ebooks.map((ebook) =>
-          ebook.id === editingEbook.id ? { ...ebook, ...formData } : ebook
-        )
-      );
-      toast.success("Ebook updated successfully");
-    } else {
-      setEbooks([
-        ...ebooks,
-        {
-          id: Date.now().toString(),
-          chapters: [],
-          features: [],
-          isPurchased: false,
-          visible: true,
-          ...formData,
-        } as Ebook,
-      ]);
-      toast.success("Ebook created successfully");
-    }
-    setIsDialogOpen(false);
-    setEditingEbook(null);
-    setFormData({});
+  // Dummy data for ebooks
+  const ebooks: Ebook[] = [
+    {
+      id: 1,
+      type: "Programming",
+      title: "Python Programming Guide",
+      description: "A comprehensive guide to Python programming language",
+      number_of_pages: 250,
+      price: 999,
+      commission: 10,
+      content: null,
+      contentUrl: "https://example.com/ebook.pdf",
+      thumbnail: null,
+      thumbnailUrl:
+        "https://images.unsplash.com/photo-1544716278-ca5e3f4abd8c?q=80&w=2070&auto=format&fit=crop",
+      visible: true,
+      originalPrice: 1999,
+      isPurchased: false,
+    },
+    {
+      id: 2,
+      type: "Design",
+      title: "UI/UX Design Principles",
+      description: "Master the fundamentals of UI/UX design",
+      number_of_pages: 180,
+      price: 799,
+      commission: 8,
+      content: null,
+      contentUrl: "https://example.com/design-guide.pdf",
+      thumbnail: null,
+      thumbnailUrl:
+        "https://images.unsplash.com/photo-1561070791-2526d30994b5?q=80&w=2064&auto=format&fit=crop",
+      visible: false,
+      originalPrice: 1499,
+      isPurchased: false,
+    },
+  ];
+
+  const handleCreateEbook = () => {
+    // Here you would typically make an API call to create the ebook
+    setIsCreateDialogOpen(false);
   };
 
-  const handleEdit = (ebook: Ebook) => {
-    setEditingEbook(ebook);
-    setFormData(ebook);
-    setIsDialogOpen(true);
+  const handleEditEbook = (id: number) => {
+    navigate(`/admin/dashboard/ebook/${id}`);
   };
 
-  const handleDelete = (id: string) => {
-    setEbookToDelete(id);
-    setIsDeleteDialogOpen(true);
+  const handleDeleteEbook = (id: number) => {
+    // Here you would typically make an API call to delete the ebook
   };
 
-  const confirmDelete = () => {
-    if (ebookToDelete) {
-      setEbooks(ebooks.filter((ebook) => ebook.id !== ebookToDelete));
-      toast.success("Ebook deleted successfully");
-      setIsDeleteDialogOpen(false);
-      setEbookToDelete(null);
-    }
-  };
-
-  const handleView = (id: string) => {
-    navigate(`/ebook/${id}?admin=true`);
-  };
-
-  const handleThumbnailChange = (e: React.ChangeEvent<HTMLInputElement>) => {
-    const file = e.target.files?.[0];
-    if (file) {
-      setFormData({
-        ...formData,
-        thumbnail: file,
-        thumbnailUrl: URL.createObjectURL(file),
-      });
-    }
-  };
-
-  const handleIntroVideoChange = (e: React.ChangeEvent<HTMLInputElement>) => {
-    const file = e.target.files?.[0];
-    if (file) {
-      setFormData({
-        ...formData,
-        introVideo: file,
-        introVideoUrl: URL.createObjectURL(file),
-      });
-    }
+  const handleViewEbook = (id: number) => {
+    navigate(`/admin/ebooks/${id}`);
   };
 
   return (
-    <Card>
-      <CardHeader className="flex flex-row items-center justify-between">
-        <CardTitle>Ebooks Management</CardTitle>
-        <Dialog open={isDialogOpen} onOpenChange={setIsDialogOpen}>
-          <DialogTrigger asChild>
-            <Button>
-              <Plus className="mr-2 h-4 w-4" />
-              Add New Ebook
-            </Button>
-          </DialogTrigger>
-          <DialogContent className="max-w-2xl">
-            <DialogHeader>
-              <DialogTitle>
-                {editingEbook ? "Edit Ebook" : "Add New Ebook"}
-              </DialogTitle>
-            </DialogHeader>
-            <form onSubmit={handleSubmit} className="space-y-4">
-              <div className="grid grid-cols-2 gap-4">
-                <div>
-                  <Label>Title</Label>
-                  <Input
-                    value={formData.title || ""}
-                    onChange={(e) =>
-                      setFormData({ ...formData, title: e.target.value })
-                    }
-                    required
-                  />
-                </div>
-                <div>
-                  <Label>Author</Label>
-                  <Input
-                    value={formData.author || ""}
-                    onChange={(e) =>
-                      setFormData({ ...formData, author: e.target.value })
-                    }
-                    required
-                  />
-                </div>
-              </div>
-              <div>
-                <Label>Author Position</Label>
-                <Input
-                  value={formData.authorPosition || ""}
-                  onChange={(e) =>
-                    setFormData({ ...formData, authorPosition: e.target.value })
-                  }
-                  required
-                />
-              </div>
-              <div>
-                <Label>Author Description</Label>
-                <Textarea
-                  value={formData.authorDescription || ""}
-                  onChange={(e) =>
-                    setFormData({
-                      ...formData,
-                      authorDescription: e.target.value,
-                    })
-                  }
-                  required
-                />
-              </div>
-              <div>
-                <Label>Description</Label>
-                <Textarea
-                  value={formData.description || ""}
-                  onChange={(e) =>
-                    setFormData({ ...formData, description: e.target.value })
-                  }
-                  required
-                />
-              </div>
-              <div className="grid grid-cols-2 gap-4">
-                <div>
-                  <Label>Price</Label>
-                  <Input
-                    type="number"
-                    value={formData.price || ""}
-                    onChange={(e) =>
-                      setFormData({
-                        ...formData,
-                        price: parseFloat(e.target.value),
-                      })
-                    }
-                    required
-                  />
-                </div>
-                <div>
-                  <Label>Original Price</Label>
-                  <Input
-                    type="number"
-                    value={formData.originalPrice || ""}
-                    onChange={(e) =>
-                      setFormData({
-                        ...formData,
-                        originalPrice: parseFloat(e.target.value),
-                      })
-                    }
-                    required
-                  />
-                </div>
-              </div>
-              <div className="grid grid-cols-2 gap-4">
-                <div>
-                  <Label>Pages</Label>
-                  <Input
-                    type="number"
-                    value={formData.pages || ""}
-                    onChange={(e) =>
-                      setFormData({
-                        ...formData,
-                        pages: parseInt(e.target.value),
-                      })
-                    }
-                    required
-                  />
-                </div>
-                <div>
-                  <Label>Format</Label>
-                  <Select
-                    value={formData.format || ""}
-                    onValueChange={(value) =>
-                      setFormData({ ...formData, format: value })
-                    }
-                  >
-                    <SelectTrigger>
-                      <SelectValue placeholder="Select format" />
-                    </SelectTrigger>
-                    <SelectContent>
-                      {ebookFormats.map((format) => (
-                        <SelectItem key={format} value={format}>
-                          {format}
-                        </SelectItem>
-                      ))}
-                    </SelectContent>
-                  </Select>
-                </div>
-              </div>
-              <div className="grid grid-cols-2 gap-4">
-                <div>
-                  <Label>Thumbnail</Label>
-                  <Input
-                    type="file"
-                    accept="image/*"
-                    onChange={handleThumbnailChange}
-                    className="cursor-pointer"
-                  />
-                </div>
-                <div>
-                  <Label>Intro Video</Label>
-                  <Input
-                    type="file"
-                    accept="video/*"
-                    onChange={handleIntroVideoChange}
-                    className="cursor-pointer"
-                  />
-                </div>
-              </div>
-              <div className="flex items-center space-x-2">
-                <Switch
-                  checked={formData.visible}
-                  onCheckedChange={(checked) =>
-                    setFormData({ ...formData, visible: checked })
-                  }
-                />
-                <Label>Visible</Label>
-              </div>
-              <Button type="submit" className="w-full">
-                {editingEbook ? "Update Ebook" : "Add Ebook"}
-              </Button>
-            </form>
-          </DialogContent>
-        </Dialog>
-      </CardHeader>
-      <CardContent>
+    <div className="container mx-auto py-10">
+      <div className="flex justify-between items-center mb-8">
+        <h1 className="text-3xl font-bold">Ebook Management</h1>
+        <Button onClick={() => setIsCreateDialogOpen(true)}>
+          <Plus className="w-4 h-4 mr-2" />
+          Create New Ebook
+        </Button>
+      </div>
+
+      <div className="rounded-md border">
         <Table>
           <TableHeader>
             <TableRow>
               <TableHead>Title</TableHead>
-              <TableHead>Author</TableHead>
+              <TableHead>Type</TableHead>
+              <TableHead>Pages</TableHead>
               <TableHead>Price</TableHead>
-              <TableHead>Format</TableHead>
+              <TableHead>Commission</TableHead>
               <TableHead>Status</TableHead>
               <TableHead>Actions</TableHead>
             </TableRow>
@@ -417,10 +153,20 @@ const EbooksManagement = () => {
           <TableBody>
             {ebooks.map((ebook) => (
               <TableRow key={ebook.id}>
-                <TableCell className="font-medium">{ebook.title}</TableCell>
-                <TableCell>{ebook.author}</TableCell>
+                <TableCell className="flex items-center gap-2">
+                  <img
+                    src={ebook.thumbnailUrl}
+                    alt={ebook.title}
+                    className="w-10 h-10 rounded object-cover"
+                  />
+                  {ebook.title}
+                </TableCell>
+                <TableCell>
+                  <Badge variant="secondary">{ebook.type}</Badge>
+                </TableCell>
+                <TableCell>{ebook.number_of_pages}</TableCell>
                 <TableCell>{formatCurrency(ebook.price)}</TableCell>
-                <TableCell>{ebook.format}</TableCell>
+                <TableCell>{ebook.commission}%</TableCell>
                 <TableCell>
                   <span
                     className={`px-2 py-1 rounded-full text-xs ${
@@ -433,27 +179,27 @@ const EbooksManagement = () => {
                   </span>
                 </TableCell>
                 <TableCell>
-                  <div className="flex space-x-2">
+                  <div className="flex gap-2">
                     <Button
                       variant="outline"
                       size="icon"
-                      onClick={() => handleView(ebook.id)}
+                      onClick={() => handleViewEbook(ebook.id)}
                     >
-                      <Eye className="h-4 w-4" />
+                      <Eye className="w-4 h-4" />
                     </Button>
                     <Button
                       variant="outline"
                       size="icon"
-                      onClick={() => handleEdit(ebook)}
+                      onClick={() => handleEditEbook(ebook.id)}
                     >
-                      <Pencil className="h-4 w-4" />
+                      <Pencil className="w-4 h-4" />
                     </Button>
                     <Button
                       variant="outline"
                       size="icon"
-                      onClick={() => handleDelete(ebook.id)}
+                      onClick={() => handleDeleteEbook(ebook.id)}
                     >
-                      <Trash2 className="h-4 w-4" />
+                      <Trash2 className="w-4 h-4" />
                     </Button>
                   </div>
                 </TableCell>
@@ -461,33 +207,121 @@ const EbooksManagement = () => {
             ))}
           </TableBody>
         </Table>
-      </CardContent>
+      </div>
 
-      {/* Delete Confirmation Dialog */}
-      <Dialog open={isDeleteDialogOpen} onOpenChange={setIsDeleteDialogOpen}>
+      {/* Create Ebook Dialog */}
+      <Dialog open={isCreateDialogOpen} onOpenChange={setIsCreateDialogOpen}>
         <DialogContent>
           <DialogHeader>
-            <DialogTitle>Delete Ebook</DialogTitle>
+            <DialogTitle>Create New Ebook</DialogTitle>
           </DialogHeader>
-          <p>
-            Are you sure you want to delete this ebook? This action cannot be
-            undone.
-          </p>
-          <DialogFooter>
-            <Button
-              variant="outline"
-              onClick={() => setIsDeleteDialogOpen(false)}
-            >
-              Cancel
-            </Button>
-            <Button variant="destructive" onClick={confirmDelete}>
-              Delete Ebook
-            </Button>
-          </DialogFooter>
+          <div className="space-y-4">
+            <div>
+              <Label>Ebook Type</Label>
+              <Select
+                value={newEbook.type}
+                onValueChange={(value) =>
+                  setNewEbook({ ...newEbook, type: value })
+                }
+              >
+                <SelectTrigger>
+                  <SelectValue placeholder="Select type" />
+                </SelectTrigger>
+                <SelectContent>
+                  {ebookTypes.map((type) => (
+                    <SelectItem key={type} value={type}>
+                      {type}
+                    </SelectItem>
+                  ))}
+                </SelectContent>
+              </Select>
+            </div>
+            <div>
+              <Label>Title</Label>
+              <Input
+                value={newEbook.title}
+                onChange={(e) =>
+                  setNewEbook({ ...newEbook, title: e.target.value })
+                }
+              />
+            </div>
+            <div>
+              <Label>Description</Label>
+              <Textarea
+                value={newEbook.description}
+                onChange={(e) =>
+                  setNewEbook({ ...newEbook, description: e.target.value })
+                }
+              />
+            </div>
+            <div className="grid grid-cols-2 gap-4">
+              <div>
+                <Label>Number of Pages</Label>
+                <Input
+                  type="number"
+                  value={newEbook.number_of_pages}
+                  onChange={(e) =>
+                    setNewEbook({
+                      ...newEbook,
+                      number_of_pages: parseInt(e.target.value),
+                    })
+                  }
+                />
+              </div>
+              <div>
+                <Label>Price</Label>
+                <Input
+                  type="number"
+                  value={newEbook.price}
+                  onChange={(e) =>
+                    setNewEbook({
+                      ...newEbook,
+                      price: parseInt(e.target.value),
+                    })
+                  }
+                />
+              </div>
+            </div>
+            <div className="grid grid-cols-2 gap-4">
+              <div>
+                <Label>Commission Rate (%)</Label>
+                <Input
+                  type="number"
+                  value={newEbook.commission}
+                  onChange={(e) =>
+                    setNewEbook({
+                      ...newEbook,
+                      commission: parseInt(e.target.value),
+                    })
+                  }
+                />
+              </div>
+              <div>
+                <Label>Original Price</Label>
+                <Input
+                  type="number"
+                  value={newEbook.originalPrice}
+                  onChange={(e) =>
+                    setNewEbook({
+                      ...newEbook,
+                      originalPrice: parseInt(e.target.value),
+                    })
+                  }
+                />
+              </div>
+            </div>
+            <div className="flex justify-end gap-4">
+              <Button
+                variant="outline"
+                onClick={() => setIsCreateDialogOpen(false)}
+              >
+                Cancel
+              </Button>
+              <Button onClick={handleCreateEbook}>Create Ebook</Button>
+            </div>
+          </div>
         </DialogContent>
       </Dialog>
-    </Card>
+    </div>
   );
-};
-
-export default EbooksManagement;
+}

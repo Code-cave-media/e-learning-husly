@@ -17,10 +17,10 @@ import {
 import { cn } from "@/lib/utils";
 
 const navigation = [
-  { name: "Dashboard", href: "/dashboard", icon: Home },
-  { name: "Courses", href: "/dashboard/courses", icon: BookOpen },
-  { name: "Ebooks", href: "/dashboard/ebooks", icon: FileText },
-  { name: "Affiliate", href: "/dashboard/affiliate", icon: Users },
+  { name: "Dashboard", href: "/user/dashboard", icon: Home },
+  { name: "Courses", href: "/user/dashboard/courses", icon: BookOpen },
+  { name: "Ebooks", href: "/user/dashboard/ebooks", icon: FileText },
+  { name: "Affiliate", href: "/user/dashboard/affiliate", icon: Users },
 ];
 
 export default function DashboardLayout({
@@ -74,7 +74,7 @@ export default function DashboardLayout({
               variant="ghost"
               className="w-full justify-start gap-2 text-purple-600 hover:text-purple-700 hover:bg-purple-50"
               onClick={() => {
-                navigate("/admin");
+                navigate("/admin/dashboard");
                 setIsMobileMenuOpen(false);
               }}
             >

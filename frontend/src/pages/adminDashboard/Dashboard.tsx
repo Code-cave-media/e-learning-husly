@@ -94,32 +94,6 @@ const AdminDashboard = () => {
           </div>
         </CardContent>
       </Card>
-
-      {/* Navigation Tabs */}
-      <Tabs defaultValue="overview" className="space-y-4">
-        <TabsList>
-          <TabsTrigger value="overview">Overview</TabsTrigger>
-          <TabsTrigger value="ebooks">Ebooks</TabsTrigger>
-          <TabsTrigger value="courses">Courses</TabsTrigger>
-          <TabsTrigger value="withdrawals">Withdrawals</TabsTrigger>
-          <TabsTrigger value="users">Users</TabsTrigger>
-        </TabsList>
-        <TabsContent value="overview" className="space-y-4">
-          {/* Overview content */}
-        </TabsContent>
-        <TabsContent value="ebooks" className="space-y-4">
-          {/* Ebooks content */}
-        </TabsContent>
-        <TabsContent value="courses" className="space-y-4">
-          {/* Courses content */}
-        </TabsContent>
-        <TabsContent value="withdrawals" className="space-y-4">
-          {/* Withdrawals content */}
-        </TabsContent>
-        <TabsContent value="users" className="space-y-4">
-          {/* Users content */}
-        </TabsContent>
-      </Tabs>
     </div>
   );
 };

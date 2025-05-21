@@ -26,13 +26,7 @@ import {
 import { Input } from "@/components/ui/input";
 import { Textarea } from "@/components/ui/textarea";
 import { Label } from "@/components/ui/label";
-import {
-  Select,
-  SelectContent,
-  SelectItem,
-  SelectTrigger,
-  SelectValue,
-} from "@/components/ui/select";
+
 import { Switch } from "@/components/ui/switch";
 import { formatCurrency } from "@/lib/utils";
 
@@ -40,12 +34,10 @@ interface Chapter {
   id: number;
   title: string;
   description: string;
-  video: File | null;
-  videoUrl: string;
-  duration: number;
+  pageNumber: number;
 }
 
-interface Instructor {
+interface Author {
   id: number;
   name: string;
   position: string;
@@ -58,68 +50,60 @@ interface LearningPoint {
   text: string;
 }
 
-interface Course {
+interface Ebook {
   id: number;
   type: string;
   title: string;
   description: string;
-  total_hours: number;
-  level: string;
+  numberOfPages: number;
   commission: number;
   price: number;
   thumbnail: File | null;
   thumbnailUrl: string;
   introVideo: File | null;
   introVideoUrl: string;
+  ebookFile: File | null;
+  ebookFileUrl: string;
   visible: boolean;
   chapters: Chapter[];
-  instructor: Instructor;
+  author: Author;
   learning_points: LearningPoint[];
-  duration: string;
   originalPrice: number;
   isPurchased: boolean;
 }
 
-export default function CourseDetailPage() {
+export default function EbookDetailPage() {
   const { id } = useParams<{ id: string }>();
   const navigate = useNavigate();
   const [isVideoPlaying, setIsVideoPlaying] = useState(false);
   const { fetching, makeApiCall } = useAPICall();
   const { isAuthenticated } = useAuth();
-  const [course, setCourse] = useState<Course | null>(null);
+  const [ebook, setEbook] = useState<Ebook | null>(null);
   const [isChapterDialogOpen, setIsChapterDialogOpen] = useState(false);
-  const [isInstructorDialogOpen, setIsInstructorDialogOpen] = useState(false);
-  const [isLearningPointDialogOpen, setIsLearningPointDialogOpen] =
-    useState(false);
+  const [isAuthorDialogOpen, setIsAuthorDialogOpen] = useState(false);
   const [newChapter, setNewChapter] = useState<Partial<Chapter>>({});
-  const [newInstructor, setNewInstructor] = useState<Partial<Instructor>>({});
+  const [newAuthor, setNewAuthor] = useState<Partial<Author>>({});
   const [newLearningPoint, setNewLearningPoint] = useState("");
   const [isEditMode, setIsEditMode] = useState(false);
-  const [editedCourse, setEditedCourse] = useState<Course | null>(null);
+  const [editedEbook, setEditedEbook] = useState<Ebook | null>(null);
   const [isDeleteConfirmOpen, setIsDeleteConfirmOpen] = useState(false);
   const [itemToDelete, setItemToDelete] = useState<{
-    type: "chapter" | "learningPoint" | "thumbnail" | "video" | "course";
+    type: "chapter" | "learningPoint" | "thumbnail" | "ebook" | "ebook";
     id?: number;
   } | null>(null);
-  const [isDeleteCourseDialogOpen, setIsDeleteCourseDialogOpen] =
-    useState(false);
+  const [isDeleteEbookDialogOpen, setIsDeleteEbookDialogOpen] = useState(false);
   const [editingLearningPointId, setEditingLearningPointId] = useState<
     number | null
   >(null);
   const [editingLearningPoint, setEditingLearningPoint] = useState("");
   const [editingChapterId, setEditingChapterId] = useState<number | null>(null);
   const [editingChapter, setEditingChapter] = useState<Chapter | null>(null);
-  const [editingInstructorId, setEditingInstructorId] = useState<number | null>(
-    null
-  );
-  const [editingInstructor, setEditingInstructor] = useState<Instructor | null>(
-    null
-  );
+  const [editingAuthorId, setEditingAuthorId] = useState<number | null>(null);
+  const [editingAuthor, setEditingAuthor] = useState<Author | null>(null);
 
   const handleEditModeToggle = () => {
     if (isEditMode) {
-      // Save changes
-      setCourse(editedCourse);
+      setEbook(editedEbook);
       setIsEditMode(false);
       toast.success("Changes saved successfully");
     } else {
@@ -128,23 +112,23 @@ export default function CourseDetailPage() {
   };
 
   const handleTextChange = (
-    field: keyof Course,
+    field: keyof Ebook,
     value: string | number | boolean
   ) => {
-    if (editedCourse) {
-      setEditedCourse({
-        ...editedCourse,
+    if (editedEbook) {
+      setEditedEbook({
+        ...editedEbook,
         [field]: value,
       });
     }
   };
 
-  const handleInstructorChange = (field: keyof Instructor, value: string) => {
-    if (editedCourse) {
-      setEditedCourse({
-        ...editedCourse,
-        instructor: {
-          ...editedCourse.instructor,
+  const handleAuthorChange = (field: keyof Author, value: string) => {
+    if (editedEbook) {
+      setEditedEbook({
+        ...editedEbook,
+        author: {
+          ...editedEbook.author,
           [field]: value,
         },
       });
@@ -152,41 +136,38 @@ export default function CourseDetailPage() {
   };
 
   const handleDeleteItem = () => {
-    if (!itemToDelete || !editedCourse) return;
+    if (!itemToDelete || !editedEbook) return;
 
     switch (itemToDelete.type) {
       case "chapter":
-        setEditedCourse({
-          ...editedCourse,
-          chapters: editedCourse.chapters.filter(
+        setEditedEbook({
+          ...editedEbook,
+          chapters: editedEbook.chapters.filter(
             (c) => c.id !== itemToDelete.id
           ),
         });
         break;
       case "learningPoint":
-        setEditedCourse({
-          ...editedCourse,
-          learning_points: editedCourse.learning_points.filter(
+        setEditedEbook({
+          ...editedEbook,
+          learning_points: editedEbook.learning_points.filter(
             (p) => p.id !== itemToDelete.id
           ),
         });
         break;
       case "thumbnail":
-        setEditedCourse({
-          ...editedCourse,
+        setEditedEbook({
+          ...editedEbook,
           thumbnail: null,
           thumbnailUrl: "",
         });
         break;
-      case "video":
-        if (itemToDelete.id) {
-          setEditedCourse({
-            ...editedCourse,
-            chapters: editedCourse.chapters.map((c) =>
-              c.id === itemToDelete.id ? { ...c, video: null, videoUrl: "" } : c
-            ),
-          });
-        }
+      case "ebook":
+        setEditedEbook({
+          ...editedEbook,
+          ebookFile: null,
+          ebookFileUrl: "",
+        });
         break;
     }
 
@@ -197,9 +178,9 @@ export default function CourseDetailPage() {
 
   const handleThumbnailChange = (e: React.ChangeEvent<HTMLInputElement>) => {
     const file = e.target.files?.[0];
-    if (file && editedCourse) {
-      setEditedCourse({
-        ...editedCourse,
+    if (file && editedEbook) {
+      setEditedEbook({
+        ...editedEbook,
         thumbnail: file,
         thumbnailUrl: URL.createObjectURL(file),
       });
@@ -208,59 +189,40 @@ export default function CourseDetailPage() {
 
   const handleIntroVideoChange = (e: React.ChangeEvent<HTMLInputElement>) => {
     const file = e.target.files?.[0];
-    if (file && editedCourse) {
-      setEditedCourse({
-        ...editedCourse,
+    if (file && editedEbook) {
+      setEditedEbook({
+        ...editedEbook,
         introVideo: file,
         introVideoUrl: URL.createObjectURL(file),
       });
     }
   };
 
-  const handleChapterVideoChange = (
-    chapterId: number,
-    e: React.ChangeEvent<HTMLInputElement>
-  ) => {
+  const handleEbookFileChange = (e: React.ChangeEvent<HTMLInputElement>) => {
     const file = e.target.files?.[0];
-    if (file && editedCourse) {
-      setEditedCourse({
-        ...editedCourse,
-        chapters: editedCourse.chapters.map((c) =>
-          c.id === chapterId
-            ? { ...c, video: file, videoUrl: URL.createObjectURL(file) }
-            : c
-        ),
-      });
-    }
-  };
-
-  const handleVideoChange = (e: React.ChangeEvent<HTMLInputElement>) => {
-    const file = e.target.files?.[0];
-    if (file) {
-      setNewChapter({
-        ...newChapter,
-        video: file,
-        videoUrl: URL.createObjectURL(file),
+    if (file && editedEbook) {
+      setEditedEbook({
+        ...editedEbook,
+        ebookFile: file,
+        ebookFileUrl: URL.createObjectURL(file),
       });
     }
   };
 
   const handleAddChapter = () => {
-    if (!newChapter.title || !newChapter.video) {
-      toast.error("Please fill in all required fields and upload a video");
+    if (!newChapter.title || !newChapter.pageNumber) {
+      toast.error("Please fill in all required fields");
       return;
     }
 
     const chapter: Chapter = {
-      id: (course?.chapters.length || 0) + 1,
+      id: (ebook?.chapters.length || 0) + 1,
       title: newChapter.title,
       description: newChapter.description || "",
-      video: newChapter.video,
-      videoUrl: newChapter.videoUrl || "",
-      duration: newChapter.duration || 0,
+      pageNumber: newChapter.pageNumber || 0,
     };
 
-    setCourse((prev) => ({
+    setEbook((prev) => ({
       ...prev!,
       chapters: [...(prev?.chapters || []), chapter],
     }));
@@ -269,25 +231,25 @@ export default function CourseDetailPage() {
     toast.success("Chapter added successfully");
   };
 
-  const handleUpdateInstructor = () => {
-    if (!newInstructor.name || !newInstructor.position) {
+  const handleUpdateAuthor = () => {
+    if (!newAuthor.name || !newAuthor.position) {
       toast.error("Please fill in all required fields");
       return;
     }
 
-    setCourse((prev) => ({
+    setEbook((prev) => ({
       ...prev!,
-      instructor: {
-        id: prev?.instructor.id || 1,
-        name: newInstructor.name,
-        position: newInstructor.position,
-        description: newInstructor.description || "",
-        image_url: newInstructor.image_url || "",
+      author: {
+        id: prev?.author.id || 1,
+        name: newAuthor.name,
+        position: newAuthor.position,
+        description: newAuthor.description || "",
+        image_url: newAuthor.image_url || "",
       },
     }));
-    setIsInstructorDialogOpen(false);
-    setNewInstructor({});
-    toast.success("Instructor updated successfully");
+    setIsAuthorDialogOpen(false);
+    setNewAuthor({});
+    toast.success("Author updated successfully");
   };
 
   const handleAddLearningPoint = () => {
@@ -296,7 +258,7 @@ export default function CourseDetailPage() {
       return;
     }
 
-    setCourse((prev) => ({
+    setEbook((prev) => ({
       ...prev!,
       learning_points: [
         ...(prev?.learning_points || []),
@@ -307,30 +269,19 @@ export default function CourseDetailPage() {
     toast.success("Learning point added successfully");
   };
 
-  const handleDeleteLearningPoint = (pointId: number) => {
-    setCourse((prev) => ({
-      ...prev!,
-      learning_points:
-        prev?.learning_points.filter((p) => p.id !== pointId) || [],
-    }));
-    toast.success("Learning point deleted successfully");
+  const handleDeleteEbook = () => {
+    toast.success("Ebook deleted successfully");
+    navigate("/admin/ebooks");
   };
 
-  const handleDeleteCourse = () => {
-    // Here you would typically make an API call to delete the course
-    toast.success("Course deleted successfully");
-    navigate("/admin/courses");
-  };
-
-  // Dummy course data
+  // Dummy ebook data
   useEffect(() => {
-    setCourse({
+    setEbook({
       id: 1,
       type: "Digital Marketing",
       title: "Digital Marketing Masterclass",
       description: "Learn digital marketing from scratch",
-      total_hours: 20,
-      level: "Beginner to Advanced",
+      numberOfPages: 250,
       commission: 10,
       price: 4999,
       thumbnail: null,
@@ -339,6 +290,8 @@ export default function CourseDetailPage() {
       introVideo: null,
       introVideoUrl:
         "https://storage.googleapis.com/gtv-videos-bucket/sample/BigBuckBunny.mp4",
+      ebookFile: null,
+      ebookFileUrl: "",
       visible: true,
       chapters: [
         {
@@ -346,54 +299,44 @@ export default function CourseDetailPage() {
           title: "Introduction to Digital Marketing",
           description:
             "Learn the fundamentals of digital marketing and its importance in today's business landscape.",
-          video: null,
-          videoUrl: "",
-          duration: 45,
+          pageNumber: 1,
         },
         {
           id: 2,
           title: "Search Engine Optimization (SEO)",
           description:
             "Master the art of optimizing your website for search engines and driving organic traffic.",
-          video: null,
-          videoUrl: "",
-          duration: 60,
+          pageNumber: 45,
         },
         {
           id: 3,
           title: "Social Media Marketing",
           description:
             "Create and execute effective social media strategies across different platforms.",
-          video: null,
-          videoUrl: "",
-          duration: 75,
+          pageNumber: 89,
         },
         {
           id: 4,
           title: "Content Marketing",
           description:
             "Learn how to create engaging content that resonates with your target audience.",
-          video: null,
-          videoUrl: "",
-          duration: 90,
+          pageNumber: 132,
         },
         {
           id: 5,
           title: "Email Marketing",
           description:
             "Build and manage email campaigns that convert subscribers into customers.",
-          video: null,
-          videoUrl: "",
-          duration: 60,
+          pageNumber: 175,
         },
       ],
-      instructor: {
+      author: {
         id: 1,
         name: "John Doe",
         position: "Digital Marketing Expert",
         description:
           "10+ years of experience in digital marketing, specializing in SEO and social media strategy. Former marketing director at TechCorp and founder of DigitalGrowth Academy.",
-        image_url: "https://example.com/instructor.jpg",
+        image_url: "https://example.com/author.jpg",
       },
       learning_points: [
         { id: 1, text: "Understand the core principles of digital marketing" },
@@ -408,19 +351,18 @@ export default function CourseDetailPage() {
         { id: 7, text: "Create a comprehensive digital marketing plan" },
         { id: 8, text: "Understand and implement marketing automation" },
       ],
-      duration: "20 hours",
       originalPrice: 9999,
       isPurchased: false,
     });
   }, [id]);
 
   useEffect(() => {
-    if (course) {
-      setEditedCourse(course);
+    if (ebook) {
+      setEditedEbook(ebook);
     }
-  }, [course]);
+  }, [ebook]);
 
-  if (!course) {
+  if (!ebook) {
     return <div>Loading...</div>;
   }
 
@@ -432,39 +374,35 @@ export default function CourseDetailPage() {
           <div className="grid grid-cols-1 lg:grid-cols-2 gap-12 items-center">
             <div className="space-y-6">
               <div className="flex items-center gap-4">
-                <Badge variant="secondary">{course.type}</Badge>
-                <Badge variant="outline">4.9 ★ (1,234 reviews)</Badge>
+                <Badge variant="outline">EBook</Badge>
+                <Badge variant="secondary">{ebook.type}</Badge>
               </div>
-              <h1 className="text-4xl md:text-5xl font-bold">{course.title}</h1>
+              <h1 className="text-4xl md:text-5xl font-bold">{ebook.title}</h1>
               <p className="text-xl text-muted-foreground">
-                {course.description}
+                {ebook.description}
               </p>
-              <div className="flex items-center gap-6">
+              <div>
                 <div className="flex items-center gap-2">
-                  <Clock className="w-5 h-5 text-primary" />
-                  <span>{course.total_hours} hours</span>
-                </div>
-                <div className="flex items-center gap-2">
-                  <FileText className="w-5 h-5 text-primary" />
-                  <span>{course.level}</span>
+                  <BookOpen className="w-5 h-5 text-primary" />
+                  <span>{ebook.numberOfPages} Pages</span>
                 </div>
               </div>
               <Button size="lg" className="bg-primary hover:bg-primary/90">
-               <PlayCircle className="w-5 h-5 mr-2" /> 
-                Watch Course
+                <BookOpen className="w-5 h-5 mr-2" />
+                Read Ebook
               </Button>
             </div>
             <div className="relative">
               <div className="relative aspect-video overflow-hidden rounded-lg shadow-xl">
-                {course.thumbnailUrl ? (
+                {ebook.thumbnailUrl ? (
                   <video
                     className="w-full h-full object-cover"
-                    poster={course.thumbnailUrl}
+                    poster={ebook.thumbnailUrl}
                     controls={isVideoPlaying}
                     onClick={() => setIsVideoPlaying(true)}
-                    src={course.introVideoUrl}
+                    src={ebook.introVideoUrl}
                   >
-                    <source src={course.introVideoUrl} type="video/mp4" />
+                    <source src={ebook.introVideoUrl} type="video/mp4" />
                     Your browser does not support the video tag.
                   </video>
                 ) : (
@@ -472,7 +410,7 @@ export default function CourseDetailPage() {
                     <span className="text-gray-500">No media</span>
                   </div>
                 )}
-                {!isVideoPlaying && course.thumbnailUrl && (
+                {!isVideoPlaying && ebook.thumbnailUrl && (
                   <div className="absolute inset-0 flex items-center justify-center z-20">
                     <Button
                       size="lg"
@@ -497,7 +435,7 @@ export default function CourseDetailPage() {
                     htmlFor="thumbnail-upload"
                     className="cursor-pointer bg-primary text-white px-4 py-2 rounded inline-flex items-center gap-2"
                   >
-                    {course.thumbnailUrl ? "Change Thumbnail" : "Add Thumbnail"}
+                    {ebook.thumbnailUrl ? "Change Thumbnail" : "Add Thumbnail"}
                   </Label>
                 </div>
                 <div>
@@ -512,7 +450,22 @@ export default function CourseDetailPage() {
                     htmlFor="intro-video-upload"
                     className="cursor-pointer bg-primary text-white px-4 py-2 rounded inline-flex items-center gap-2"
                   >
-                    {course.introVideoUrl ? "Change Intro" : "Add Intro"}
+                    {ebook.introVideoUrl ? "Change Intro" : "Add Intro"}
+                  </Label>
+                </div>
+                <div>
+                  <Input
+                    type="file"
+                    accept=".pdf,.epub"
+                    onChange={handleEbookFileChange}
+                    className="hidden"
+                    id="ebook-upload"
+                  />
+                  <Label
+                    htmlFor="ebook-upload"
+                    className="cursor-pointer bg-primary text-white px-4 py-2 rounded inline-flex items-center gap-2"
+                  >
+                    {ebook.ebookFileUrl ? "Change Ebook" : "Add Ebook"}
                   </Label>
                 </div>
               </div>
@@ -526,21 +479,21 @@ export default function CourseDetailPage() {
         <div className="grid grid-cols-1 lg:grid-cols-3 gap-8">
           {/* Main Content */}
           <div className="lg:col-span-2 space-y-8">
-            {/* Learning Points */}
+            {/* What's Inside */}
             <div className="space-y-4">
               <div className="flex justify-between items-center">
-                <h2 className="text-2xl font-semibold">What You'll Learn</h2>
+                <h2 className="text-2xl font-semibold">What's Inside</h2>
                 <div className="flex gap-2">
                   <Input
                     value={newLearningPoint}
                     onChange={(e) => setNewLearningPoint(e.target.value)}
-                    placeholder="Add a learning point"
+                    placeholder="Add a point"
                   />
                   <Button onClick={handleAddLearningPoint}>Add</Button>
                 </div>
               </div>
               <div className="grid grid-cols-1 md:grid-cols-2 gap-4">
-                {course.learning_points.map((point) => (
+                {ebook.learning_points.map((point) => (
                   <div key={point.id} className="flex items-start gap-2 group">
                     <CheckCircle2 className="w-5 h-5 text-primary mt-1" />
                     {editingLearningPointId === point.id ? (
@@ -555,11 +508,11 @@ export default function CourseDetailPage() {
                         <Button
                           size="sm"
                           onClick={() => {
-                            if (editedCourse) {
-                              setEditedCourse({
-                                ...editedCourse,
+                            if (editedEbook) {
+                              setEditedEbook({
+                                ...editedEbook,
                                 learning_points:
-                                  editedCourse.learning_points.map((p) =>
+                                  editedEbook.learning_points.map((p) =>
                                     p.id === point.id
                                       ? { ...p, text: editingLearningPoint }
                                       : p
@@ -614,16 +567,16 @@ export default function CourseDetailPage() {
               </div>
             </div>
 
-            {/* Course Modules */}
+            {/* Table of Contents */}
             <div className="space-y-4">
               <div className="flex justify-between items-center">
-                <h2 className="text-2xl font-semibold">Course Modules</h2>
+                <h2 className="text-2xl font-semibold">Table of Contents</h2>
                 <Button onClick={() => setIsChapterDialogOpen(true)}>
-                  Add Chapter
+                  Add Table Content
                 </Button>
               </div>
               <div className="space-y-4">
-                {course.chapters.map((chapter) => (
+                {ebook.chapters.map((chapter) => (
                   <Card key={chapter.id} className="p-4">
                     <div className="flex items-center justify-between">
                       <div className="flex-1">
@@ -652,22 +605,22 @@ export default function CourseDetailPage() {
                             <div className="flex gap-2">
                               <Input
                                 type="number"
-                                value={editingChapter.duration}
+                                value={editingChapter.pageNumber}
                                 onChange={(e) =>
                                   setEditingChapter({
                                     ...editingChapter,
-                                    duration: parseInt(e.target.value),
+                                    pageNumber: parseInt(e.target.value),
                                   })
                                 }
-                                placeholder="Duration (minutes)"
+                                placeholder="Page number"
                                 className="w-32"
                               />
                               <Button
                                 onClick={() => {
-                                  if (editedCourse) {
-                                    setEditedCourse({
-                                      ...editedCourse,
-                                      chapters: editedCourse.chapters.map((c) =>
+                                  if (editedEbook) {
+                                    setEditedEbook({
+                                      ...editedEbook,
+                                      chapters: editedEbook.chapters.map((c) =>
                                         c.id === chapter.id ? editingChapter : c
                                       ),
                                     });
@@ -693,7 +646,7 @@ export default function CourseDetailPage() {
                             </p>
                             <div className="flex items-center gap-4 mt-2">
                               <span className="text-sm text-muted-foreground">
-                                {chapter.duration} minutes
+                                Page {chapter.pageNumber}
                               </span>
                             </div>
                           </>
@@ -727,21 +680,6 @@ export default function CourseDetailPage() {
                             </Button>
                           </>
                         )}
-                        <Input
-                          type="file"
-                          accept="video/*"
-                          onChange={(e) =>
-                            handleChapterVideoChange(chapter.id, e)
-                          }
-                          className="hidden"
-                          id={`video-upload-${chapter.id}`}
-                        />
-                        <Label
-                          htmlFor={`video-upload-${chapter.id}`}
-                          className="cursor-pointer bg-primary text-white px-4 py-2 rounded"
-                        >
-                          {chapter.videoUrl ? "Change Video" : "Add Video"}
-                        </Label>
                       </div>
                     </div>
                   </Card>
@@ -749,63 +687,63 @@ export default function CourseDetailPage() {
               </div>
             </div>
 
-            {/* Instructor */}
+            {/* About the Author */}
             <div className="space-y-4">
               <div className="flex justify-between items-center">
-                <h2 className="text-2xl font-semibold">About the Instructor</h2>
-                {editingInstructorId !== course.instructor.id && (
+                <h2 className="text-2xl font-semibold">About the Author</h2>
+                {editingAuthorId !== ebook.author.id && (
                   <Button
                     onClick={() => {
-                      setEditingInstructorId(course.instructor.id);
-                      setEditingInstructor(course.instructor);
+                      setEditingAuthorId(ebook.author.id);
+                      setEditingAuthor(ebook.author);
                     }}
                   >
-                    Edit Instructor
+                    Edit Author
                   </Button>
                 )}
               </div>
               <div className="space-y-2">
-                {editingInstructorId === course.instructor.id ? (
+                {editingAuthorId === ebook.author.id ? (
                   <div className="space-y-4">
                     <Input
-                      value={editingInstructor.name}
+                      value={editingAuthor.name}
                       onChange={(e) =>
-                        setEditingInstructor({
-                          ...editingInstructor,
+                        setEditingAuthor({
+                          ...editingAuthor,
                           name: e.target.value,
                         })
                       }
-                      placeholder="Instructor name"
+                      placeholder="Author name"
                     />
                     <Input
-                      value={editingInstructor.position}
+                      value={editingAuthor.position}
                       onChange={(e) =>
-                        setEditingInstructor({
-                          ...editingInstructor,
+                        setEditingAuthor({
+                          ...editingAuthor,
                           position: e.target.value,
                         })
                       }
-                      placeholder="Instructor position"
+                      placeholder="Author position"
                     />
                     <Textarea
-                      value={editingInstructor.description}
+                      value={editingAuthor.description}
                       onChange={(e) =>
-                        setEditingInstructor({
-                          ...editingInstructor,
+                        setEditingAuthor({
+                          ...editingAuthor,
                           description: e.target.value,
                         })
                       }
-                      placeholder="Instructor description"
+                      placeholder="Author description"
                     />
                     <div className="flex gap-2">
                       <Button
                         onClick={() => {
-                          if (editedCourse) {
-                            setEditedCourse({
-                              ...editedCourse,
-                              instructor: editingInstructor,
+                          if (editedEbook) {
+                            setEditedEbook({
+                              ...editedEbook,
+                              author: editingAuthor,
                             });
-                            setEditingInstructorId(null);
+                            setEditingAuthorId(null);
                           }
                         }}
                       >
@@ -813,7 +751,7 @@ export default function CourseDetailPage() {
                       </Button>
                       <Button
                         variant="outline"
-                        onClick={() => setEditingInstructorId(null)}
+                        onClick={() => setEditingAuthorId(null)}
                       >
                         Cancel
                       </Button>
@@ -822,87 +760,105 @@ export default function CourseDetailPage() {
                 ) : (
                   <>
                     <h3 className="text-xl font-semibold">
-                      {course.instructor.name}
+                      {ebook.author.name}
                     </h3>
                     <p className="text-muted-foreground">
-                      {course.instructor.position}
+                      {ebook.author.position}
                     </p>
-                    <p>{course.instructor.description}</p>
+                    <p>{ebook.author.description}</p>
                   </>
                 )}
               </div>
             </div>
           </div>
 
-          {/* Course Settings */}
+          {/* Ebook Settings */}
           <div className="lg:col-span-1">
             <div className="sticky top-24">
               <Card className="p-6 space-y-4">
                 <div className="space-y-2">
                   {isEditMode ? (
                     <>
-                      <div className="grid grid-cols-2 gap-4">
-                        <div>
-                          <Label>Course Type</Label>
-                          <Input
-                            value={editedCourse?.type}
-                            readOnly
-                            className="bg-gray-50"
-                          />
-                        </div>
-                        <div>
-                          <Label>Course Level</Label>
-                          <Input
-                            value={editedCourse?.level}
-                            readOnly
-                            className="bg-gray-50"
-                          />
-                        </div>
+                      <div>
+                        <Label>Title</Label>
+                        <Input
+                          value={editedEbook?.title}
+                          onChange={(e) =>
+                            handleTextChange("title", e.target.value)
+                          }
+                        />
                       </div>
-
-                      <div className="grid grid-cols-2 gap-4">
-                        <div>
-                          <Label>Total Hours</Label>
-                          <Input
-                            type="number"
-                            value={editedCourse?.total_hours}
-                            readOnly
-                            className="bg-gray-50"
-                          />
-                        </div>
-                        <div>
-                          <Label>Price</Label>
-                          <Input
-                            type="number"
-                            value={editedCourse?.price}
-                            readOnly
-                            className="bg-gray-50"
-                          />
-                        </div>
+                      <div>
+                        <Label>Description</Label>
+                        <Textarea
+                          value={editedEbook?.description}
+                          onChange={(e) =>
+                            handleTextChange("description", e.target.value)
+                          }
+                        />
                       </div>
-
+                      <div>
+                        <Label>Type</Label>
+                        <Input
+                          value={editedEbook?.type}
+                          onChange={(e) =>
+                            handleTextChange("type", e.target.value)
+                          }
+                        />
+                      </div>
+                      <div>
+                        <Label>Number of Pages</Label>
+                        <Input
+                          type="number"
+                          value={editedEbook?.numberOfPages}
+                          onChange={(e) =>
+                            handleTextChange(
+                              "numberOfPages",
+                              parseInt(e.target.value)
+                            )
+                          }
+                        />
+                      </div>
+                      <div>
+                        <Label>Price</Label>
+                        <Input
+                          type="number"
+                          value={editedEbook?.price}
+                          onChange={(e) =>
+                            handleTextChange("price", parseInt(e.target.value))
+                          }
+                        />
+                      </div>
                       <div>
                         <Label>Commission (%)</Label>
                         <Input
                           type="number"
-                          value={editedCourse?.commission}
-                          readOnly
-                          className="bg-gray-50"
+                          value={editedEbook?.commission}
+                          onChange={(e) =>
+                            handleTextChange(
+                              "commission",
+                              parseInt(e.target.value)
+                            )
+                          }
                         />
                       </div>
-
                       <div className="flex items-center space-x-2">
-                        <Switch checked={editedCourse?.visible} disabled />
+                        <Switch
+                          checked={editedEbook?.visible}
+                          onCheckedChange={(checked) =>
+                            handleTextChange("visible", checked)
+                          }
+                        />
                         <Label>Visible</Label>
                       </div>
                     </>
                   ) : (
                     <>
                       <h3 className="text-2xl font-bold">
-                        {formatCurrency(course.price)}
+                        {formatCurrency(ebook.price)}
                       </h3>
                       <p className="text-muted-foreground line-through">
-                        {formatCurrency(course.originalPrice)}
+                        {formatCurrency(ebook.originalPrice)}
                       </p>
                     </>
                   )}
@@ -913,15 +869,16 @@ export default function CourseDetailPage() {
                     size="lg"
                     onClick={handleEditModeToggle}
                   >
-                    {isEditMode ? "Save Changes" : "Edit Course"}
+                    {isEditMode ? "Save Changes" : "Edit Ebook"}
                   </Button>
                   <Button
                     className="w-full"
                     variant="destructive"
                     size="lg"
-                    onClick={() => setIsDeleteCourseDialogOpen(true)}
+                    onClick={() => setIsDeleteEbookDialogOpen(true)}
                   >
-                    Delete Course
+                    <Trash2 className="w-5 h-5 mr-2" />
+                    Delete Ebook
                   </Button>
                 </div>
               </Card>
@@ -934,7 +891,7 @@ export default function CourseDetailPage() {
       <Dialog open={isChapterDialogOpen} onOpenChange={setIsChapterDialogOpen}>
         <DialogContent>
           <DialogHeader>
-            <DialogTitle>Add New Chapter</DialogTitle>
+            <DialogTitle>Add New Table Content</DialogTitle>
           </DialogHeader>
           <div className="space-y-4">
             <div>
@@ -958,33 +915,17 @@ export default function CourseDetailPage() {
               />
             </div>
             <div>
-              <Label>Video</Label>
-              <Input
-                type="file"
-                accept="video/*"
-                onChange={handleVideoChange}
-                className="cursor-pointer"
-              />
-              {newChapter.videoUrl && (
-                <video
-                  src={newChapter.videoUrl}
-                  className="mt-2 w-full max-h-48 object-cover rounded"
-                  controls
-                />
-              )}
-            </div>
-            <div>
-              <Label>Duration (minutes)</Label>
+              <Label>Page Number</Label>
               <Input
                 type="number"
-                value={newChapter.duration || ""}
+                value={newChapter.pageNumber || ""}
                 onChange={(e) =>
                   setNewChapter({
                     ...newChapter,
-                    duration: parseInt(e.target.value),
+                    pageNumber: parseInt(e.target.value),
                   })
                 }
-                placeholder="Enter duration in minutes"
+                placeholder="Enter page number"
               />
             </div>
           </div>
@@ -995,7 +936,7 @@ export default function CourseDetailPage() {
             >
               Cancel
             </Button>
-            <Button onClick={handleAddChapter}>Add Chapter</Button>
+            <Button onClick={handleAddChapter}>Add Table Content</Button>
           </DialogFooter>
         </DialogContent>
       </Dialog>
@@ -1027,31 +968,31 @@ export default function CourseDetailPage() {
         </DialogContent>
       </Dialog>
 
-      {/* Delete Course Dialog */}
+      {/* Delete Ebook Dialog */}
       <Dialog
-        open={isDeleteCourseDialogOpen}
-        onOpenChange={setIsDeleteCourseDialogOpen}
+        open={isDeleteEbookDialogOpen}
+        onOpenChange={setIsDeleteEbookDialogOpen}
       >
         <DialogContent>
           <DialogHeader>
-            <DialogTitle>Delete Course</DialogTitle>
+            <DialogTitle>Delete Ebook</DialogTitle>
           </DialogHeader>
           <p>
-            Are you sure you want to delete this course? This action cannot be
+            Are you sure you want to delete this ebook? This action cannot be
             undone.
           </p>
           <DialogFooter>
             <Button
               variant="outline"
               onClick={() => {
-                setIsDeleteCourseDialogOpen(false);
+                setIsDeleteEbookDialogOpen(false);
                 setItemToDelete(null);
               }}
             >
               Cancel
             </Button>
-            <Button variant="destructive" onClick={handleDeleteCourse}>
-              Delete Course
+            <Button variant="destructive" onClick={handleDeleteEbook}>
+              Delete Ebook
             </Button>
           </DialogFooter>
         </DialogContent>
