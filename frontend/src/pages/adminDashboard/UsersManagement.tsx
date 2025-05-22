@@ -107,65 +107,6 @@ const UsersManagement = () => {
     <Card>
       <CardHeader className="flex flex-row items-center justify-between">
         <CardTitle>Users Management</CardTitle>
-        <Dialog open={isDialogOpen} onOpenChange={setIsDialogOpen}>
-          <DialogTrigger asChild>
-            <Button>
-              <Plus className="mr-2 h-4 w-4" />
-              Create Demo Account
-            </Button>
-          </DialogTrigger>
-          <DialogContent>
-            <DialogHeader>
-              <DialogTitle>
-                {editingUser ? "Edit User" : "Create Demo Account"}
-              </DialogTitle>
-            </DialogHeader>
-            <form onSubmit={handleSubmit} className="space-y-4">
-              <div>
-                <label className="text-sm font-medium">Name</label>
-                <Input
-                  value={formData.name || ""}
-                  onChange={(e) =>
-                    setFormData({ ...formData, name: e.target.value })
-                  }
-                  required
-                />
-              </div>
-              <div>
-                <label className="text-sm font-medium">Email</label>
-                <Input
-                  type="email"
-                  value={formData.email || ""}
-                  onChange={(e) =>
-                    setFormData({ ...formData, email: e.target.value })
-                  }
-                  required
-                />
-              </div>
-              {editingUser?.type === "demo" && (
-                <div>
-                  <label className="text-sm font-medium">Card Count</label>
-                  <Input
-                    type="number"
-                    value={formData.affiliateData?.cardCount || 0}
-                    onChange={(e) =>
-                      setFormData({
-                        ...formData,
-                        affiliateData: {
-                          ...formData.affiliateData,
-                          cardCount: parseInt(e.target.value),
-                        },
-                      })
-                    }
-                  />
-                </div>
-              )}
-              <Button type="submit">
-                {editingUser ? "Update User" : "Create Demo Account"}
-              </Button>
-            </form>
-          </DialogContent>
-        </Dialog>
       </CardHeader>
       <CardContent>
         <Table>

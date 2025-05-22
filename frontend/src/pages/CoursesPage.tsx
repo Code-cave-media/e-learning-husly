@@ -2,6 +2,7 @@ import React, { useState } from "react";
 import TabNavigation from "@/components/shared/TabNavigation";
 import CourseCard from "@/components/shared/CourseCard";
 import EmptyState from "@/components/shared/EmptyState";
+import { useAuth } from "@/contexts/AuthContext";
 
 // Mock data
 const allCourses = [
@@ -85,6 +86,7 @@ const tabs = [
 
 const CoursesPage = () => {
   const [activeTab, setActiveTab] = useState("all");
+  const { isAuthenticated } = useAuth();
 
   let coursesToShow;
   switch (activeTab) {

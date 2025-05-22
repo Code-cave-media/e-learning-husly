@@ -26,8 +26,7 @@ import { LoadingScreen } from "@/components/ui/LoadingScreen";
 import AffiliateProgramPage from "./pages/AffiliateProgramPage";
 import CourseWatchPage from "./pages/userDashboard/CourseWatchPage";
 import EbookViewPage from "./pages/userDashboard/EbookViewPage";
-import { Toast } from "@radix-ui/react-toast";
-import toast, { Toaster } from "react-hot-toast";
+import { Toaster } from "react-hot-toast";
 import { useEffect } from "react";
 import AdminDashboard from "./pages/adminDashboard/Dashboard";
 import EbooksManagement from "./pages/adminDashboard/EbooksManagement";
@@ -38,6 +37,8 @@ import TransactionsManagement from "./pages/adminDashboard/TransactionsManagemen
 import PurchasesManagement from "./pages/adminDashboard/PurchasesManagement";
 import UserCourseDetailPage from "./pages/userDashboard/CourseDetailPage";
 import AdminEbookDetailPage from "./pages/adminDashboard/EbookDetailPage";
+import LandingPage from "./pages/Landing";
+import CouponsManagement from "./pages/adminDashboard/CouponsManagement";
 
 const queryClient = new QueryClient();
 
@@ -150,6 +151,7 @@ const AppRoutes = () => {
           </PublicRoute>
         }
       />
+      <Route path="/landing/:type/:id" element={<LandingPage />} />
 
       {/* Protected Dashboard Routes */}
       <Route
@@ -209,7 +211,7 @@ const AppRoutes = () => {
         }
       />
       <Route
-        path="/course/:courseId/watch/:chapterId"
+        path="/course/watch/:courseId"
         element={
           <ProtectedRoute>
             <DashboardLayout>
@@ -219,7 +221,7 @@ const AppRoutes = () => {
         }
       />
       <Route
-        path="/ebook/:ebookId/read"
+        path="/ebook/read/:ebookId"
         element={
           <ProtectedRoute>
             <DashboardLayout>
@@ -246,6 +248,16 @@ const AppRoutes = () => {
           <AdminRoute>
             <AdminLayout>
               <CoursesManagement />
+            </AdminLayout>
+          </AdminRoute>
+        }
+      />
+      <Route
+        path="/admin/dashboard/coupons"
+        element={
+          <AdminRoute>
+            <AdminLayout>
+              <CouponsManagement />
             </AdminLayout>
           </AdminRoute>
         }

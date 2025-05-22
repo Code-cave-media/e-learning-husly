@@ -31,6 +31,7 @@ const navigation = [
   { name: "Purchases", href: "/admin/dashboard/purchases", icon: ShoppingCart },
   { name: "Withdrawals", href: "/admin/dashboard/withdrawals", icon: Wallet },
   { name: "Users", href: "/admin/dashboard/users", icon: Users },
+  { name: "Coupons", href: "/admin/dashboard/coupons", icon: Users },
 ];
 
 export default function AdminLayout({

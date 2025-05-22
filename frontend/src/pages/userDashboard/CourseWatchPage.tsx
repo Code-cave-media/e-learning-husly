@@ -10,6 +10,8 @@ import {
   PlayCircle,
   Award,
 } from "lucide-react";
+import useDownloader from "react-use-downloader";
+
 import { useParams, useNavigate } from "react-router-dom";
 
 // Mock data - In a real app, this would come from an API
@@ -17,6 +19,8 @@ const courseData = {
   id: "1",
   title: "Web Development Bootcamp",
   description: "Learn full-stack web development from scratch",
+  thumbnail:
+    "https://marketplace.canva.com/EAEqfS4X0Xw/1/0/1600w/canva-most-attractive-youtube-thumbnail-wK95f3XNRaM.jpg",
   chapters: [
     {
       id: "1",
@@ -60,9 +64,13 @@ const courseData = {
     },
   ],
   hasCertificate: true,
+  certificateUrl:
+    "https://cdn-ghkoj.nitrocdn.com/kjYfdEBKRwdYwvHQyjaYBdTGFpFGjqYW/assets/images/optimized/rev-87469d3/sertifier.com/blog/wp-content/uploads/2024/01/1-2-scaled.jpg",
 };
 
 const CourseWatchPage = () => {
+  const { download } = useDownloader();
+
   const { courseId, chapterId } = useParams();
   const navigate = useNavigate();
   const [currentChapter, setCurrentChapter] = useState(
@@ -74,7 +82,6 @@ const CourseWatchPage = () => {
     const chapter = courseData.chapters.find((c) => c.id === chapterId);
     if (chapter) {
       setCurrentChapter(chapter);
-      navigate(`/course/${courseId}/watch/${chapterId}`);
     }
   };
 
@@ -127,6 +134,7 @@ const CourseWatchPage = () => {
                   src={currentChapter.videoUrl}
                   controls
                   className="w-full h-full"
+                  poster={courseData.thumbnail}
                 />
               </div>
               <div className="mt-4">
@@ -172,15 +180,21 @@ const CourseWatchPage = () => {
                 </p>
               </div>
 
-              {isAllChaptersCompleted && (
+              {isAllChaptersCompleted && courseData.hasCertificate && (
                 <Button
                   className="w-full mb-4"
-                  onClick={handleCertificateAction}
+                  onClick={() =>
+                    download(courseData.certificateUrl, "certificate.jpg")
+                  }
                 >
                   <Award className="mr-2 h-4 w-4" />
-                  {courseData.hasCertificate
-                    ? "Download Certificate"
-                    : "Claim Certificate"}
+                  Download Certificate
+                </Button>
+              )}
+              {isAllChaptersCompleted && !courseData.hasCertificate && (
+                <Button className="w-full mb-4" onClick={() => {}}>
+                  <Award className="mr-2 h-4 w-4" />
+                  Claim Certificate
                 </Button>
               )}
 
