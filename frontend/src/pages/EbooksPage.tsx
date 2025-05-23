@@ -2,6 +2,7 @@ import React, { useState } from "react";
 import TabNavigation from "@/components/shared/TabNavigation";
 import EbookCard from "@/components/shared/EbookCard";
 import EmptyState from "@/components/shared/EmptyState";
+import { useAuth } from "@/contexts/AuthContext";
 
 // Mock data
 const allEbooks = [
@@ -66,16 +67,24 @@ const newEbooks = allEbooks.filter((ebook) => ebook.isNew);
 // Featured ebooks
 const featuredEbooks = allEbooks.filter((ebook) => ebook.isFeatured);
 
-const tabs = [
-  { id: "all", label: "All eBooks" },
-  { id: "my", label: "My eBooks" },
-  { id: "new", label: "New" },
-  { id: "featured", label: "Featured" },
-];
+
 
 const EbooksPage = () => {
   const [activeTab, setActiveTab] = useState("all");
 
+  const { isAuthenticated } = useAuth();
+  const allTabs = [
+    { id: "all", label: "All eBooks" },
+    { id: "my", label: "My eBooks" },
+    { id: "new", label: "New" },
+    { id: "featured", label: "Featured" },
+  ];
+  const tabs = allTabs.filter((item) => {
+    if (item.id == "my" && !isAuthenticated) {
+      return false;
+    }
+    return true;
+  });
   let ebooksToShow;
   switch (activeTab) {
     case "my":

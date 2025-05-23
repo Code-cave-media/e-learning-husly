@@ -35,6 +35,14 @@ import {
   FileText,
   Mail,
 } from "lucide-react";
+import {
+  Command,
+  CommandInput,
+  CommandList,
+  CommandItem,
+  CommandEmpty,
+} from "@/components/ui/command";
+import { Combobox } from "@/components/ui/combobox";
 
 // Dummy data
 const dummyCourses = [
@@ -107,9 +115,10 @@ export default function PurchasesManagement() {
   );
   const [isCreateDialogOpen, setIsCreateDialogOpen] = useState(false);
   const [newPurchase, setNewPurchase] = useState<NewPurchase>({
-    item_type: "",
+    item_type: "course",
     item_id: 0,
     purchased_user_id: 0,
+    affiliate_user_id: undefined,
   });
   const [purchases, setPurchases] = useState<Purchase[]>(dummyPurchases);
 
@@ -143,18 +152,20 @@ export default function PurchasesManagement() {
     setPurchases([...purchases, newPurchaseItem]);
     setIsCreateDialogOpen(false);
     setNewPurchase({
-      item_type: "",
+      item_type: "course",
       item_id: 0,
       purchased_user_id: 0,
+      affiliate_user_id: undefined,
     });
     toast.success("Purchase created successfully");
   };
 
   const resetForm = () => {
     setNewPurchase({
-      item_type: "",
+      item_type: "course",
       item_id: 0,
       purchased_user_id: 0,
+      affiliate_user_id: undefined,
     });
     setIsCreateDialogOpen(false);
   };
@@ -205,12 +216,11 @@ export default function PurchasesManagement() {
         </Table>
       </div>
 
-      {/* View Purchase Details Dialog */}
       <Dialog
         open={!!selectedPurchase}
         onOpenChange={() => setSelectedPurchase(null)}
       >
-        <DialogContent className="max-w-3xl max-h-[90vh] flex flex-col">
+        <DialogContent className="">
           <DialogHeader className="flex-shrink-0">
             <DialogTitle className="text-2xl font-bold flex items-center gap-2">
               <Package className="w-6 h-6" />
@@ -331,123 +341,62 @@ export default function PurchasesManagement() {
             <DialogTitle>Create New Purchase</DialogTitle>
           </DialogHeader>
           <div className="space-y-4">
-            <div>
-              <label className="block text-sm font-medium mb-1">
-                Item Type
-              </label>
-              <Select
-                value={newPurchase.item_type || ""}
-                onValueChange={(value) =>
-                  setNewPurchase({
-                    ...newPurchase,
-                    item_type: value,
-                    item_id: 0,
-                  })
-                }
-              >
-                <SelectTrigger>
-                  <SelectValue placeholder="Select item type" />
-                </SelectTrigger>
-                <SelectContent>
-                  <SelectItem value="course">Course</SelectItem>
-                  <SelectItem value="ebook">E-Book</SelectItem>
-                </SelectContent>
-              </Select>
-            </div>
-
-            {newPurchase.item_type && (
-              <div>
-                <label className="block text-sm font-medium mb-1">Item</label>
-                <Select
-                  value={
-                    newPurchase.item_id ? newPurchase.item_id.toString() : ""
-                  }
-                  onValueChange={(value) =>
-                    setNewPurchase({ ...newPurchase, item_id: parseInt(value) })
-                  }
-                >
-                  <SelectTrigger>
-                    <SelectValue placeholder="Select item" />
-                  </SelectTrigger>
-                  <SelectContent>
-                    {newPurchase.item_type === "course"
-                      ? dummyCourses.map((course) => (
-                          <SelectItem
-                            key={course.id}
-                            value={course.id.toString()}
-                          >
-                            {course.title}
-                          </SelectItem>
-                        ))
-                      : dummyEbooks.map((ebook) => (
-                          <SelectItem
-                            key={ebook.id}
-                            value={ebook.id.toString()}
-                          >
-                            {ebook.title}
-                          </SelectItem>
-                        ))}
-                  </SelectContent>
-                </Select>
-              </div>
-            )}
-
-            <div>
-              <label className="block text-sm font-medium mb-1">
-                Purchased By
-              </label>
-              <Select
-                value={
-                  newPurchase.purchased_user_id
-                    ? newPurchase.purchased_user_id.toString()
-                    : ""
-                }
-                onValueChange={(value) =>
-                  setNewPurchase({
-                    ...newPurchase,
-                    purchased_user_id: parseInt(value),
-                  })
-                }
-              >
-                <SelectTrigger>
-                  <SelectValue placeholder="Select user" />
-                </SelectTrigger>
-                <SelectContent>
-                  {dummyUsers.map((user) => (
-                    <SelectItem key={user.id} value={user.id.toString()}>
-                      {user.name}
-                    </SelectItem>
-                  ))}
-                </SelectContent>
-              </Select>
-            </div>
-
-            <div>
-              <label className="block text-sm font-medium mb-1">
-                Affiliate (Optional)
-              </label>
-              <Select
-                value={newPurchase.affiliate_user_id?.toString() || ""}
-                onValueChange={(value) =>
-                  setNewPurchase({
-                    ...newPurchase,
-                    affiliate_user_id: value ? parseInt(value) : undefined,
-                  })
-                }
-              >
-                <SelectTrigger>
-                  <SelectValue placeholder="Select affiliate" />
-                </SelectTrigger>
-                <SelectContent>
-                  <SelectItem value="">None</SelectItem>
-                  {dummyUsers.map((user) => (
-                    <SelectItem key={user.id} value={user.id.toString()}>
-                      {user.name}
-                    </SelectItem>
-                  ))}
-                </SelectContent>
-              </Select>
-            </div>
+            {/* Course Combobox */}
+            <Combobox
+              label="Course"
+              options={dummyCourses.map((course) => ({
+                value: course.id.toString(),
+                label: course.title,
+              }))}
+              value={newPurchase.item_id ? newPurchase.item_id.toString() : ""}
+              onChange={(val) =>
+                setNewPurchase({ ...newPurchase, item_id: parseInt(val) })
+              }
+              placeholder="Select course"
+            />
+            {/* Purchased User Combobox */}
+            <Combobox
+              label="Purchased User"
+              options={dummyUsers.map((user) => ({
+                value: user.id.toString(),
+                label: user.name,
+              }))}
+              value={
+                newPurchase.purchased_user_id
+                  ? newPurchase.purchased_user_id.toString()
+                  : ""
+              }
+              onChange={(val) =>
+                setNewPurchase({
+                  ...newPurchase,
+                  purchased_user_id: parseInt(val),
+                })
+              }
+              placeholder="Select user"
+            />
+            {/* Affiliate User Combobox */}
+            <Combobox
+              label="Affiliate User (Optional)"
+              options={[
+                { value: "none", label: "None" },
+                ...dummyUsers.map((user) => ({
+                  value: user.id.toString(),
+                  label: user.name,
+                })),
+              ]}
+              value={
+                typeof newPurchase.affiliate_user_id === "number"
+                  ? newPurchase.affiliate_user_id.toString()
+                  : "none"
+              }
+              onChange={(val) =>
+                setNewPurchase({
+                  ...newPurchase,
+                  affiliate_user_id: val === "none" ? undefined : parseInt(val),
+                })
+              }
+              placeholder="Select affiliate"
+            />
           </div>
           <DialogFooter>
             <Button variant="outline" onClick={resetForm}>

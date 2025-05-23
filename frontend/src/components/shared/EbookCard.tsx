@@ -112,7 +112,7 @@ const EbookCard = ({
           </>
         ) : (
           <Button asChild className="w-full">
-            <Link to={`/checkout/course/${id}`}>Buy</Link>
+            <Link to={`/landing/course/${id}`}>Buy</Link>
           </Button>
         )}
       </CardFooter>

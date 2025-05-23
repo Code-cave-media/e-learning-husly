@@ -199,7 +199,7 @@ export default function CoursesManagement() {
   };
 
   const handleView = (courseId: number) => {
-    navigate(`/user/dashboard/course/${courseId}`);
+    navigate(`/landing/course/${courseId}`);
   };
 
   return (

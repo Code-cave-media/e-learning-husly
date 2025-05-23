@@ -1,11 +1,13 @@
 import React, { useState, useEffect } from "react";
 import * as Dialog from "@radix-ui/react-dialog";
 import { X } from "lucide-react";
+import { useNavigate } from "react-router-dom";
 
 const Landing = () => {
   const [timeLeft, setTimeLeft] = useState(10);
   const [showBuyButton, setShowBuyButton] = useState(false);
   const [dialogOpen, setDialogOpen] = useState(false);
+  const navigate = useNavigate();
 
   useEffect(() => {
     if (timeLeft <= 0) {
@@ -28,7 +30,7 @@ const Landing = () => {
   };
 
   const handleBuyNowClick = () => {
-    setDialogOpen(true);
+    navigate("/landing/type/id/checkout");
   };
 
   return (
@@ -89,54 +91,6 @@ const Landing = () => {
           Buy Now
         </button>
       )}
-
-      {/* Radix Dialog */}
-      <Dialog.Root open={dialogOpen} onOpenChange={setDialogOpen}>
-        <Dialog.Portal>
-          <Dialog.Overlay className="fixed inset-0 bg-black/50 data-[state=open]:animate-fadeIn" />
-          <Dialog.Content className="fixed top-[50%] left-[50%] -translate-x-1/2 -translate-y-1/2 w-full max-w-md rounded-lg bg-[#0d1117] text-white p-6 shadow-lg focus:outline-none data-[state=open]:animate-slideIn">
-            <Dialog.Title className="text-xl font-bold mb-4">
-              Sign Up
-            </Dialog.Title>
-            <Dialog.Description className="mb-4 text-gray-400">
-              Enter your details to create an account.
-            </Dialog.Description>
-
-            <form className="flex flex-col gap-4">
-              <input
-                type="text"
-                placeholder="Name"
-                className="bg-gray-800 border border-gray-600 p-2 rounded text-white outline-none"
-              />
-              <input
-                type="email"
-                placeholder="Email"
-                className="bg-gray-800 border border-gray-600 p-2 rounded text-white outline-none"
-              />
-              <input
-                type="password"
-                placeholder="Password"
-                className="bg-gray-800 border border-gray-600 p-2 rounded text-white outline-none"
-              />
-              <button
-                type="submit"
-                className="bg-[#00b0ff] text-white p-2 rounded hover:opacity-90"
-              >
-                Course for 200$
-              </button>
-            </form>
-
-            <Dialog.Close asChild>
-              <button
-                className="absolute top-3 right-3 rounded-full text-gray-400 hover:text-white"
-                aria-label="Close"
-              >
-                <X />
-              </button>
-            </Dialog.Close>
-          </Dialog.Content>
-        </Dialog.Portal>
-      </Dialog.Root>
     </div>
   );
 };

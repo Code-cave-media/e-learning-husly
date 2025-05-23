@@ -124,7 +124,7 @@ export default function EbookManagement() {
   };
 
   const handleViewEbook = (id: number) => {
-    navigate(`/admin/ebooks/${id}`);
+    navigate(`/landing/ebook/${id}`);
   };
 
   return (

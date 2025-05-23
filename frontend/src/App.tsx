@@ -39,6 +39,7 @@ import UserCourseDetailPage from "./pages/userDashboard/CourseDetailPage";
 import AdminEbookDetailPage from "./pages/adminDashboard/EbookDetailPage";
 import LandingPage from "./pages/Landing";
 import CouponsManagement from "./pages/adminDashboard/CouponsManagement";
+import Checkout from "./pages/Checkout";
 
 const queryClient = new QueryClient();
 
@@ -152,6 +153,7 @@ const AppRoutes = () => {
         }
       />
       <Route path="/landing/:type/:id" element={<LandingPage />} />
+      <Route path="/landing/:type/:id/checkout" element={<Checkout />} />
 
       {/* Protected Dashboard Routes */}
       <Route

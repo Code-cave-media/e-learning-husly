@@ -77,16 +77,23 @@ const newCourses = allCourses.filter((course) => course.isNew);
 // Featured courses
 const featuredCourses = allCourses.filter((course) => course.isFeatured);
 
-const tabs = [
-  { id: "all", label: "All Courses" },
-  { id: "my", label: "My Courses" },
-  { id: "new", label: "New" },
-  { id: "featured", label: "Featured" },
-];
-
 const CoursesPage = () => {
   const [activeTab, setActiveTab] = useState("all");
+  const allTabs = [
+    { id: "all", label: "All Courses" },
+    { id: "my", label: "My Courses" },
+    { id: "new", label: "New" },
+    { id: "featured", label: "Featured" },
+  ];
+
   const { isAuthenticated } = useAuth();
+
+  const tabs = allTabs.filter((item) => {
+    if (item.id == "my" && !isAuthenticated) {
+      return false;
+    }
+    return true;
+  });
 
   let coursesToShow;
   switch (activeTab) {

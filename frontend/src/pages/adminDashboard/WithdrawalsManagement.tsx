@@ -16,6 +16,7 @@ import {
   DialogHeader,
   DialogTitle,
   DialogTrigger,
+  DialogFooter,
 } from "@/components/ui/dialog";
 import {
   Select,
@@ -25,6 +26,14 @@ import {
   SelectValue,
 } from "@/components/ui/select";
 import { Badge } from "@/components/ui/badge";
+import {
+  DollarSign,
+  User as UserIcon,
+  Banknote,
+  Calendar,
+  BadgeCheck,
+  AlertCircle,
+} from "lucide-react";
 
 interface Withdrawal {
   id: string;
@@ -34,6 +43,10 @@ interface Withdrawal {
   status: "pending" | "paid" | "failed";
   reason?: string;
   date: string;
+  upi?: string;
+  bankName?: string;
+  accountNumber?: string;
+  ifsc?: string;
 }
 
 const WithdrawalsManagement = () => {
@@ -45,6 +58,18 @@ const WithdrawalsManagement = () => {
       amount: 150.0,
       status: "pending",
       date: "2024-03-15",
+      upi: "john@upi",
+    },
+    {
+      id: "2",
+      userId: "partner2",
+      userName: "Jane Partner",
+      amount: 300.0,
+      status: "paid",
+      date: "2024-03-10",
+      bankName: "HDFC Bank",
+      accountNumber: "1234567890",
+      ifsc: "HDFC0001234",
     },
   ]);
 
@@ -52,6 +77,11 @@ const WithdrawalsManagement = () => {
   const [selectedWithdrawal, setSelectedWithdrawal] =
     useState<Withdrawal | null>(null);
   const [reason, setReason] = useState("");
+
+  const [isDetailsDialogOpen, setIsDetailsDialogOpen] = useState(false);
+  const [detailsWithdrawal, setDetailsWithdrawal] = useState<Withdrawal | null>(
+    null
+  );
 
   const handleStatusChange = (
     withdrawal: Withdrawal,
@@ -120,6 +150,16 @@ const WithdrawalsManagement = () => {
                 </TableCell>
                 <TableCell>
                   <div className="flex space-x-2">
+                    <Button
+                      variant="outline"
+                      size="sm"
+                      onClick={() => {
+                        setDetailsWithdrawal(withdrawal);
+                        setIsDetailsDialogOpen(true);
+                      }}
+                    >
+                      View Details
+                    </Button>
                     <Select
                       onValueChange={(value) =>
                         handleStatusChange(
@@ -144,6 +184,7 @@ const WithdrawalsManagement = () => {
           </TableBody>
         </Table>
 
+        {/* Failure Reason Dialog */}
         <Dialog open={isDialogOpen} onOpenChange={setIsDialogOpen}>
           <DialogContent>
             <DialogHeader>
@@ -167,6 +208,106 @@ const WithdrawalsManagement = () => {
                 Submit
               </Button>
             </div>
+          </DialogContent>
+        </Dialog>
+
+        {/* Details Dialog */}
+        <Dialog
+          open={isDetailsDialogOpen}
+          onOpenChange={setIsDetailsDialogOpen}
+        >
+          <DialogContent>
+            <DialogHeader>
+              <DialogTitle>Withdrawal Details</DialogTitle>
+            </DialogHeader>
+            {detailsWithdrawal && (
+              <div className="space-y-6">
+                {/* Amount & Status */}
+                <div className="grid grid-cols-2 gap-4">
+                  <div className="flex items-center gap-2">
+                    <DollarSign className="w-5 h-5 " />
+                    <div>
+                      <p className="text-sm text-muted-foreground">Amount</p>
+                      <p className="font-medium text-lg">
+                        ${detailsWithdrawal.amount.toFixed(2)}
+                      </p>
+                    </div>
+                  </div>
+                  <div className="flex items-center gap-2">
+                    <BadgeCheck className="w-5 h-5 " />
+                    <div>
+                      <p className="text-sm text-muted-foreground">Status</p>
+                      <Badge
+                        className={getStatusColor(detailsWithdrawal.status)}
+                      >
+                        {detailsWithdrawal.status}
+                      </Badge>
+                    </div>
+                  </div>
+                </div>
+                {/* User Info */}
+                <div className="flex items-center gap-2">
+                  <UserIcon className="w-5 h-5 " />
+                  <div>
+                    <p className="text-sm text-muted-foreground">User</p>
+                    <p className="font-medium">{detailsWithdrawal.userName}</p>
+                  </div>
+                </div>
+                <div className="flex items-center gap-2">
+                  <UserIcon className="w-5 h-5 " />
+                  <div>
+                    <p className="text-sm text-muted-foreground">User Type</p>
+                    <p className="font-medium">
+                      {detailsWithdrawal.userId.startsWith("partner")
+                        ? "Partner"
+                        : "Regular"}
+                    </p>
+                  </div>
+                </div>
+                {/* Payment Details */}
+                <div className="flex items-center gap-2">
+                  <Banknote className="w-5 h-5 " />
+                  <div>
+                    <p className="text-sm text-muted-foreground">
+                      Payment Details
+                    </p>
+                    <div className="font-medium">
+                      {detailsWithdrawal.upi ? (
+                        <>UPI: {detailsWithdrawal.upi}</>
+                      ) : detailsWithdrawal.bankName ? (
+                        <>
+                          Bank: {detailsWithdrawal.bankName} <br />
+                          Account: {detailsWithdrawal.accountNumber} <br />
+                          IFSC: {detailsWithdrawal.ifsc}
+                        </>
+                      ) : (
+                        <>-</>
+                      )}
+                    </div>
+                  </div>
+                </div>
+                {/* Date */}
+                <div className="flex items-center gap-2">
+                  <Calendar className="w-5 h-5 " />
+                  <div>
+                    <p className="text-sm text-muted-foreground">Date</p>
+                    <p className="font-medium">{detailsWithdrawal.date}</p>
+                  </div>
+                </div>
+                {/* Failure Reason */}
+                {detailsWithdrawal.reason && (
+                  <div className="flex items-center gap-2">
+                    <AlertCircle className="w-5 h-5 text-destructive" />
+                    <div>
+                      <p className="text-sm text-muted-foreground">
+                        Failure Reason
+                      </p>
+                      <p className="font-medium">{detailsWithdrawal.reason}</p>
+                    </div>
+                  </div>
+                )}
+              </div>
+            )}
           </DialogContent>
         </Dialog>
       </CardContent>
