@@ -8,6 +8,7 @@ class User(Base):
     password = Column(String, nullable=False)
     user_id = Column(String, unique=True, nullable=False)
     is_admin = Column(Boolean,default=False)
+    has_dummy_purchase = Column(Boolean, default=False)
 class TempUser(Base):
     __tablename__ = "temp_user"
     id = Column(Integer, primary_key=True, index=True)

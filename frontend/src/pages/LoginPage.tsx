@@ -15,7 +15,7 @@ import { useAuth } from "@/contexts/AuthContext";
 
 const LoginPage = () => {
   const navigate = useNavigate();
-  const { isAuthenticated, login } = useAuth();
+  const { isAuthenticated } = useAuth();
   const [isLoading, setIsLoading] = useState(false);
   const [formData, setFormData] = useState({
     email: "",
@@ -24,7 +24,7 @@ const LoginPage = () => {
 
   // Redirect if already authenticated
   if (isAuthenticated) {
-    return <Navigate to="/dashboard" replace />;
+    return <Navigate to="/user/dashboard" replace />;
   }
 
   const handleSubmit = async (e: React.FormEvent) => {
@@ -34,7 +34,7 @@ const LoginPage = () => {
     try {
       await login(formData.email, formData.password);
       toast.success("Login successful!");
-      navigate("/dashboard", { replace: true });
+      navigate("/user/dashboard", { replace: true });
     } catch (error) {
       toast.error("Login failed. Please check your credentials.");
     } finally {

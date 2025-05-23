@@ -45,6 +45,20 @@ import {
   Cell,
   Legend,
 } from "recharts";
+import {
+  Dialog,
+  DialogContent,
+  DialogHeader,
+  DialogTitle,
+  DialogFooter,
+} from "@/components/ui/dialog";
+import {
+  Select,
+  SelectTrigger,
+  SelectValue,
+  SelectContent,
+  SelectItem,
+} from "@/components/ui/select";
 
 // Mock data - In a real app, this would come from an API
 const dashboardData = {
@@ -139,6 +153,15 @@ const dashboardData = {
 const AffiliateDashboardPage = () => {
   const { toast } = useToast();
   const [activeTab, setActiveTab] = useState("overview");
+  const [isWithdrawDialogOpen, setIsWithdrawDialogOpen] = useState(false);
+  const [withdrawMethod, setWithdrawMethod] = useState<"upi" | "bank">("upi");
+  const [withdrawForm, setWithdrawForm] = useState({
+    amount: "",
+    upi: "",
+    bankName: "",
+    accountNumber: "",
+    ifsc: "",
+  });
 
   const handleCopyLink = (link: string) => {
     navigator.clipboard.writeText(link);
@@ -180,7 +203,10 @@ const AffiliateDashboardPage = () => {
             Track your performance and earnings
           </p>
         </div>
-        <Button className="w-full md:w-auto">
+        <Button
+          className="w-full md:w-auto"
+          onClick={() => setIsWithdrawDialogOpen(true)}
+        >
           <Wallet className="mr-2 h-4 w-4" />
           Withdraw Earnings
         </Button>
@@ -560,6 +586,96 @@ const AffiliateDashboardPage = () => {
           </Card>
         </TabsContent>
       </Tabs>
+
+      <Dialog
+        open={isWithdrawDialogOpen}
+        onOpenChange={setIsWithdrawDialogOpen}
+      >
+        <DialogContent>
+          <DialogHeader>
+            <DialogTitle>Withdraw Earnings</DialogTitle>
+          </DialogHeader>
+          <div className="space-y-4">
+            <Input
+              type="number"
+              placeholder="Amount"
+              value={withdrawForm.amount}
+              onChange={(e) =>
+                setWithdrawForm((f) => ({ ...f, amount: e.target.value }))
+              }
+            />
+            <div>
+              <label className="block text-sm font-medium mb-1">
+                Withdraw Method
+              </label>
+              <Select
+                value={withdrawMethod}
+                onValueChange={(v) => setWithdrawMethod(v)}
+              >
+                <SelectTrigger>
+                  <SelectValue placeholder="Select method" />
+                </SelectTrigger>
+                <SelectContent>
+                  <SelectItem value="upi">UPI</SelectItem>
+                  <SelectItem value="bank">Bank Account</SelectItem>
+                </SelectContent>
+              </Select>
+            </div>
+            {withdrawMethod === "upi" ? (
+              <Input
+                placeholder="UPI ID"
+                value={withdrawForm.upi}
+                onChange={(e) =>
+                  setWithdrawForm((f) => ({ ...f, upi: e.target.value }))
+                }
+              />
+            ) : (
+              <div className="space-y-2">
+                <Input
+                  placeholder="Bank Name"
+                  value={withdrawForm.bankName}
+                  onChange={(e) =>
+                    setWithdrawForm((f) => ({ ...f, bankName: e.target.value }))
+                  }
+                />
+                <Input
+                  placeholder="Account Number"
+                  value={withdrawForm.accountNumber}
+                  onChange={(e) =>
+                    setWithdrawForm((f) => ({
+                      ...f,
+                      accountNumber: e.target.value,
+                    }))
+                  }
+                />
+                <Input
+                  placeholder="IFSC Code"
+                  value={withdrawForm.ifsc}
+                  onChange={(e) =>
+                    setWithdrawForm((f) => ({ ...f, ifsc: e.target.value }))
+                  }
+                />
+              </div>
+            )}
+          </div>
+          <DialogFooter>
+            <Button
+              onClick={() => setIsWithdrawDialogOpen(false)}
+              variant="outline"
+            >
+              Cancel
+            </Button>
+            <Button
+              onClick={() => {
+                // Handle withdraw logic here
+                setIsWithdrawDialogOpen(false);
+              }}
+            >
+              Withdraw
+            </Button>
+          </DialogFooter>
+        </DialogContent>
+      </Dialog>
     </div>
   );
 };

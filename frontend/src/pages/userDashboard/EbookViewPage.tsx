@@ -10,6 +10,7 @@ import "@react-pdf-viewer/core/lib/styles/index.css";
 import "@react-pdf-viewer/default-layout/lib/styles/index.css";
 import "@react-pdf-viewer/page-navigation/lib/styles/index.css";
 import { Alert, AlertDescription } from "@/components/ui/alert";
+import useDownloader from "react-use-downloader";
 
 // Mock data - In a real app, this would come from an API
 const ebookData = {
@@ -32,12 +33,13 @@ const ebookData = {
 
 const EbookViewPage = () => {
   const { ebookId } = useParams();
+  const { download } = useDownloader();
   const [error, setError] = useState<string | null>(null);
   const defaultLayoutPluginInstance = defaultLayoutPlugin();
   const pageNavigationPluginInstance = pageNavigationPlugin();
 
   const handleDownload = () => {
-    window.open(ebookData.pdfUrl, "_blank");
+    download(ebookData.pdfUrl, "ebook.pdf");
   };
 
   const handleTocClick = (page: number) => {
