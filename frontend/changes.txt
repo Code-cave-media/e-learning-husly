@@ -1,0 +1,27 @@
+Main page
+---------
+-> Buy now button to Start your side hustle in page . Remove price
+-> Training and BluePrint in filter  , All,Training,BluePrint
+-> remove navbar
+-> Blue button 
+-> Featured in home page
+
+Landing page
+------------
+-> Login button in landing page
+
+
+
+User Dashboard
+-----------------
+-> Remove cards mobile view
+-> Home filter : All, My Training, My BluePrint
+-> Change top products to product
+-> Product Card : Affiliate link button to inside image
+-> navlink active button Blue
+-> Affiliate : View more button for other 3 card
+-> Affiliate : Affiliate Dashboard to Affiliate
+-> Affiliate : Remove Withdraw earning button and place in Withdraw history
+-> Affiliate : 5 second take to show the graph first graph and animation trigger ( optional )
+-> Affiliate : Mobile View Scaling the graph view issue
+-> Affiliate : Withdraw policy popup

@@ -66,7 +66,7 @@ export default function AdminLayout({
                 variant={isActive ? "secondary" : "ghost"}
                 className={cn(
                   "w-full justify-start gap-2",
-                  isActive && "bg-secondary"
+                  isActive && "bg-blue-600 text-white hover:bg-blue-600"
                 )}
                 onClick={() => {
                   navigate(item.href);

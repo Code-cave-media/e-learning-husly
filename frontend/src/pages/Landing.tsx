@@ -2,6 +2,7 @@ import React, { useState, useEffect } from "react";
 import * as Dialog from "@radix-ui/react-dialog";
 import { X } from "lucide-react";
 import { useNavigate } from "react-router-dom";
+import { Button } from "@/components/ui/button";
 
 const Landing = () => {
   const [timeLeft, setTimeLeft] = useState(10);
@@ -35,6 +36,17 @@ const Landing = () => {
 
   return (
     <div className="flex flex-col items-center bg-black text-white p-5 font-sans min-h-screen bg-gradient-to-b from-black to-[#1a2a4a]">
+      {/* Login Button */}
+      <div className="absolute top-4 right-4">
+        <Button
+          variant="outline"
+          className="border-white bg-transparent transition-all text-white hover:bg-blue-400 hover:border-blue-400 hover:text-white"
+          onClick={() => navigate("/login")}
+        >
+          Login
+        </Button>
+      </div>
+
       <div className="mb-5 w-20 h-20 rounded-full bg-gray-700 flex justify-center items-center overflow-hidden">
         <img
           src="https://www.shutterstock.com/shutterstock/photos/2278726727/display_1500/stock-vector-minimalistic-circular-logo-sample-vector-2278726727.jpg"

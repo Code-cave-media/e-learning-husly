@@ -17,6 +17,8 @@ import {
   Clock,
   BookOpen,
   Video,
+  ChevronDown,
+  Search,
 } from "lucide-react";
 import {
   Table,
@@ -154,7 +156,9 @@ const AffiliateDashboardPage = () => {
   const { toast } = useToast();
   const [activeTab, setActiveTab] = useState("overview");
   const [isWithdrawDialogOpen, setIsWithdrawDialogOpen] = useState(false);
+  const [showMoreCards, setShowMoreCards] = useState(false);
   const [withdrawMethod, setWithdrawMethod] = useState<"upi" | "bank">("upi");
+  const [searchQuery, setSearchQuery] = useState("");
   const [withdrawForm, setWithdrawForm] = useState({
     amount: "",
     upi: "",
@@ -162,6 +166,11 @@ const AffiliateDashboardPage = () => {
     accountNumber: "",
     ifsc: "",
   });
+
+  // Filter products based on search query
+  const filteredProducts = dashboardData.topProducts.filter((product) =>
+    product.name.toLowerCase().includes(searchQuery.toLowerCase())
+  );
 
   const handleCopyLink = (link: string) => {
     navigator.clipboard.writeText(link);
@@ -194,309 +203,370 @@ const AffiliateDashboardPage = () => {
   };
 
   return (
-    <div className="container px-4 py-8">
+    <div className="container px-4 py-8 max-sm:px-0">
       {/* Header */}
       <div className="flex flex-col md:flex-row justify-between items-start md:items-center gap-4 mb-8">
         <div>
-          <h1 className="text-3xl font-bold">Affiliate Dashboard</h1>
+          <h1 className="text-3xl font-bold">Dashboard</h1>
           <p className="text-muted-foreground">
             Track your performance and earnings
           </p>
         </div>
-        <Button
-          className="w-full md:w-auto"
-          onClick={() => setIsWithdrawDialogOpen(true)}
-        >
-          <Wallet className="mr-2 h-4 w-4" />
-          Withdraw Earnings
-        </Button>
       </div>
 
       {/* Overview Cards */}
-      <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-4 gap-6 mb-8">
+      <div className="md:grid md:grid-cols-4 md:gap-6 mb-8 max-sm:px-4">
+        {/* Mobile Scroll Container */}
+        <div className="md:contents">
+          <div className="flex overflow-x-auto snap-x snap-mandatory md:contents gap-4 pb-4 -mx-4 px-4 md:mx-0 md:px-0 md:pb-0">
+            <Card className="w-[calc(100vw-2rem)] flex-shrink-0 snap-start md:w-auto md:min-w-0">
+              <CardContent className="p-6">
+                <div className="flex items-center justify-between">
+                  <div>
+                    <p className="text-sm text-muted-foreground">
+                      Total Earnings
+                    </p>
+                    <h3 className="text-2xl font-bold">
+                      ${dashboardData.overview.totalEarnings.toFixed(2)}
+                    </h3>
+                  </div>
+                  <div className="p-3 bg-primary/10 rounded-full">
+                    <DollarSign className="h-6 w-6 text-primary" />
+                  </div>
+                </div>
+                <div className="mt-4 flex items-center text-sm text-green-600">
+                  <TrendingUp className="h-4 w-4 mr-1" />
+                  <span>+12.5% from last month</span>
+                </div>
+              </CardContent>
+            </Card>
+
+            <Card className="w-[calc(100vw-2rem)] flex-shrink-0 snap-start md:w-auto md:min-w-0">
+              <CardContent className="p-6">
+                <div className="flex items-center justify-between">
+                  <div>
+                    <p className="text-sm text-muted-foreground">
+                      Total Clicks
+                    </p>
+                    <h3 className="text-2xl font-bold">
+                      {dashboardData.overview.totalClicks}
+                    </h3>
+                  </div>
+                  <div className="p-3 bg-primary/10 rounded-full">
+                    <Users className="h-6 w-6 text-primary" />
+                  </div>
+                </div>
+                <div className="mt-4 flex items-center text-sm text-green-600">
+                  <TrendingUp className="h-4 w-4 mr-1" />
+                  <span>+8.2% from last month</span>
+                </div>
+              </CardContent>
+            </Card>
+
+            <Card className="w-[calc(100vw-2rem)] flex-shrink-0 snap-start md:w-auto md:min-w-0">
+              <CardContent className="p-6">
+                <div className="flex items-center justify-between">
+                  <div>
+                    <p className="text-sm text-muted-foreground">
+                      Conversion Rate
+                    </p>
+                    <h3 className="text-2xl font-bold">
+                      {dashboardData.overview.conversionRate}%
+                    </h3>
+                  </div>
+                  <div className="p-3 bg-primary/10 rounded-full">
+                    <BarChart3 className="h-6 w-6 text-primary" />
+                  </div>
+                </div>
+                <div className="mt-4 flex items-center text-sm text-red-600">
+                  <TrendingDown className="h-4 w-4 mr-1" />
+                  <span>-2.1% from last month</span>
+                </div>
+              </CardContent>
+            </Card>
+
+            <Card className="w-[calc(100vw-2rem)] flex-shrink-0 snap-start md:w-auto md:min-w-0">
+              <CardContent className="p-6">
+                <div className="flex items-center justify-between">
+                  <div>
+                    <p className="text-sm text-muted-foreground">
+                      Active Links
+                    </p>
+                    <h3 className="text-2xl font-bold">
+                      {dashboardData.overview.activeLinks}
+                    </h3>
+                  </div>
+                  <div className="p-3 bg-primary/10 rounded-full">
+                    <ExternalLink className="h-6 w-6 text-primary" />
+                  </div>
+                </div>
+                <div className="mt-4 flex items-center text-sm text-green-600">
+                  <TrendingUp className="h-4 w-4 mr-1" />
+                  <span>+2 new this month</span>
+                </div>
+              </CardContent>
+            </Card>
+          </div>
+        </div>
+      </div>
+      <div className="space-y-6 mb-10">
+        {/* Overview Filters */}
+
+        {/* 12 Month Earnings Chart */}
         <Card>
-          <CardContent className="p-6">
-            <div className="flex items-center justify-between">
-              <div>
-                <p className="text-sm text-muted-foreground">Total Earnings</p>
-                <h3 className="text-2xl font-bold">
-                  ${dashboardData.overview.totalEarnings.toFixed(2)}
-                </h3>
-              </div>
-              <div className="p-3 bg-primary/10 rounded-full">
-                <DollarSign className="h-6 w-6 text-primary" />
-              </div>
-            </div>
-            <div className="mt-4 flex items-center text-sm text-green-600">
-              <TrendingUp className="h-4 w-4 mr-1" />
-              <span>+12.5% from last month</span>
+          <CardContent className="p-4 md:p-6">
+            <h3 className="text-lg font-semibold mb-4">
+              12 Month Earnings Overview
+            </h3>
+            <div className="h-[400px] md:h-[300px] -mx-4 md:mx-0">
+              <ResponsiveContainer width="100%" height="100%">
+                <LineChart data={dashboardData.monthlyEarnings}>
+                  <CartesianGrid
+                    strokeDasharray="3 3"
+                    className="stroke-muted"
+                  />
+                  <XAxis
+                    dataKey="month"
+                    tickFormatter={formatMonth}
+                    tick={{ fontSize: 12 }}
+                    interval="preserveStartEnd"
+                  />
+                  <YAxis
+                    tickFormatter={(value) => `$${value}`}
+                    tick={{ fontSize: 12 }}
+                  />
+                  <Tooltip
+                    labelFormatter={formatMonth}
+                    formatter={(value) => [`$${value}`, "Earnings"]}
+                    contentStyle={{ fontSize: 12 }}
+                  />
+                  <Line
+                    type="monotone"
+                    dataKey="earnings"
+                    stroke="#0088FE"
+                    strokeWidth={2}
+                    dot={{ r: 4 }}
+                    activeDot={{ r: 6 }}
+                    animationDuration={5000}
+                  />
+                </LineChart>
+              </ResponsiveContainer>
             </div>
           </CardContent>
         </Card>
+
+        {/* Clicks and Conversions Chart */}
         <Card>
-          <CardContent className="p-6">
-            <div className="flex items-center justify-between">
-              <div>
-                <p className="text-sm text-muted-foreground">Total Clicks</p>
-                <h3 className="text-2xl font-bold">
-                  {dashboardData.overview.totalClicks}
-                </h3>
-              </div>
-              <div className="p-3 bg-primary/10 rounded-full">
-                <Users className="h-6 w-6 text-primary" />
-              </div>
-            </div>
-            <div className="mt-4 flex items-center text-sm text-green-600">
-              <TrendingUp className="h-4 w-4 mr-1" />
-              <span>+8.2% from last month</span>
+          <CardContent className="p-4 md:p-6">
+            <h3 className="text-lg font-semibold mb-4">Clicks & Conversions</h3>
+            <div className="h-[400px] md:h-[300px] -mx-4 md:mx-0">
+              <ResponsiveContainer width="100%" height="100%">
+                <BarChart data={dashboardData.performance.daily}>
+                  <CartesianGrid
+                    strokeDasharray="3 3"
+                    className="stroke-muted"
+                  />
+                  <XAxis
+                    dataKey="date"
+                    tickFormatter={(date) =>
+                      new Date(date).toLocaleDateString()
+                    }
+                    tick={{ fontSize: 12 }}
+                    interval="preserveStartEnd"
+                  />
+                  <YAxis tick={{ fontSize: 12 }} />
+                  <Tooltip
+                    labelFormatter={(date) =>
+                      new Date(date).toLocaleDateString()
+                    }
+                    contentStyle={{ fontSize: 12 }}
+                  />
+                  <Bar
+                    dataKey="clicks"
+                    fill="#8884d8"
+                    name="Clicks"
+                    animationDuration={5000}
+                    radius={[4, 4, 0, 0]}
+                  />
+                  <Bar
+                    dataKey="conversions"
+                    fill="#82ca9d"
+                    name="Conversions"
+                    animationDuration={5000}
+                    radius={[4, 4, 0, 0]}
+                  />
+                </BarChart>
+              </ResponsiveContainer>
             </div>
           </CardContent>
         </Card>
-        <Card>
+
+        {/* Sales Distribution Pie Chart */}
+        {/* <Card>
           <CardContent className="p-6">
-            <div className="flex items-center justify-between">
-              <div>
-                <p className="text-sm text-muted-foreground">Conversion Rate</p>
-                <h3 className="text-2xl font-bold">
-                  {dashboardData.overview.conversionRate}%
-                </h3>
-              </div>
-              <div className="p-3 bg-primary/10 rounded-full">
-                <BarChart3 className="h-6 w-6 text-primary" />
-              </div>
-            </div>
-            <div className="mt-4 flex items-center text-sm text-red-600">
-              <TrendingDown className="h-4 w-4 mr-1" />
-              <span>-2.1% from last month</span>
+            <h3 className="text-lg font-semibold mb-4">Sales Distribution</h3>
+            <div className="h-[300px] md:p-6 p-0">
+              <ResponsiveContainer width="100%" height="100%">
+                <PieChart>
+                  <Pie
+                    data={dashboardData.salesDistribution}
+                    cx="50%"
+                    cy="50%"
+                    innerRadius={60}
+                    outerRadius={80}
+                    paddingAngle={5}
+                    dataKey="value"
+                    animationDuration={5000}
+                  >
+                    {dashboardData.salesDistribution.map((entry, index) => (
+                      <Cell key={`cell-${index}`} fill={entry.color} />
+                    ))}
+                  </Pie>
+                  <Tooltip formatter={(value) => [`${value}%`, "Percentage"]} />
+                  <Legend
+                    verticalAlign="bottom"
+                    height={36}
+                    formatter={(value) => (
+                      <span className="text-sm">{value}</span>
+                    )}
+                  />
+                </PieChart>
+              </ResponsiveContainer>
             </div>
           </CardContent>
-        </Card>
+        </Card> */}
+
+        {/* Recent Activity */}
         <Card>
           <CardContent className="p-6">
-            <div className="flex items-center justify-between">
-              <div>
-                <p className="text-sm text-muted-foreground">Active Links</p>
-                <h3 className="text-2xl font-bold">
-                  {dashboardData.overview.activeLinks}
-                </h3>
-              </div>
-              <div className="p-3 bg-primary/10 rounded-full">
-                <ExternalLink className="h-6 w-6 text-primary" />
-              </div>
-            </div>
-            <div className="mt-4 flex items-center text-sm text-green-600">
-              <TrendingUp className="h-4 w-4 mr-1" />
-              <span>+2 new this month</span>
+            <h3 className="text-lg font-semibold mb-4">Recent Activity</h3>
+            <div className="space-y-4">
+              {dashboardData.performance.daily.slice(-5).map((day, index) => (
+                <div key={index} className="flex items-center justify-between">
+                  <div className="flex items-center gap-4">
+                    <div className="p-2 bg-primary/10 rounded-full">
+                      <Calendar className="h-4 w-4 text-primary" />
+                    </div>
+                    <div>
+                      <p className="font-medium">
+                        {new Date(day.date).toLocaleDateString()}
+                      </p>
+                      <p className="text-sm text-muted-foreground">
+                        {day.clicks} clicks • {day.conversions} conversions
+                      </p>
+                    </div>
+                  </div>
+                  <div className="text-right">
+                    <p className="font-medium">${day.earnings.toFixed(2)}</p>
+                    <p className="text-sm text-green-600">
+                      +{day.conversions} sales
+                    </p>
+                  </div>
+                </div>
+              ))}
             </div>
           </CardContent>
         </Card>
       </div>
-
       {/* Content Tabs */}
       <Tabs
-        defaultValue="overview"
+        defaultValue="products"
         className="space-y-6"
         onValueChange={setActiveTab}
       >
-        <TabsList>
-          <TabsTrigger value="overview">Overview & Analytics</TabsTrigger>
-          <TabsTrigger value="products">Top Products</TabsTrigger>
-          <TabsTrigger value="withdrawals">Withdraw History</TabsTrigger>
+        <TabsList className="mb-6 ">
+          <TabsTrigger value="products">Products</TabsTrigger>
+          <TabsTrigger value="withdrawals">Withdrawal</TabsTrigger>
         </TabsList>
 
-        <TabsContent value="overview" className="space-y-6">
-          {/* 12 Month Earnings Chart */}
-          <Card>
-            <CardContent className="p-6">
-              <h3 className="text-lg font-semibold mb-4">
-                12 Month Earnings Overview
-              </h3>
-              <div className="h-[300px]">
-                <ResponsiveContainer width="100%" height="100%">
-                  <LineChart data={dashboardData.monthlyEarnings}>
-                    <CartesianGrid
-                      strokeDasharray="3 3"
-                      className="stroke-muted"
-                    />
-                    <XAxis dataKey="month" tickFormatter={formatMonth} />
-                    <YAxis tickFormatter={(value) => `$${value}`} />
-                    <Tooltip
-                      labelFormatter={formatMonth}
-                      formatter={(value) => [`$${value}`, "Earnings"]}
-                    />
-                    <Line
-                      type="monotone"
-                      dataKey="earnings"
-                      stroke="#0088FE"
-                      strokeWidth={2}
-                      dot={{ r: 4 }}
-                      activeDot={{ r: 6 }}
-                    />
-                  </LineChart>
-                </ResponsiveContainer>
-              </div>
-            </CardContent>
-          </Card>
-
-          {/* Clicks and Conversions Chart */}
-          <Card>
-            <CardContent className="p-6">
-              <h3 className="text-lg font-semibold mb-4">
-                Clicks & Conversions
-              </h3>
-              <div className="h-[300px]">
-                <ResponsiveContainer width="100%" height="100%">
-                  <BarChart data={dashboardData.performance.daily}>
-                    <CartesianGrid
-                      strokeDasharray="3 3"
-                      className="stroke-muted"
-                    />
-                    <XAxis
-                      dataKey="date"
-                      tickFormatter={(date) =>
-                        new Date(date).toLocaleDateString()
-                      }
-                    />
-                    <YAxis />
-                    <Tooltip
-                      labelFormatter={(date) =>
-                        new Date(date).toLocaleDateString()
-                      }
-                    />
-                    <Bar dataKey="clicks" fill="#8884d8" name="Clicks" />
-                    <Bar
-                      dataKey="conversions"
-                      fill="#82ca9d"
-                      name="Conversions"
-                    />
-                  </BarChart>
-                </ResponsiveContainer>
-              </div>
-            </CardContent>
-          </Card>
-
-          {/* Sales Distribution Pie Chart */}
-          <Card>
-            <CardContent className="p-6">
-              <h3 className="text-lg font-semibold mb-4">Sales Distribution</h3>
-              <div className="h-[300px]">
-                <ResponsiveContainer width="100%" height="100%">
-                  <PieChart>
-                    <Pie
-                      data={dashboardData.salesDistribution}
-                      cx="50%"
-                      cy="50%"
-                      innerRadius={60}
-                      outerRadius={80}
-                      paddingAngle={5}
-                      dataKey="value"
-                    >
-                      {dashboardData.salesDistribution.map((entry, index) => (
-                        <Cell key={`cell-${index}`} fill={entry.color} />
-                      ))}
-                    </Pie>
-                    <Tooltip
-                      formatter={(value) => [`${value}%`, "Percentage"]}
-                    />
-                    <Legend
-                      verticalAlign="bottom"
-                      height={36}
-                      formatter={(value) => (
-                        <span className="text-sm">{value}</span>
-                      )}
-                    />
-                  </PieChart>
-                </ResponsiveContainer>
-              </div>
-            </CardContent>
-          </Card>
-
-          {/* Recent Activity */}
-          <Card>
-            <CardContent className="p-6">
-              <h3 className="text-lg font-semibold mb-4">Recent Activity</h3>
-              <div className="space-y-4">
-                {dashboardData.performance.daily.slice(-5).map((day, index) => (
-                  <div
-                    key={index}
-                    className="flex items-center justify-between"
-                  >
-                    <div className="flex items-center gap-4">
-                      <div className="p-2 bg-primary/10 rounded-full">
-                        <Calendar className="h-4 w-4 text-primary" />
-                      </div>
-                      <div>
-                        <p className="font-medium">
-                          {new Date(day.date).toLocaleDateString()}
-                        </p>
-                        <p className="text-sm text-muted-foreground">
-                          {day.clicks} clicks • {day.conversions} conversions
-                        </p>
-                      </div>
-                    </div>
-                    <div className="text-right">
-                      <p className="font-medium">${day.earnings.toFixed(2)}</p>
-                      <p className="text-sm text-green-600">
-                        +{day.conversions} sales
-                      </p>
-                    </div>
-                  </div>
-                ))}
-              </div>
-            </CardContent>
-          </Card>
-        </TabsContent>
-
         <TabsContent value="products" className="space-y-6">
+          {/* Search Bar */}
+          <div className="flex items-center gap-4">
+            <div className="relative flex-1 max-w-sm">
+              <Search className="absolute left-2 top-2.5 h-4 w-4 text-muted-foreground" />
+              <Input
+                placeholder="Search products..."
+                value={searchQuery}
+                onChange={(e) => setSearchQuery(e.target.value)}
+                className="pl-8"
+              />
+            </div>
+            {searchQuery && (
+              <Button
+                variant="ghost"
+                size="sm"
+                onClick={() => setSearchQuery("")}
+                className="text-muted-foreground"
+              >
+                Clear
+              </Button>
+            )}
+          </div>
+
           {/* Top Products Table */}
           <Card>
             <CardContent className="p-6">
               <h3 className="text-lg font-semibold mb-4">
-                Top Performing Products
+                Performing Products
               </h3>
-              <Table>
-                <TableHeader>
-                  <TableRow>
-                    <TableHead>Product</TableHead>
-                    <TableHead>Clicks</TableHead>
-                    <TableHead>Conversions</TableHead>
-                    <TableHead>Earnings</TableHead>
-                    <TableHead>Actions</TableHead>
-                  </TableRow>
-                </TableHeader>
-                <TableBody>
-                  {dashboardData.topProducts.map((product) => (
-                    <TableRow key={product.id}>
-                      <TableCell className="font-medium">
-                        {product.name}
-                      </TableCell>
-                      <TableCell>{product.clicks}</TableCell>
-                      <TableCell>{product.conversions}</TableCell>
-                      <TableCell>${product.earnings.toFixed(2)}</TableCell>
-                      <TableCell>
-                        <Button
-                          variant="ghost"
-                          size="sm"
-                          onClick={() =>
-                            handleCopyLink(
-                              `https://example.com/ref/${product.id}`
-                            )
-                          }
-                        >
-                          <Copy className="h-4 w-4 mr-2" />
-                          Copy Link
-                        </Button>
-                      </TableCell>
+              {filteredProducts.length > 0 ? (
+                <Table>
+                  <TableHeader>
+                    <TableRow>
+                      <TableHead>Product</TableHead>
+                      <TableHead>Clicks</TableHead>
+                      <TableHead>Conversions</TableHead>
+                      <TableHead>Earnings</TableHead>
+                      <TableHead>Actions</TableHead>
                     </TableRow>
-                  ))}
-                </TableBody>
-              </Table>
+                  </TableHeader>
+                  <TableBody>
+                    {filteredProducts.map((product) => (
+                      <TableRow key={product.id}>
+                        <TableCell className="font-medium">
+                          {product.name}
+                        </TableCell>
+                        <TableCell>{product.clicks}</TableCell>
+                        <TableCell>{product.conversions}</TableCell>
+                        <TableCell>${product.earnings.toFixed(2)}</TableCell>
+                        <TableCell>
+                          <Button
+                            variant="ghost"
+                            size="sm"
+                            onClick={() =>
+                              handleCopyLink(
+                                `https://example.com/ref/${product.id}`
+                              )
+                            }
+                          >
+                            <Copy className="h-4 w-4 mr-2" />
+                            Copy Link
+                          </Button>
+                        </TableCell>
+                      </TableRow>
+                    ))}
+                  </TableBody>
+                </Table>
+              ) : (
+                <div className="text-center py-8 text-muted-foreground">
+                  No products found matching "{searchQuery}"
+                </div>
+              )}
             </CardContent>
           </Card>
         </TabsContent>
 
         <TabsContent value="withdrawals" className="space-y-6">
           {/* Withdraw Summary Cards */}
+          <div className="flex justify-end mb-6">
+            <Button
+              className="w-full md:w-auto"
+              onClick={() => setIsWithdrawDialogOpen(true)}
+            >
+              <Wallet className="mr-2 h-4 w-4" />
+              Withdraw Earnings
+            </Button>
+          </div>
           <div className="grid grid-cols-1 md:grid-cols-3 gap-6">
             <Card>
               <CardContent className="p-6">
@@ -596,6 +666,13 @@ const AffiliateDashboardPage = () => {
             <DialogTitle>Withdraw Earnings</DialogTitle>
           </DialogHeader>
           <div className="space-y-4">
+            <div className="bg-yellow-50 border border-yellow-200 rounded-lg p-4 text-sm text-yellow-800">
+              <p className="font-medium">Important Notice</p>
+              <p className="mt-1">
+                Withdrawal requests typically take 7 business days to process.
+                Please ensure all your details are correct before submitting.
+              </p>
+            </div>
             <Input
               type="number"
               placeholder="Amount"
@@ -610,7 +687,7 @@ const AffiliateDashboardPage = () => {
               </label>
               <Select
                 value={withdrawMethod}
-                onValueChange={(v) => setWithdrawMethod(v)}
+                onValueChange={(v: "upi" | "bank") => setWithdrawMethod(v)}
               >
                 <SelectTrigger>
                   <SelectValue placeholder="Select method" />

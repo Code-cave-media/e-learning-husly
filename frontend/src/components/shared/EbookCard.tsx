@@ -11,18 +11,19 @@ import {
   DialogTrigger,
 } from "@/components/ui/dialog";
 import { toast } from "sonner";
-
 import { Input } from "@/components/ui/input";
+import { Link as LinkIcon } from "lucide-react";
 
 interface EbookCardProps {
   id: string;
   title: string;
   description: string;
   price: number;
-  coverUrl: string;
+  thumbnail?: string;
   isNew?: boolean;
   isFeatured?: boolean;
   isPurchased?: boolean;
+  isHomePage?: boolean; // Optional prop to indicate if it's on the home page
 }
 
 const EbookCard = ({
@@ -30,10 +31,11 @@ const EbookCard = ({
   title,
   description,
   price,
-  coverUrl,
+  thumbnail,
   isNew = false,
   isFeatured = false,
   isPurchased = false,
+  isHomePage,
 }: EbookCardProps) => {
   const { isAuthenticated } = useAuth();
   const [affiliateLink, setAffiliateLink] = React.useState("");
@@ -51,11 +53,12 @@ const EbookCard = ({
     setTimeout(() => setShowCopied(false), 2000);
     toast.success("Link copied to clipboard!");
   };
+  console.log(isAuthenticated);
   return (
     <Card className="overflow-hidden h-full flex flex-col transition-all hover:shadow-md">
       <div className="relative h-[200px] overflow-hidden bg-gray-100">
         <img
-          src={coverUrl}
+          src={thumbnail}
           alt={title}
           className="w-full h-full object-contain"
         />
@@ -63,14 +66,46 @@ const EbookCard = ({
           {isNew && <span className="tag-new">New</span>}
           {isFeatured && <span className="tag-featured">Featured</span>}
         </div>
+        {isAuthenticated && (
+          <Dialog>
+            <DialogTrigger asChild>
+              <button className="absolute bottom-2 right-2 p-2 bg-gray-100 rounded-full hover:bg-white transition-colors">
+                <LinkIcon className="w-4 h-4 text-gray-600" />
+              </button>
+            </DialogTrigger>
+            <DialogContent>
+              <DialogHeader>
+                <DialogTitle>Generate Affiliate Link</DialogTitle>
+              </DialogHeader>
+              <div className="space-y-4 py-4">
+                <p className="text-sm text-gray-500">
+                  Share this ebook with your audience and earn 30% commission on
+                  each sale.
+                </p>
+                {affiliateLink ? (
+                  <div className="flex items-center space-x-2">
+                    <Input value={affiliateLink} readOnly />
+                    <Button size="sm" onClick={copyAffiliateLink}>
+                      {showCopied ? "Copied!" : "Copy"}
+                    </Button>
+                  </div>
+                ) : (
+                  <Button onClick={createAffiliateLink}>Generate Link</Button>
+                )}
+              </div>
+            </DialogContent>
+          </Dialog>
+        )}
       </div>
       <CardContent className="flex-grow pt-4">
         <h3 className="font-semibold text-lg mb-2 line-clamp-1">{title}</h3>
         <p className="text-gray-600 text-sm line-clamp-2 mb-2">{description}</p>
-        <p className="font-bold text-brand-primary">${price.toFixed(2)}</p>
+        {!isHomePage && (
+          <p className="font-bold text-brand-primary">${price.toFixed(2)}</p>
+        )}
       </CardContent>
-      <CardFooter className="border-t pt-4 pb-4">
-        {isAuthenticated ? (
+      <CardFooter className="border-t pt-0 pb-4">
+        {isAuthenticated && !isHomePage && (
           <>
             {isPurchased ? (
               <Button asChild className="w-full">
@@ -81,38 +116,11 @@ const EbookCard = ({
                 <Link to={`/landing/ebook/${id}`}>Buy</Link>
               </Button>
             )}
-            <Dialog>
-              <DialogTrigger asChild>
-                <Button variant="outline" className="w-full">
-                  Affiliate
-                </Button>
-              </DialogTrigger>
-              <DialogContent>
-                <DialogHeader>
-                  <DialogTitle>Generate Affiliate Link</DialogTitle>
-                </DialogHeader>
-                <div className="space-y-4 py-4">
-                  <p className="text-sm text-gray-500">
-                    Share this course with your audience and earn 30% commission
-                    on each sale.
-                  </p>
-                  {affiliateLink ? (
-                    <div className="flex items-center space-x-2">
-                      <Input value={affiliateLink} readOnly />
-                      <Button size="sm" onClick={copyAffiliateLink}>
-                        {showCopied ? "Copied!" : "Copy"}
-                      </Button>
-                    </div>
-                  ) : (
-                    <Button onClick={createAffiliateLink}>Generate Link</Button>
-                  )}
-                </div>
-              </DialogContent>
-            </Dialog>
           </>
-        ) : (
+        )}
+        {isHomePage && (
           <Button asChild className="w-full">
-            <Link to={`/landing/course/${id}`}>Buy</Link>
+            <Link to={`/landing/ebook/${id}`}>Start your side hustle</Link>
           </Button>
         )}
       </CardFooter>

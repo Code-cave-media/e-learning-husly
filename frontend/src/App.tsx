@@ -27,7 +27,7 @@ import AffiliateProgramPage from "./pages/AffiliateProgramPage";
 import CourseWatchPage from "./pages/userDashboard/CourseWatchPage";
 import EbookViewPage from "./pages/userDashboard/EbookViewPage";
 import { Toaster } from "react-hot-toast";
-import { useEffect } from "react";
+import { useEffect, useState } from "react";
 import AdminDashboard from "./pages/adminDashboard/Dashboard";
 import EbooksManagement from "./pages/adminDashboard/EbooksManagement";
 import CoursesManagement from "./pages/adminDashboard/CoursesManagement";
@@ -40,6 +40,9 @@ import AdminEbookDetailPage from "./pages/adminDashboard/EbookDetailPage";
 import LandingPage from "./pages/Landing";
 import CouponsManagement from "./pages/adminDashboard/CouponsManagement";
 import Checkout from "./pages/Checkout";
+import { useAPICall } from "./hooks/useApiCall";
+import { API_ENDPOINT } from "./config/backend";
+import LearningPage from "./pages/LearningPage";
 
 const queryClient = new QueryClient();
 
@@ -69,9 +72,9 @@ const AdminRoute = ({ children }: { children: React.ReactNode }) => {
 const PublicRoute = ({ children }: { children: React.ReactNode }) => {
   const { isAuthenticated } = useAuth();
 
-  if (isAuthenticated) {
-    return <Navigate to="/user/dashboard" replace />;
-  }
+  // if (isAuthenticated) {
+  //   return <Navigate to="/user/dashboard" replace />;
+  // }
 
   return <>{children}</>;
 };
@@ -83,6 +86,7 @@ const AppRoutes = () => {
     script.async = true;
     document.body.appendChild(script);
   }, []);
+
   return (
     <Routes>
       {/* Public Routes */}
@@ -96,7 +100,7 @@ const AppRoutes = () => {
           </PublicRoute>
         }
       />
-      <Route
+      {/* <Route
         path="/affiliate-program"
         element={
           <PublicRoute>
@@ -105,26 +109,26 @@ const AppRoutes = () => {
             </MainLayout>
           </PublicRoute>
         }
-      />
+      /> */}
       <Route
-        path="/courses"
+        path="/learning"
         element={
           <PublicRoute>
             <MainLayout>
-              <CoursesPage />
+              <LearningPage />
             </MainLayout>
           </PublicRoute>
         }
       />
-      <Route
+      {/* <Route
         path="/course/:id"
         element={
           <MainLayout>
             <CourseDetailPage />
           </MainLayout>
         }
-      />
-      <Route
+      /> */}
+      {/* <Route
         path="/ebooks"
         element={
           <PublicRoute>
@@ -141,7 +145,7 @@ const AppRoutes = () => {
             <EbookDetailPage />
           </MainLayout>
         }
-      />
+      /> */}
       <Route
         path="/login"
         element={
@@ -336,15 +340,45 @@ const AppRoutes = () => {
   );
 };
 
+const UserVerification = ({ children }) => {
+  const { makeApiCall } = useAPICall();
+  const [fetching, setFetching] = useState(false);
+  const { authToken, login } = useAuth();
+  // useEffect(() => {
+
+  //   const checkUser = async () => {
+  //     if(authToken){
+  //       const response = await makeApiCall(
+  //         "GET",
+  //         API_ENDPOINT.VERIFY_USER,
+  //         null,
+  //         "application/json",
+  //         authToken
+  //       );
+  //       if (response.status === 200) {
+  //         const user = response.data;
+  //         login(user);
+  //       }
+  //     }
+  //     setFetching(false);
+  //   };
+  //   checkUser();
+  // }, []);
+  if (fetching) {
+    return <LoadingScreen />;
+  }
+  return <>{children}</>;
+};
 const App = () => (
   <QueryClientProvider client={queryClient}>
     <TooltipProvider>
       <Toaster position="top-center" />
       <AuthProvider>
-        <Router>
-          <LoadingScreen />
-          <AppRoutes />
-        </Router>
+        <UserVerification>
+          <Router>
+            <AppRoutes />
+          </Router>
+        </UserVerification>
       </AuthProvider>
     </TooltipProvider>
   </QueryClientProvider>

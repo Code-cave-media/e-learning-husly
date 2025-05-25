@@ -11,7 +11,7 @@ const mockCourses = [
     title: "Web Development Bootcamp",
     description: "Learn full-stack web development from scratch",
     price: 99.99,
-    imageUrl:
+    thumbnail:
       "https://images.unsplash.com/photo-1498050108023-c5249f4df085?ixlib=rb-4.0.3",
     isNew: true,
     isFeatured: true,
@@ -22,7 +22,7 @@ const mockCourses = [
     title: "Digital Marketing Masterclass",
     description: "Master the art of digital marketing and grow your business",
     price: 79.99,
-    imageUrl:
+    thumbnail:
       "https://images.unsplash.com/photo-1460925895917-afdab827c52f?ixlib=rb-4.0.3",
     isNew: true,
     isFeatured: false,
@@ -33,7 +33,7 @@ const mockCourses = [
     title: "Data Science Fundamentals",
     description: "Learn data science and machine learning basics",
     price: 129.99,
-    imageUrl:
+    thumbnail:
       "https://images.unsplash.com/photo-1551288049-bebda4e38f71?ixlib=rb-4.0.3",
     isNew: false,
     isFeatured: true,
@@ -71,7 +71,7 @@ const DashboardPage = () => {
       </div>
 
       {/* Overview Cards */}
-      <div className="grid grid-cols-1 md:grid-cols-3 gap-6 mb-8">
+      <div className="hidden md:grid grid-cols-1 md:grid-cols-3 gap-6 mb-8">
         <Card>
           <CardHeader className="pb-2">
             <CardTitle className="text-sm text-gray-500 font-medium">
@@ -85,7 +85,7 @@ const DashboardPage = () => {
         <Card>
           <CardHeader className="pb-2">
             <CardTitle className="text-sm text-gray-500 font-medium">
-              Course Progress
+              Training Progress
             </CardTitle>
           </CardHeader>
           <CardContent>
@@ -113,8 +113,8 @@ const DashboardPage = () => {
       >
         <TabsList>
           <TabsTrigger value="all">All</TabsTrigger>
-          <TabsTrigger value="course">My Course</TabsTrigger>
-          <TabsTrigger value="ebook">My EBook</TabsTrigger>
+          <TabsTrigger value="course">My Trainings</TabsTrigger>
+          <TabsTrigger value="ebook">My BluePrints</TabsTrigger>
         </TabsList>
 
         <TabsContent value={activeTab} className="mt-6">

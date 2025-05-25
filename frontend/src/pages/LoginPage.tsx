@@ -10,36 +10,44 @@ import {
 import { Button } from "@/components/ui/button";
 import { Input } from "@/components/ui/input";
 import { Label } from "@/components/ui/label";
-import { toast } from "sonner";
+
 import { useAuth } from "@/contexts/AuthContext";
+import { useAPICall } from "@/hooks/useApiCall";
+import { API_ENDPOINT } from "@/config/backend";
+import { set } from "date-fns";
+import toast from "react-hot-toast";
 
 const LoginPage = () => {
   const navigate = useNavigate();
-  const { isAuthenticated } = useAuth();
+  const { isAuthenticated,login } = useAuth();
+  const {fetching,makeApiCall} = useAPICall()
   const [isLoading, setIsLoading] = useState(false);
   const [formData, setFormData] = useState({
     email: "",
     password: "",
   });
 
-  // Redirect if already authenticated
-  if (isAuthenticated) {
-    return <Navigate to="/user/dashboard" replace />;
-  }
+
 
   const handleSubmit = async (e: React.FormEvent) => {
     e.preventDefault();
     setIsLoading(true);
+    
+      const response = await makeApiCall(
+        "POST",
+        API_ENDPOINT.LOGIN,
+        formData,"application/json"
+      );
+      if(response.status == 200){
+        login(response.data.user,response.data.token);
+        toast.success("Login successful!");
+        navigate("/user/dashboard", { replace: true });
+      }else{
+        toast.error("Login failed! Please check your credentials.");
 
-    try {
-      await login(formData.email, formData.password);
-      toast.success("Login successful!");
-      navigate("/user/dashboard", { replace: true });
-    } catch (error) {
-      toast.error("Login failed. Please check your credentials.");
-    } finally {
+      }
       setIsLoading(false);
-    }
+      
   };
 
   const handleChange = (e: React.ChangeEvent<HTMLInputElement>) => {
