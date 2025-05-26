@@ -35,7 +35,7 @@ def delete_coupon_code(db:Session,coupon_id:int):
 
 def get_coupons(db:Session,page: int = 0):
   skip = (page - 1) * settings.COUPONS_PER_PAGE
-  coupons = db.query(CouponCode).offset(skip).limit(settings.COUPONS_PER_PAGE).all()
+  items = coupons = db.query(CouponCode).offset(skip).limit(settings.COUPONS_PER_PAGE).all()
   total_count = db.query(CouponCode).count()
   total_pages = (total_count + settings.COUPONS_PER_PAGE - 1 ) // settings.COUPONS_PER_PAGE
   serialized_coupons = [CouponCodeResponse.from_orm(coupon).model_dump() for coupon in coupons]

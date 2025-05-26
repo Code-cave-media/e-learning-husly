@@ -3,6 +3,15 @@ from db.base import Base
 from sqlalchemy.orm import relationship
 from .utils import TimestampMixin
 
+class CourseLandingPage(TimestampMixin,Base):
+    __tablename__ = "course_landing_page"
+    id = Column(Integer, primary_key=True, index=True)
+    main_heading = Column(String, nullable=False)
+    sub_heading = Column(String, nullable=False)
+    top_heading = Column(String, nullable=False)
+    highlight_words = Column(String, nullable=False)
+    thumbnail = Column(String, nullable=False)
+    course_id = Column(Integer, ForeignKey("course.id"), unique=True)
 class Course(TimestampMixin,Base):
     __tablename__ = "course"
     id = Column(Integer, primary_key=True, index=True)
@@ -11,8 +20,11 @@ class Course(TimestampMixin,Base):
     price = Column(Float)
     commission = Column(Float)
     visible = Column(Boolean,default=True)
+    intro_video = Column(String)
     thumbnail = Column(String)
     chapters = relationship("CourseChapter", backref="course", cascade="all, delete-orphan")
+    landing_page = relationship("CourseLandingPage", backref="course", uselist=False)
+
 
 class CourseChapter(TimestampMixin,Base):
     __tablename__ = "course_chapter"
@@ -22,7 +34,6 @@ class CourseChapter(TimestampMixin,Base):
     title = Column(String)
     description = Column(String)
     duration = Column(String)
-    visible = Column(Boolean,default=True)
 
 class CouponCode(TimestampMixin,Base):
     __tablename__ = "coupon_code"

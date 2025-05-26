@@ -3,7 +3,8 @@ from sqlalchemy.orm import Session
 from crud import ebook as crud_ebook 
 from schemas.ebook import *
 from db.session import get_db
-
+from models.user import User
+from core.deps import is_admin_user
 router = APIRouter()
 @router.get('/get/{ebook_id}',response_model=EBookResponse)
 async def create_ebook(
@@ -18,7 +19,9 @@ async def create_ebook(
 @router.post('/create',response_model=EBookResponse)
 async def create_ebook(
   db: Session = Depends(get_db),
+  current_user: User = Depends(is_admin_user),
   thumbnail: UploadFile = File(...),
+  type: str = Form(...),
   title: str = Form(...),
   description: str = Form(...),
   author: str = Form(...),
@@ -38,7 +41,7 @@ async def create_ebook(
     "thumbnail":thumbnail_url,
     "pdf":pdf_url,
     "author":author,
-    
+    "type":type
   }
   ebook = crud_ebook.create_ebook(db=db,data=data)
   return ebook

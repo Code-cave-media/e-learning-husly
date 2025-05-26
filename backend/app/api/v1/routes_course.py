@@ -4,9 +4,9 @@ from crud import course as crud_course
 from schemas.course import *
 from db.session import get_db
 from schemas.common import Pagination,PaginationResponse
-
+from core.deps import is_admin_user,get_current_user
 router = APIRouter()
-
+from models.user import User
 @router.get('/get/{course_id}',response_model=CourseResponse)
 async def create_course(
   course_id:str,
@@ -17,26 +17,39 @@ async def create_course(
     raise HTTPException(status_code=404,detail="Course not found")
   return db_course
 
+@router.get('/list',response_model=PaginationResponse[CourseResponse])
+async def list_courses(
+  db: Session = Depends(get_db),
+  data: Pagination = Depends(),
+  current_user: User = Depends(get_current_user)
+): 
+  return crud_course.get_list_of_courses(db,data.page,data.page_size)
+
 @router.post('/create',response_model=CourseResponse)
 async def create_course(
   db: Session = Depends(get_db),
+  current_user:User = Depends(is_admin_user),
   thumbnail: UploadFile | None = File(...),
   title: str = Form(...),
   description: str = Form(...),
   price: float = Form(...),
   commission: float = Form(...),
-  visible: bool = Form(...)
+  visible: bool = Form(...),
+  intro_video: UploadFile  = File(...),
 ):
   thumbnail_url = await crud_course.upload_thumbnail(thumbnail)
+  intro_video_url = await crud_course.upload_intro_video(intro_video)
   data = {
     "title": title,
     "description": description,
     "price": price,
     "commission": commission,
     "visible": visible,
-    "thumbnail":thumbnail_url
+    "thumbnail":thumbnail_url,
+    "intro_video": intro_video_url,
   }
   course = crud_course.create_course(db=db,data=data)
+  db_landing = crud_course.create_landing_page(db,course.id)
   return course
 
 @router.put('/update/{course_id}',response_model=CourseResponse)
@@ -82,7 +95,6 @@ async def create_course_chapter(
   description: str = Form(...),
   title: str = Form(...),
   duration: str = Form(...),
-  visible: bool = Form(...)
 ):
   db_course = crud_course.get_course_by_id(db,course_id)
   if not db_course:
@@ -93,7 +105,6 @@ async def create_course_chapter(
     "description": description,
     "duration": duration,
     "course_id": course_id,
-    "visible": visible,
     "video":video_url
   }
   course_chapter = crud_course.create_course_chapter(db=db,data=data)

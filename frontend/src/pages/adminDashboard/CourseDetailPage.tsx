@@ -40,9 +40,11 @@ interface Chapter {
   id: number;
   title: string;
   description: string;
+  duration: number;
   video: File | null;
   videoUrl: string;
-  duration: number;
+  pdf: File | null;
+  pdfUrl: string;
 }
 
 interface Instructor {
@@ -63,10 +65,8 @@ interface Course {
   type: string;
   title: string;
   description: string;
-  total_hours: number;
-  level: string;
-  commission: number;
   price: number;
+  commission: number;
   thumbnail: File | null;
   thumbnailUrl: string;
   introVideo: File | null;
@@ -255,9 +255,11 @@ export default function CourseDetailPage() {
       id: (course?.chapters.length || 0) + 1,
       title: newChapter.title,
       description: newChapter.description || "",
+      duration: newChapter.duration || 0,
       video: newChapter.video,
       videoUrl: newChapter.videoUrl || "",
-      duration: newChapter.duration || 0,
+      pdf: newChapter.pdf,
+      pdfUrl: newChapter.pdfUrl || "",
     };
 
     setCourse((prev) => ({
@@ -329,10 +331,8 @@ export default function CourseDetailPage() {
       type: "Digital Marketing",
       title: "Digital Marketing Masterclass",
       description: "Learn digital marketing from scratch",
-      total_hours: 20,
-      level: "Beginner to Advanced",
-      commission: 10,
       price: 4999,
+      commission: 10,
       thumbnail: null,
       thumbnailUrl:
         "https://images.unsplash.com/photo-1552664730-d307ca884978?q=80&w=2070&auto=format&fit=crop",
@@ -346,69 +346,36 @@ export default function CourseDetailPage() {
           title: "Introduction to Digital Marketing",
           description:
             "Learn the fundamentals of digital marketing and its importance in today's business landscape.",
+          duration: 45,
           video: null,
           videoUrl: "",
-          duration: 45,
+          pdf: null,
+          pdfUrl: "",
         },
         {
           id: 2,
           title: "Search Engine Optimization (SEO)",
           description:
             "Master the art of optimizing your website for search engines and driving organic traffic.",
-          video: null,
-          videoUrl: "",
           duration: 60,
-        },
-        {
-          id: 3,
-          title: "Social Media Marketing",
-          description:
-            "Create and execute effective social media strategies across different platforms.",
           video: null,
           videoUrl: "",
-          duration: 75,
-        },
-        {
-          id: 4,
-          title: "Content Marketing",
-          description:
-            "Learn how to create engaging content that resonates with your target audience.",
-          video: null,
-          videoUrl: "",
-          duration: 90,
-        },
-        {
-          id: 5,
-          title: "Email Marketing",
-          description:
-            "Build and manage email campaigns that convert subscribers into customers.",
-          video: null,
-          videoUrl: "",
-          duration: 60,
+          pdf: null,
+          pdfUrl: "",
         },
       ],
       instructor: {
         id: 1,
         name: "John Doe",
         position: "Digital Marketing Expert",
-        description:
-          "10+ years of experience in digital marketing, specializing in SEO and social media strategy. Former marketing director at TechCorp and founder of DigitalGrowth Academy.",
-        image_url: "https://example.com/instructor.jpg",
+        description: "10+ years of experience in digital marketing",
+        image_url: "https://example.com/author.jpg",
       },
       learning_points: [
-        { id: 1, text: "Understand the core principles of digital marketing" },
-        { id: 2, text: "Master SEO techniques to improve website visibility" },
-        { id: 3, text: "Create effective social media marketing campaigns" },
-        { id: 4, text: "Develop engaging content marketing strategies" },
-        {
-          id: 5,
-          text: "Build and manage successful email marketing campaigns",
-        },
-        { id: 6, text: "Analyze and optimize marketing performance" },
-        { id: 7, text: "Create a comprehensive digital marketing plan" },
-        { id: 8, text: "Understand and implement marketing automation" },
+        { id: 1, text: "Understand digital marketing fundamentals" },
+        { id: 2, text: "Master SEO techniques" },
       ],
-      duration: "20 hours",
+      duration: "2 hours",
       originalPrice: 9999,
       isPurchased: false,
     });
@@ -442,15 +409,11 @@ export default function CourseDetailPage() {
               <div className="flex items-center gap-6">
                 <div className="flex items-center gap-2">
                   <Clock className="w-5 h-5 text-primary" />
-                  <span>{course.total_hours} hours</span>
-                </div>
-                <div className="flex items-center gap-2">
-                  <FileText className="w-5 h-5 text-primary" />
-                  <span>{course.level}</span>
+                  <span>{course.duration}</span>
                 </div>
               </div>
               <Button size="lg" className="bg-primary hover:bg-primary/90">
-               <PlayCircle className="w-5 h-5 mr-2" /> 
+                <PlayCircle className="w-5 h-5 mr-2" />
                 Watch Course
               </Button>
             </div>
@@ -851,9 +814,9 @@ export default function CourseDetailPage() {
                           />
                         </div>
                         <div>
-                          <Label>Course Level</Label>
+                          <Label>Duration</Label>
                           <Input
-                            value={editedCourse?.level}
+                            value={editedCourse?.duration}
                             readOnly
                             className="bg-gray-50"
                           />
@@ -862,19 +825,19 @@ export default function CourseDetailPage() {
 
                       <div className="grid grid-cols-2 gap-4">
                         <div>
-                          <Label>Total Hours</Label>
+                          <Label>Price</Label>
                           <Input
                             type="number"
-                            value={editedCourse?.total_hours}
+                            value={editedCourse?.price}
                             readOnly
                             className="bg-gray-50"
                           />
                         </div>
                         <div>
-                          <Label>Price</Label>
+                          <Label>Original Price</Label>
                           <Input
                             type="number"
-                            value={editedCourse?.price}
+                            value={editedCourse?.originalPrice}
                             readOnly
                             className="bg-gray-50"
                           />
@@ -958,6 +921,20 @@ export default function CourseDetailPage() {
               />
             </div>
             <div>
+              <Label>Duration (minutes)</Label>
+              <Input
+                type="number"
+                value={newChapter.duration || ""}
+                onChange={(e) =>
+                  setNewChapter({
+                    ...newChapter,
+                    duration: parseInt(e.target.value),
+                  })
+                }
+                placeholder="Enter duration in minutes"
+              />
+            </div>
+            <div>
               <Label>Video</Label>
               <Input
                 type="file"
@@ -974,17 +951,21 @@ export default function CourseDetailPage() {
               )}
             </div>
             <div>
-              <Label>Duration (minutes)</Label>
+              <Label>PDF (Optional)</Label>
               <Input
-                type="number"
-                value={newChapter.duration || ""}
-                onChange={(e) =>
-                  setNewChapter({
-                    ...newChapter,
-                    duration: parseInt(e.target.value),
-                  })
-                }
-                placeholder="Enter duration in minutes"
+                type="file"
+                accept=".pdf"
+                onChange={(e) => {
+                  const file = e.target.files?.[0];
+                  if (file) {
+                    setNewChapter({
+                      ...newChapter,
+                      pdf: file,
+                      pdfUrl: URL.createObjectURL(file),
+                    });
+                  }
+                }}
+                className="cursor-pointer"
               />
             </div>
           </div>

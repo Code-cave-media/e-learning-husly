@@ -1,6 +1,6 @@
 from fastapi import APIRouter,Depends,HTTPException
 from sqlalchemy.orm import Session
-from schemas.user import LoginRequest,Token,UserCreate,UserResponse
+from schemas.user import *
 from crud import user as crud_user
 from core.security import create_access_token
 from core.deps import get_current_user,is_admin_user
@@ -17,14 +17,13 @@ def register(user_in:UserCreate,db:Session=Depends(get_db)):
   crud_user.create_affiliate_account(db,db_user.id)
   return db_user
 
-@router.post('/login',response_model=Token)
+@router.post('/login',response_model=LoginResponse)
 def login(request:LoginRequest,db:Session=Depends(get_db)):
   user = crud_user.get_user_by_email(db,request.email)
-  print(crud_user.verify_password(request.password,user.password))
   if not user or not crud_user.verify_password(request.password,user.password):
     raise HTTPException(status_code=400,detail="Invalid credentials")
   token = create_access_token(data={'sub':user.email})
-  return {'access_token':token,'user_id':user.user_id }
+  return {'token':token,'user':UserResponse.from_orm(user)} 
 
 @router.get('/me',response_model=UserResponse)
 def verify_user(current_user:User=Depends(get_current_user)):

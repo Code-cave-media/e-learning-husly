@@ -10,23 +10,26 @@ interface AuthContextType {
   authToken: string | null;
   user: IUser;
   login: (user: IUser, token?: string) => void;
+  loading: boolean;
+  setLoading: (loading: boolean) => void;
 }
 
 const AuthContext = createContext<AuthContextType | undefined>(undefined);
 
 export const AuthProvider = ({ children }: { children: React.ReactNode }) => {
-  const [isAuthenticated, setIsAuthenticated] = useState(true);
-  const [isAdmin, setIsAdmin] = useState(true);
+  const [isAuthenticated, setIsAuthenticated] = useState(false);
+  const [isAdmin, setIsAdmin] = useState(false);
   const [user, setUser] = useState<IUser | null>(null);
   const [authToken, setAuthToken] = useState<string | null>(null);
-  const [loading, setLoading] = useState(true);
+  const [loading, setLoading] = useState(false);
+  const [isCheckedToken, setIsCheckedToken] = useState(false);
 
   useEffect(() => {
     const token = localStorage.getItem("auth_token");
     if (token) {
       setAuthToken(token);
     }
-    setLoading(false);
+    setIsCheckedToken(true);
   }, []);
   const verifyUser = (user: IUser) => {
     setUser(user);
@@ -48,8 +51,12 @@ export const AuthProvider = ({ children }: { children: React.ReactNode }) => {
     setIsAdmin(false);
   };
 
-  if (loading) {
-    return <Loading />;
+  if (!isCheckedToken) {
+    return (
+      <div className="flex items-center justify-center h-screen">
+        <Loading />
+      </div>
+    );
   }
   return (
     <AuthContext.Provider
@@ -61,8 +68,15 @@ export const AuthProvider = ({ children }: { children: React.ReactNode }) => {
         authToken,
         user,
         login,
+        loading,
+        setLoading,
       }}
     >
+      {loading && (
+        <div className="fixed w-full h-full inset-0 flex items-center justify-center bg-black bg-opacity-50 z-[100]">
+          <Loading />
+        </div>
+      )}
       {children}
     </AuthContext.Provider>
   );

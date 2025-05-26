@@ -17,7 +17,7 @@ def create_user(db:Session,user:UserCreate,is_hashed_pw=False):
   else:
     hashed_pw = user.password
   user_id = create_user_id(db)
-  db_user = User(email=user.email,password=hashed_pw,user_id=user_id)
+  db_user = User(email=user.email,password=hashed_pw,user_id=user_id,name=user.name,phone=user.phone)
   db.add(db_user)
   db.commit()
   db.refresh(db_user)
@@ -62,7 +62,7 @@ def short_uuid(length=15):
     return base64.urlsafe_b64encode(uid.bytes).decode('utf-8').rstrip('=')[:length]
 
 def create_affiliate_account(db:Session,user_id:int):
-  db_account =  db.query(AffiliateAccount).filter(balance=0,user_id=user_id)
+  db_account =  AffiliateAccount(balance=0,user_id=user_id)
   db.add(db_account)
   db.commit()
   db.refresh(db_account)

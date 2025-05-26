@@ -3,23 +3,29 @@ import uuid
 import os
 from core.config import settings
 from fastapi import UploadFile 
-
-async def upload_file(file:UploadFile,folder):
+from lib.boto3 import upload_to_space, delete_from_space
+async def upload_file(file: UploadFile, folder: str) -> str:
     filename = f"{uuid.uuid4().hex}_{file.filename}"
-    
-    save_dir = os.path.join(settings.MEDIA_PATH, folder)
-    os.makedirs(save_dir, exist_ok=True)
+    return upload_to_space(folder,filename, await file.read())
 
-    file_path = os.path.join(save_dir, filename)
+async def delete_file(file_url: str):
+    if file_url:
+        return delete_from_space(file_url)
+    return True
 
-    with open(file_path, "wb") as buffer:
-        buffer.write(await file.read())
+def to_pagination_response(
+    query,
+    schema,
+    page: int,
+    page_size: int,
+):
+    skip = (page - 1) * page_size
+    total_count = query.count()
+    items = query.offset(skip).limit(page_size).all()
 
-    relative_path = os.path.join(folder, filename)
-    file_path = f"{relative_path.replace(os.sep, '/')}"
-    return file_path
-
-async def delete_file(path):
-    full_path = os.path.join(settings.MEDIA_PATH, path.strip("/"))
-    if os.path.exists(full_path):
-        os.remove(full_path)
+    return {
+        "has_prev":page > 1,
+        "has_next":(page * page_size) < total_count,
+        "total":total_count,
+        "items":[schema.from_orm(item) for item in items]
+    }

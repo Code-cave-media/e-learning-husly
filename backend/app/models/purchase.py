@@ -42,3 +42,6 @@ class TransactionProcessing(TimestampMixin, Base):
     user_id = Column(Integer)
     is_new_user = Column(Boolean)
     amount = Column(String)
+    discount = Column(String)
+    coupon_code = Column(String)
+    coupon_type = Column(String)

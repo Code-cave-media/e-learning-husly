@@ -1,13 +1,17 @@
 from sqlalchemy.orm import Session
-from models.course import Course,CourseChapter
+from models.course import Course,CourseChapter,CourseLandingPage
 from fastapi import UploadFile 
 from core.config import settings
 import uuid
 import os
 from core.config import settings
 from .utils import *
+from schemas.course import CourseResponse
 async def upload_thumbnail(file: UploadFile):
     folder = "course/thumbnail"
+    return await upload_file(file,folder)
+async def upload_intro_video(file: UploadFile):
+    folder = "course/intro"
     return await upload_file(file,folder)
 
 async def upload_video(file: UploadFile):
@@ -21,6 +25,9 @@ def get_course_by_id(db:Session,course_id:int):
 def get_course_chapter_by_id(db:Session,course_chapter_id:int):
     return db.query(CourseChapter).filter(CourseChapter.id==course_chapter_id).first()
 
+def get_list_of_courses(db:Session,page:int=1,limit:int=10):
+    query = db.query(Course).order_by(Course.created_at.desc())
+    return to_pagination_response(query,CourseResponse,page,limit)
 
 def create_course(db:Session,data:dict):
     db_course = Course(**data)
@@ -82,8 +89,10 @@ def delete_course_chapter(db:Session,db_course_course:CourseChapter):
     db.commit()
     return {'detail':"Course Chapter deleted successfully"}
 
-
-
-
-
+def create_landing_page(db:Session,course_id:int):
+    db_landing = CourseLandingPage(main_heading="",sub_heading="",top_heading="",highlight_words="",thumbnail="",course_id=course_id)
+    db.add(db_landing)
+    db.commit() 
+    db.refresh(db_landing)
+    return db_landing
 

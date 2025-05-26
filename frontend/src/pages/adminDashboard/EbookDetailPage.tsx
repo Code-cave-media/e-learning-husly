@@ -26,14 +26,14 @@ import {
 import { Input } from "@/components/ui/input";
 import { Textarea } from "@/components/ui/textarea";
 import { Label } from "@/components/ui/label";
+import { Checkbox } from "@/components/ui/checkbox";
 
 import { Switch } from "@/components/ui/switch";
 import { formatCurrency } from "@/lib/utils";
 
-interface Chapter {
+interface TableOfContent {
   id: number;
   title: string;
-  description: string;
   pageNumber: number;
 }
 
@@ -55,17 +55,14 @@ interface Ebook {
   type: string;
   title: string;
   description: string;
-  numberOfPages: number;
-  commission: number;
   price: number;
+  commission: number;
   thumbnail: File | null;
   thumbnailUrl: string;
   introVideo: File | null;
   introVideoUrl: string;
-  ebookFile: File | null;
-  ebookFileUrl: string;
   visible: boolean;
-  chapters: Chapter[];
+  tableOfContents: TableOfContent[];
   author: Author;
   learning_points: LearningPoint[];
   originalPrice: number;
@@ -81,7 +78,7 @@ export default function EbookDetailPage() {
   const [ebook, setEbook] = useState<Ebook | null>(null);
   const [isChapterDialogOpen, setIsChapterDialogOpen] = useState(false);
   const [isAuthorDialogOpen, setIsAuthorDialogOpen] = useState(false);
-  const [newChapter, setNewChapter] = useState<Partial<Chapter>>({});
+  const [newChapter, setNewChapter] = useState<Partial<TableOfContent>>({});
   const [newAuthor, setNewAuthor] = useState<Partial<Author>>({});
   const [newLearningPoint, setNewLearningPoint] = useState("");
   const [isEditMode, setIsEditMode] = useState(false);
@@ -97,7 +94,9 @@ export default function EbookDetailPage() {
   >(null);
   const [editingLearningPoint, setEditingLearningPoint] = useState("");
   const [editingChapterId, setEditingChapterId] = useState<number | null>(null);
-  const [editingChapter, setEditingChapter] = useState<Chapter | null>(null);
+  const [editingChapter, setEditingChapter] = useState<TableOfContent | null>(
+    null
+  );
   const [editingAuthorId, setEditingAuthorId] = useState<number | null>(null);
   const [editingAuthor, setEditingAuthor] = useState<Author | null>(null);
 
@@ -142,7 +141,7 @@ export default function EbookDetailPage() {
       case "chapter":
         setEditedEbook({
           ...editedEbook,
-          chapters: editedEbook.chapters.filter(
+          tableOfContents: editedEbook.tableOfContents.filter(
             (c) => c.id !== itemToDelete.id
           ),
         });
@@ -165,8 +164,6 @@ export default function EbookDetailPage() {
       case "ebook":
         setEditedEbook({
           ...editedEbook,
-          ebookFile: null,
-          ebookFileUrl: "",
         });
         break;
     }
@@ -176,59 +173,69 @@ export default function EbookDetailPage() {
     toast.success("Item deleted successfully");
   };
 
-  const handleThumbnailChange = (e: React.ChangeEvent<HTMLInputElement>) => {
+  const handleFileChange = (e: React.ChangeEvent<HTMLInputElement>) => {
     const file = e.target.files?.[0];
-    if (file && editedEbook) {
-      setEditedEbook({
-        ...editedEbook,
-        thumbnail: file,
-        thumbnailUrl: URL.createObjectURL(file),
-      });
-    }
-  };
-
-  const handleIntroVideoChange = (e: React.ChangeEvent<HTMLInputElement>) => {
-    const file = e.target.files?.[0];
-    if (file && editedEbook) {
-      setEditedEbook({
-        ...editedEbook,
-        introVideo: file,
-        introVideoUrl: URL.createObjectURL(file),
-      });
-    }
-  };
-
-  const handleEbookFileChange = (e: React.ChangeEvent<HTMLInputElement>) => {
-    const file = e.target.files?.[0];
-    if (file && editedEbook) {
-      setEditedEbook({
-        ...editedEbook,
-        ebookFile: file,
-        ebookFileUrl: URL.createObjectURL(file),
-      });
+    if (file) {
+      if (e.target.name === "thumbnail") {
+        setEditedEbook({
+          ...editedEbook,
+          thumbnail: file,
+          thumbnailUrl: URL.createObjectURL(file),
+        });
+      } else if (e.target.name === "introVideo") {
+        setEditedEbook({
+          ...editedEbook,
+          introVideo: file,
+          introVideoUrl: URL.createObjectURL(file),
+        });
+      }
     }
   };
 
   const handleAddChapter = () => {
     if (!newChapter.title || !newChapter.pageNumber) {
-      toast.error("Please fill in all required fields");
       return;
     }
 
-    const chapter: Chapter = {
-      id: (ebook?.chapters.length || 0) + 1,
+    const chapter: TableOfContent = {
+      id: (ebook?.tableOfContents.length || 0) + 1,
       title: newChapter.title,
-      description: newChapter.description || "",
       pageNumber: newChapter.pageNumber || 0,
     };
 
     setEbook((prev) => ({
       ...prev!,
-      chapters: [...(prev?.chapters || []), chapter],
+      tableOfContents: [...(prev?.tableOfContents || []), chapter],
     }));
     setIsChapterDialogOpen(false);
     setNewChapter({});
-    toast.success("Chapter added successfully");
+  };
+
+  const handleEditChapter = (chapter: TableOfContent) => {
+    setEditingChapter(chapter);
+    setEditingChapterId(chapter.id);
+  };
+
+  const handleUpdateChapter = () => {
+    if (!editingChapter || !editingChapterId) return;
+
+    setEditedEbook({
+      ...editedEbook,
+      tableOfContents: editedEbook.tableOfContents.map((c) =>
+        c.id === editingChapterId ? editingChapter : c
+      ),
+    });
+    setEditingChapter(null);
+    setEditingChapterId(null);
+  };
+
+  const handleDeleteChapter = (chapter: TableOfContent) => {
+    setEditedEbook({
+      ...editedEbook,
+      tableOfContents: editedEbook.tableOfContents.filter(
+        (c) => c.id !== chapter.id
+      ),
+    });
   };
 
   const handleUpdateAuthor = () => {
@@ -281,53 +288,25 @@ export default function EbookDetailPage() {
       type: "Digital Marketing",
       title: "Digital Marketing Masterclass",
       description: "Learn digital marketing from scratch",
-      numberOfPages: 250,
-      commission: 10,
       price: 4999,
+      commission: 10,
       thumbnail: null,
       thumbnailUrl:
         "https://images.unsplash.com/photo-1552664730-d307ca884978?q=80&w=2070&auto=format&fit=crop",
       introVideo: null,
       introVideoUrl:
         "https://storage.googleapis.com/gtv-videos-bucket/sample/BigBuckBunny.mp4",
-      ebookFile: null,
-      ebookFileUrl: "",
       visible: true,
-      chapters: [
+      tableOfContents: [
         {
           id: 1,
           title: "Introduction to Digital Marketing",
-          description:
-            "Learn the fundamentals of digital marketing and its importance in today's business landscape.",
           pageNumber: 1,
         },
         {
           id: 2,
           title: "Search Engine Optimization (SEO)",
-          description:
-            "Master the art of optimizing your website for search engines and driving organic traffic.",
           pageNumber: 45,
-        },
-        {
-          id: 3,
-          title: "Social Media Marketing",
-          description:
-            "Create and execute effective social media strategies across different platforms.",
-          pageNumber: 89,
-        },
-        {
-          id: 4,
-          title: "Content Marketing",
-          description:
-            "Learn how to create engaging content that resonates with your target audience.",
-          pageNumber: 132,
-        },
-        {
-          id: 5,
-          title: "Email Marketing",
-          description:
-            "Build and manage email campaigns that convert subscribers into customers.",
-          pageNumber: 175,
         },
       ],
       author: {
@@ -381,10 +360,10 @@ export default function EbookDetailPage() {
               <p className="text-xl text-muted-foreground">
                 {ebook.description}
               </p>
-              <div>
+              <div className="flex items-center gap-4 text-sm text-muted-foreground">
                 <div className="flex items-center gap-2">
                   <BookOpen className="w-5 h-5 text-primary" />
-                  <span>{ebook.numberOfPages} Pages</span>
+                  <span>{ebook.tableOfContents.length} Pages</span>
                 </div>
               </div>
               <Button size="lg" className="bg-primary hover:bg-primary/90">
@@ -427,9 +406,10 @@ export default function EbookDetailPage() {
                   <Input
                     type="file"
                     accept="image/*"
-                    onChange={handleThumbnailChange}
+                    onChange={handleFileChange}
                     className="hidden"
                     id="thumbnail-upload"
+                    name="thumbnail"
                   />
                   <Label
                     htmlFor="thumbnail-upload"
@@ -442,30 +422,16 @@ export default function EbookDetailPage() {
                   <Input
                     type="file"
                     accept="video/*"
-                    onChange={handleIntroVideoChange}
+                    onChange={handleFileChange}
                     className="hidden"
                     id="intro-video-upload"
+                    name="introVideo"
                   />
                   <Label
                     htmlFor="intro-video-upload"
                     className="cursor-pointer bg-primary text-white px-4 py-2 rounded inline-flex items-center gap-2"
                   >
                     {ebook.introVideoUrl ? "Change Intro" : "Add Intro"}
-                  </Label>
-                </div>
-                <div>
-                  <Input
-                    type="file"
-                    accept=".pdf,.epub"
-                    onChange={handleEbookFileChange}
-                    className="hidden"
-                    id="ebook-upload"
-                  />
-                  <Label
-                    htmlFor="ebook-upload"
-                    className="cursor-pointer bg-primary text-white px-4 py-2 rounded inline-flex items-center gap-2"
-                  >
-                    {ebook.ebookFileUrl ? "Change Ebook" : "Add Ebook"}
                   </Label>
                 </div>
               </div>
@@ -576,7 +542,7 @@ export default function EbookDetailPage() {
                 </Button>
               </div>
               <div className="space-y-4">
-                {ebook.chapters.map((chapter) => (
+                {ebook.tableOfContents.map((chapter) => (
                   <Card key={chapter.id} className="p-4">
                     <div className="flex items-center justify-between">
                       <div className="flex-1">
@@ -592,16 +558,6 @@ export default function EbookDetailPage() {
                               }
                               placeholder="Chapter title"
                             />
-                            <Textarea
-                              value={editingChapter.description}
-                              onChange={(e) =>
-                                setEditingChapter({
-                                  ...editingChapter,
-                                  description: e.target.value,
-                                })
-                              }
-                              placeholder="Chapter description"
-                            />
                             <div className="flex gap-2">
                               <Input
                                 type="number"
@@ -615,19 +571,7 @@ export default function EbookDetailPage() {
                                 placeholder="Page number"
                                 className="w-32"
                               />
-                              <Button
-                                onClick={() => {
-                                  if (editedEbook) {
-                                    setEditedEbook({
-                                      ...editedEbook,
-                                      chapters: editedEbook.chapters.map((c) =>
-                                        c.id === chapter.id ? editingChapter : c
-                                      ),
-                                    });
-                                    setEditingChapterId(null);
-                                  }
-                                }}
-                              >
+                              <Button onClick={handleUpdateChapter}>
                                 Save Changes
                               </Button>
                               <Button
@@ -641,9 +585,6 @@ export default function EbookDetailPage() {
                         ) : (
                           <>
                             <h4 className="font-semibold">{chapter.title}</h4>
-                            <p className="text-sm text-muted-foreground">
-                              {chapter.description}
-                            </p>
                             <div className="flex items-center gap-4 mt-2">
                               <span className="text-sm text-muted-foreground">
                                 Page {chapter.pageNumber}
@@ -659,8 +600,7 @@ export default function EbookDetailPage() {
                               variant="ghost"
                               size="sm"
                               onClick={() => {
-                                setEditingChapterId(chapter.id);
-                                setEditingChapter(chapter);
+                                handleEditChapter(chapter);
                               }}
                             >
                               <Pencil className="h-4 w-4" />
@@ -807,19 +747,6 @@ export default function EbookDetailPage() {
                         />
                       </div>
                       <div>
-                        <Label>Number of Pages</Label>
-                        <Input
-                          type="number"
-                          value={editedEbook?.numberOfPages}
-                          onChange={(e) =>
-                            handleTextChange(
-                              "numberOfPages",
-                              parseInt(e.target.value)
-                            )
-                          }
-                        />
-                      </div>
-                      <div>
                         <Label>Price</Label>
                         <Input
                           type="number"
@@ -901,17 +828,7 @@ export default function EbookDetailPage() {
                 onChange={(e) =>
                   setNewChapter({ ...newChapter, title: e.target.value })
                 }
-                placeholder="Enter chapter title"
-              />
-            </div>
-            <div>
-              <Label>Description</Label>
-              <Textarea
-                value={newChapter.description || ""}
-                onChange={(e) =>
-                  setNewChapter({ ...newChapter, description: e.target.value })
-                }
-                placeholder="Enter chapter description"
+                placeholder="Enter content title"
               />
             </div>
             <div>
@@ -936,7 +853,7 @@ export default function EbookDetailPage() {
             >
               Cancel
             </Button>
-            <Button onClick={handleAddChapter}>Add Table Content</Button>
+            <Button onClick={handleAddChapter}>Add Content</Button>
           </DialogFooter>
         </DialogContent>
       </Dialog>

@@ -1,10 +1,14 @@
 from pydantic import BaseModel
+from typing import Generic, List, TypeVar, Optional
 from typing import Any,List
+from pydantic.generics import GenericModel
+T = TypeVar("T")
 class Pagination(BaseModel):
   page : int
+  page_size: int
 
-class PaginationResponse(BaseModel):
+class PaginationResponse(GenericModel, Generic[T]):
   has_next:bool
   has_prev:bool
   total:int
-  data:List[Any]
+  items:List[T]

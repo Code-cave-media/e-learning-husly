@@ -6,6 +6,7 @@ import {
   Routes,
   Route,
   Navigate,
+  useNavigate,
 } from "react-router-dom";
 import MainLayout from "./components/layout/MainLayout";
 import DashboardLayout from "./components/layout/DashboardLayout";
@@ -43,6 +44,10 @@ import Checkout from "./pages/Checkout";
 import { useAPICall } from "./hooks/useApiCall";
 import { API_ENDPOINT } from "./config/backend";
 import LearningPage from "./pages/LearningPage";
+import { ConfirmDialog } from "primereact/confirmdialog";
+import "primereact/resources/themes/lara-light-cyan/theme.css";
+import "primereact/resources/primereact.min.css"; // Required base CSS
+import "primeicons/primeicons.css"; // Required for icons
 
 const queryClient = new QueryClient();
 
@@ -341,29 +346,32 @@ const AppRoutes = () => {
 };
 
 const UserVerification = ({ children }) => {
+  const navigate = useNavigate();
   const { makeApiCall } = useAPICall();
   const [fetching, setFetching] = useState(false);
   const { authToken, login } = useAuth();
-  // useEffect(() => {
-
-  //   const checkUser = async () => {
-  //     if(authToken){
-  //       const response = await makeApiCall(
-  //         "GET",
-  //         API_ENDPOINT.VERIFY_USER,
-  //         null,
-  //         "application/json",
-  //         authToken
-  //       );
-  //       if (response.status === 200) {
-  //         const user = response.data;
-  //         login(user);
-  //       }
-  //     }
-  //     setFetching(false);
-  //   };
-  //   checkUser();
-  // }, []);
+  useEffect(() => {
+    const checkUser = async () => {
+      if (authToken) {
+        const response = await makeApiCall(
+          "GET",
+          API_ENDPOINT.VERIFY_USER,
+          null,
+          "application/json",
+          authToken
+        );
+        if (response.status === 200) {
+          const user = response.data;
+          login(user);
+        } else {
+          // navigate("/login");
+          return;
+        }
+      }
+      setFetching(false);
+    };
+    checkUser();
+  }, []);
   if (fetching) {
     return <LoadingScreen />;
   }
@@ -374,11 +382,12 @@ const App = () => (
     <TooltipProvider>
       <Toaster position="top-center" />
       <AuthProvider>
-        <UserVerification>
-          <Router>
+        <Router>
+          <UserVerification>
+            <ConfirmDialog draggable={false} />
             <AppRoutes />
-          </Router>
-        </UserVerification>
+          </UserVerification>
+        </Router>
       </AuthProvider>
     </TooltipProvider>
   </QueryClientProvider>

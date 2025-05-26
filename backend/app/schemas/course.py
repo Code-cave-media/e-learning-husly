@@ -10,14 +10,21 @@ class CourseChapterResponse(BaseModel):
   title :str
   description :str
   duration :str
-  visible :bool
   created_at:datetime
   updated_at:datetime
-  @root_validator(pre=True)
-  def def_full_thumbnail_url(cls,instance):
-    setattr(instance,'video',absolute_media_url(instance.video))
-    return instance
 
+  class Config:
+    orm_mode = True
+
+class LandingPageResponse(BaseModel):
+  id: int
+  main_heading: str
+  sub_heading: str
+  top_heading: str
+  highlight_words: str
+  thumbnail: str
+  class Config:
+    orm_mode = True
 class CourseResponse(BaseModel):
   id: int
   title : str
@@ -27,20 +34,25 @@ class CourseResponse(BaseModel):
   visible : bool
   thumbnail:str
   chapters: List[CourseChapterResponse] = []
+  landing_page: LandingPageResponse
   created_at:datetime
   updated_at:datetime
-  @root_validator(pre=True)
-  def def_full_thumbnail_url(cls,instance):
-    setattr(instance,'thumbnail',absolute_media_url(instance.thumbnail))
-    return instance
+  intro_video: str | None = None
+  class Config:
+    orm_mode = True
 
-class CourseCreate(BaseModel):
-  title : str
-  description : str
-  price : float
-  commission : float
-  visible : bool
-  thumbnail:str
+
+
+class CourseChapterResponse(BaseModel):
+    id: int
+    course_id: int
+    video: str
+    title: str
+    description: str
+    duration: str
+
+    class Config:
+        orm_mode = True
 
 class EBookResponse(BaseModel):
     id: int
