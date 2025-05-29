@@ -34,6 +34,7 @@ class CourseChapter(TimestampMixin,Base):
     title = Column(String)
     description = Column(String)
     duration = Column(String)
+    pdf = Column(String, nullable=True)
 
 class CouponCode(TimestampMixin,Base):
     __tablename__ = "coupon_code"

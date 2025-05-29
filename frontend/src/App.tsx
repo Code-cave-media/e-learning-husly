@@ -7,6 +7,7 @@ import {
   Route,
   Navigate,
   useNavigate,
+  useLocation,
 } from "react-router-dom";
 import MainLayout from "./components/layout/MainLayout";
 import DashboardLayout from "./components/layout/DashboardLayout";
@@ -65,26 +66,27 @@ const ProtectedRoute = ({ children }: { children: React.ReactNode }) => {
 // Admin Route component
 const AdminRoute = ({ children }: { children: React.ReactNode }) => {
   const { isAuthenticated, isAdmin } = useAuth();
-
-  if (!isAuthenticated || !isAdmin) {
+  if (!isAuthenticated) {
+    return <Navigate to="/" replace />;
+  }
+  if (!isAdmin) {
     return <Navigate to="/user/dashboard" replace />;
   }
-
   return <>{children}</>;
 };
 
 // Public Route component - redirects to dashboard if authenticated
 const PublicRoute = ({ children }: { children: React.ReactNode }) => {
   const { isAuthenticated } = useAuth();
-
-  // if (isAuthenticated) {
-  //   return <Navigate to="/user/dashboard" replace />;
-  // }
-
+  const pathname = useLocation().pathname;
+  if (isAuthenticated) {
+    return <Navigate to="/user/dashboard" replace />;
+  }
   return <>{children}</>;
 };
 
 const AppRoutes = () => {
+  const { isCheckedUser } = useAuth();
   useEffect(() => {
     const script = document.createElement("script");
     script.src = "https://checkout.razorpay.com/v1/checkout.js";
@@ -92,6 +94,9 @@ const AppRoutes = () => {
     document.body.appendChild(script);
   }, []);
 
+  if (!isCheckedUser) {
+    return <LoadingScreen />;
+  }
   return (
     <Routes>
       {/* Public Routes */}
@@ -349,7 +354,8 @@ const UserVerification = ({ children }) => {
   const navigate = useNavigate();
   const { makeApiCall } = useAPICall();
   const [fetching, setFetching] = useState(false);
-  const { authToken, login } = useAuth();
+  const { authToken, login, setIsCheckedUser } = useAuth();
+  const pathname = useLocation().pathname;
   useEffect(() => {
     const checkUser = async () => {
       if (authToken) {
@@ -364,10 +370,24 @@ const UserVerification = ({ children }) => {
           const user = response.data;
           login(user);
         } else {
-          // navigate("/login");
+          if (
+            !(
+              pathname in
+              [
+                "/",
+                "/login",
+                "/learning",
+                "/landing/:type/:id",
+                "/landing/:type/:id/checkout",
+              ]
+            )
+          ) {
+            navigate("/login");
+          }
           return;
         }
       }
+      setIsCheckedUser(true);
       setFetching(false);
     };
     checkUser();

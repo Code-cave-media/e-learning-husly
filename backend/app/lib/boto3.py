@@ -49,6 +49,8 @@ def get_random_mock_url(file_name: str) -> str:
         return random.choice(video_urls)
     elif file_name.lower().endswith(('.jpg', '.jpeg', '.png', '.gif', '.webp')):
         return random.choice(image_urls)
+    elif file_name.lower().endswith('.pdf'):    
+        return "https://www.w3.org/WAI/ER/tests/xhtml/testfiles/resources/pdf/dummy.pdf"
     else:
         return random.choice(image_urls + video_urls)
 
@@ -67,6 +69,9 @@ def upload_to_space(folder_name: str, file_name: str, file) -> str:
     return file_url
 
 def delete_from_space(file_url: str):
+    if not settings.PRODUCTION:
+        print(f"Mock delete for file: {file_url}")
+        return True
     parsed_url = urlparse(file_url)
     object_key = parsed_url.path.lstrip('/')
     client.delete_object(Bucket=DO_SPACE_BUCKET, Key=object_key)

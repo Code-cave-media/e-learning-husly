@@ -1,22 +1,25 @@
 export interface Ebook {
   id: number;
-  type: string;
   title: string;
   description: string;
   price: number;
   commission: number;
-  thumbnail: File | null;
-  thumbnailUrl: string;
-  introVideo: File | null;
-  introVideoUrl: string;
+  thumbnail: File | null | string;
+  intro_video: File | null | string;
   visible: boolean;
-  superHeading: string;
-  mainHeading: string;
-  subHeading: string;
-  highlightWords: string;
-  tableOfContents: {
+  pdf: File | null | string;
+  landing_page: {
+    top_heading: string;
+    main_heading: string;
+    sub_heading: string;
+    highlight_words: string;
+    thumbnail: File | null | string;
+  };
+  chapters: {
     id: number;
     title: string;
-    pageNumber: number;
+    page_number: number;
   }[];
+  created_at: string;
+  updated_at: string;
 }

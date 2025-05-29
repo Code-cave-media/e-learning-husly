@@ -54,6 +54,7 @@ export const useAPICall = () => {
         error: undefined,
       };
     } catch (error) {
+      console.log(error);
       if (axios.isAxiosError(error)) {
         console.error("Error message: ", error.message);
         responseData = {

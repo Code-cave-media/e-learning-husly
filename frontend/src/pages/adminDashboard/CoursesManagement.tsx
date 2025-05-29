@@ -133,7 +133,7 @@ export default function CoursesManagement() {
               <TableHead>Actions</TableHead>
             </TableRow>
           </TableHeader>
-          <TableBody >
+          <TableBody>
             {fetching && fetchType == "listCourses" && (
               <TableRow>
                 <TableCell colSpan={6} className="text-center">
@@ -147,7 +147,7 @@ export default function CoursesManagement() {
                 <CourseListItem
                   key={course.id}
                   course={course}
-                  
+                  setCourses={setCourses}
                 />
               ))}
           </TableBody>

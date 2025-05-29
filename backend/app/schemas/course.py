@@ -12,6 +12,7 @@ class CourseChapterResponse(BaseModel):
   duration :str
   created_at:datetime
   updated_at:datetime
+  pdf: str | None = None
 
   class Config:
     orm_mode = True
@@ -42,17 +43,14 @@ class CourseResponse(BaseModel):
     orm_mode = True
 
 
+class LandingPageCreate(BaseModel):
+  main_heading: str
+  sub_heading: str
+  top_heading: str
+  highlight_words: str
+  thumbnail: str
+  
 
-class CourseChapterResponse(BaseModel):
-    id: int
-    course_id: int
-    video: str
-    title: str
-    description: str
-    duration: str
-
-    class Config:
-        orm_mode = True
 
 class EBookResponse(BaseModel):
     id: int

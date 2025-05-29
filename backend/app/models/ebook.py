@@ -13,6 +13,13 @@ class EBookLandingPage(TimestampMixin, Base):
     thumbnail = Column(String, nullable=False)
     ebook_id = Column(Integer, ForeignKey("e_book.id"), unique=True)
 
+class EBookTableContent(TimestampMixin,Base):
+    __tablename__ = "ebook_table_content"
+    id = Column(Integer, primary_key=True, index=True)
+    ebook_id = Column(Integer, ForeignKey("e_book.id"))
+    title = Column(String)
+    page_number = Column(Integer)
+
 class EBook(TimestampMixin, Base):
     __tablename__ = "e_book"
     id = Column(Integer, primary_key=True, index=True)
@@ -23,12 +30,10 @@ class EBook(TimestampMixin, Base):
     pdf = Column(String, nullable=False)  
     thumbnail = Column(String, nullable=True)
     visible = Column(Boolean, default=True)
-    # landing_page = relationship("EbookLandingPage", backref="ebook", uselist=False)
+    landing_page = relationship("EBookLandingPage", backref="ebook", uselist=False)
+    chapters = relationship("EBookTableContent", backref="ebook", cascade="all, delete-orphan")
+    intro_video = Column(String)
 
 
-class EBookTableContent(TimestampMixin,Base):
-    __tablename__ = "ebook_table_content"
-    id = Column(Integer, primary_key=True, index=True)
-    ebook_id = Column(Integer, ForeignKey("course.id"))
-    title = Column(String)
-    page_number = Column(Integer)
+
+

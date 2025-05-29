@@ -1,3 +1,4 @@
+/* eslint-disable @typescript-eslint/no-explicit-any */
 import { useEffect, useState } from "react";
 import { Button } from "@/components/ui/button";
 import { Input } from "@/components/ui/input";
@@ -31,6 +32,7 @@ import { useAPICall } from "@/hooks/useApiCall";
 import { useAuth } from "@/contexts/AuthContext";
 interface CourseListItemProps {
   course: Course;
+  setCourses: (courses: Course[] | ((prev: Course[]) => Course[])) => void;
 }
 
 interface ChapterDialogProps {
@@ -47,9 +49,10 @@ interface ChapterDialogProps {
     title: string;
     description: string;
     duration: number;
-    video?: string | File | null;
-    pdf?: string | File | null;
+    video: string | File | null;
+    pdf: string | File | null;
   };
+  loading: boolean;
 }
 
 function ChapterDialog({
@@ -57,39 +60,45 @@ function ChapterDialog({
   onClose,
   onSubmit,
   initialData,
+  loading,
 }: ChapterDialogProps) {
-  const [title, setTitle] = useState(initialData?.title || "");
-  const [description, setDescription] = useState(
-    initialData?.description || ""
-  );
-  const [duration, setDuration] = useState(initialData?.duration || 0);
-  const [video, setVideo] = useState<File | null | string>(
-    initialData?.video || null
-  );
-  const [pdf, setPdf] = useState<File | null | string>(
-    initialData?.pdf || null
+  const [formData, setFormData] = useState<ChapterDialogProps["initialData"]>(
+    initialData || {
+      description: "",
+      duration: 0,
+      pdf: null,
+      title: "",
+      video: null,
+    }
   );
 
   // Reset form when dialog opens/closes or initialData changes
   useEffect(() => {
-    if (isOpen) {
-      setTitle(initialData?.title || "");
-      setDescription(initialData?.description || "");
-      setDuration(initialData?.duration || 0);
-      setVideo(null);
-      setPdf(null);
+    if (isOpen && initialData) {
+      setFormData({
+        title: initialData.title || "",
+        description: initialData.description || "",
+        duration: initialData.duration || 0,
+        video: initialData.video || null,
+        pdf: initialData.pdf || null,
+      });
     }
   }, [isOpen, initialData]);
 
+  console.log(formData.video, formData.pdf);
+
   const handleSubmit = (e: React.FormEvent) => {
     e.preventDefault();
-    onSubmit({
-      title,
-      description,
-      duration: Number(duration),
-      video,
-      pdf,
-    });
+    if (
+      !formData.video ||
+      !formData.title ||
+      !formData.description ||
+      !formData.duration
+    ) {
+      toast.error("Please fill all the fields");
+      return;
+    }
+    onSubmit(formData);
     onClose();
   };
 
@@ -106,8 +115,10 @@ function ChapterDialog({
             <Label htmlFor="title">Title</Label>
             <Input
               id="title"
-              value={title}
-              onChange={(e) => setTitle(e.target.value)}
+              value={formData.title}
+              onChange={(e) =>
+                setFormData((prev) => ({ ...prev, title: e.target.value }))
+              }
               required
             />
           </div>
@@ -115,8 +126,13 @@ function ChapterDialog({
             <Label htmlFor="description">Description</Label>
             <Textarea
               id="description"
-              value={description}
-              onChange={(e) => setDescription(e.target.value)}
+              value={formData.description}
+              onChange={(e) =>
+                setFormData((prev) => ({
+                  ...prev,
+                  description: e.target.value,
+                }))
+              }
               required
             />
           </div>
@@ -125,8 +141,13 @@ function ChapterDialog({
             <Input
               id="duration"
               type="number"
-              value={duration}
-              onChange={(e) => setDuration(Number(e.target.value))}
+              value={formData.duration}
+              onChange={(e) =>
+                setFormData((prev) => ({
+                  ...prev,
+                  duration: Number(e.target.value),
+                }))
+              }
               required
               min={0}
             />
@@ -138,11 +159,23 @@ function ChapterDialog({
                 <Input
                   type="file"
                   accept="video/*"
-                  onChange={(e) => setVideo(e.target.files?.[0] || null)}
+                  onChange={(e) =>
+                    setFormData((prev) => ({
+                      ...prev,
+                      video: e.target.files?.[0] || null,
+                    }))
+                  }
                   className="flex-1"
                 />
-                {video && typeof video === "object" && (
-                  <span className="text-sm text-gray-500">{video.name}</span>
+                {formData.video && typeof formData.video === "object" && (
+                  <span className="text-sm text-gray-500">
+                    {formData.video.name}
+                  </span>
+                )}
+                {formData.video && typeof formData.video === "string" && (
+                  <span className="text-sm text-gray-500">
+                    {formData.video.split("/").pop()}
+                  </span>
                 )}
               </div>
             </div>
@@ -154,11 +187,23 @@ function ChapterDialog({
                 <Input
                   type="file"
                   accept=".pdf"
-                  onChange={(e) => setPdf(e.target.files?.[0] || null)}
+                  onChange={(e) =>
+                    setFormData((prev) => ({
+                      ...prev,
+                      pdf: e.target.files?.[0] || null,
+                    }))
+                  }
                   className="flex-1"
                 />
-                {pdf && typeof pdf === "object" && (
-                  <span className="text-sm text-gray-500">{pdf.name}</span>
+                {formData.pdf && typeof formData.pdf === "object" && (
+                  <span className="text-sm text-gray-500">
+                    {formData.pdf.name}
+                  </span>
+                )}
+                {formData.pdf && typeof formData.pdf === "string" && (
+                  <span className="text-sm text-gray-500">
+                    {formData.pdf.split("/").pop()}
+                  </span>
                 )}
               </div>
             </div>
@@ -167,7 +212,7 @@ function ChapterDialog({
             <Button type="button" variant="outline" onClick={onClose}>
               Cancel
             </Button>
-            <Button type="submit">
+            <Button loading={loading} type="submit">
               {initialData ? "Save Changes" : "Add Chapter"}
             </Button>
           </DialogFooter>
@@ -177,79 +222,173 @@ function ChapterDialog({
   );
 }
 
-export function CourseListItem({ course }: CourseListItemProps) {
+export function CourseListItem({ course, setCourses }: CourseListItemProps) {
   const navigate = useNavigate();
   const { authToken } = useAuth();
   const [isExpanded, setIsExpanded] = useState(false);
-  const [editedCourse, setEditedCourse] = useState<Course>(course);
+  const [editingCourse, setEditingCourse] = useState<Course>(course);
   const { makeApiCall, fetchType, fetching } = useAPICall();
   const [isChapterDialogOpen, setIsChapterDialogOpen] = useState(false);
   const [editingChapter, setEditingChapter] = useState<
     Course["chapters"][0] | null
   >(null);
-
   const handleView = () => {
     navigate(`/landing/course/${course.id}`);
   };
-
   const handleExpand = () => {
     if (!isExpanded) {
-      setEditedCourse(course);
+      setEditingCourse(course);
     }
     setIsExpanded(!isExpanded);
   };
-
-  const handleSaveChanges = () => {
-    toast.success("Course updated successfully");
-    setIsExpanded(false);
+  const handleSaveChanges = async () => {
+    if (
+      !editingCourse.title ||
+      !editingCourse.description ||
+      !editingCourse.price ||
+      !editingCourse.commission ||
+      !editingCourse.thumbnail ||
+      !editingCourse.intro_video
+    ) {
+      toast.error("Please fill all the fields");
+      return;
+    }
+    const formData = new FormData();
+    formData.append("title", editingCourse.title);
+    formData.append("description", editingCourse.description);
+    formData.append("price", editingCourse.price.toString());
+    formData.append("commission", editingCourse.commission.toString());
+    formData.append("visible", editingCourse.visible.toString());
+    if (editingCourse.thumbnail instanceof File) {
+      formData.append("thumbnail", editingCourse.thumbnail);
+    }
+    if (editingCourse.intro_video instanceof File) {
+      formData.append("intro_video", editingCourse.intro_video);
+    }
+    formData.append("main_heading", editingCourse.landing_page?.main_heading);
+    formData.append("sub_heading", editingCourse.landing_page?.sub_heading);
+    formData.append("top_heading", editingCourse.landing_page?.top_heading);
+    formData.append(
+      "highlight_words",
+      editingCourse.landing_page?.highlight_words
+    );
+    if (editingCourse.landing_page?.thumbnail instanceof File) {
+      formData.append(
+        "landing_thumbnail",
+        editingCourse.landing_page?.thumbnail
+      );
+    }
+    const response = await makeApiCall(
+      "PUT",
+      API_ENDPOINT.UPDATE_COURSE(editingCourse.id),
+      formData,
+      "application/form-data",
+      authToken,
+      "updateCourse"
+    );
+    if (response.status === 200) {
+      toast.success("Course updated successfully");
+      setCourses((prev: Course[]) =>
+        prev.map((item: any) =>
+          item.id === editingCourse.id ? response.data : item
+        )
+      );
+      setIsExpanded(false);
+    } else {
+      toast.error("Failed to update course");
+    }
   };
-
   const handleAddChapter = () => {
     setEditingChapter(null);
     setIsChapterDialogOpen(true);
   };
-
   const handleEditChapter = (chapter: Course["chapters"][0]) => {
     setEditingChapter({
       id: chapter.id,
       title: chapter.title,
       description: chapter.description,
       duration: chapter.duration,
-      video: chapter.video,
-      pdf: chapter.pdf,
+      video: chapter.video || null,
+      pdf: chapter.pdf || null,
     });
     setIsChapterDialogOpen(true);
   };
-
   const handleChapterSubmit = async (chapterData: {
     title: string;
     description: string;
     duration: number;
-    video: File | null;
-    pdf: File | null;
+    video: File | string;
+    pdf: File | null | string;
   }) => {
     if (editingChapter) {
-      setEditedCourse({
-        ...editedCourse,
-        chapters: editedCourse.chapters.map((c) =>
-          c.id === editingChapter.id
-            ? {
-                ...c,
-                ...chapterData,
-                video: chapterData.video || c.video,
-                pdf: chapterData.pdf || c.pdf,
-              }
-            : c
-        ),
-      });
-      toast.success("Chapter updated successfully");
+      const updatedCourse = new FormData();
+      if (chapterData.video instanceof File) {
+        updatedCourse.append("video", chapterData.video);
+      }
+      if (chapterData.pdf instanceof File) {
+        updatedCourse.append("pdf", chapterData.pdf);
+      }
+      updatedCourse.append("title", chapterData.title);
+      updatedCourse.append("description", chapterData.description);
+      updatedCourse.append("duration", chapterData.duration.toString());
+      const response = await makeApiCall(
+        "PUT",
+        API_ENDPOINT.UPDATE_COURSE_CHAPTER(editingChapter.id),
+        updatedCourse,
+        "application/form-data",
+        authToken,
+        "updateCourseChapter"
+      );
+      if (response.status === 200) {
+        setCourses((prev: Course[]) =>
+          prev.map((item: any) =>
+            item.id !== course.id
+              ? item
+              : {
+                  ...item,
+                  chapters: item.chapters.map((c: any) =>
+                    c.id !== editingChapter.id
+                      ? c
+                      : {
+                          ...c,
+                          ...chapterData,
+                        }
+                  ),
+                }
+          )
+        );
+        setEditingCourse({
+          ...editingCourse,
+          chapters: editingCourse.chapters.map((c) =>
+            c.id === editingChapter.id
+              ? {
+                  ...c,
+                  ...chapterData,
+                }
+              : c
+          ),
+        });
+        toast.success("Chapter updated successfully");
+      } else {
+        toast.error("Failed to update chapter");
+        setIsChapterDialogOpen(false);
+        setEditingChapter(null);
+      }
     } else {
       const newChapter = new FormData();
+      if (chapterData.video instanceof File) {
+        newChapter.append("video", chapterData.video);
+      } else if (typeof chapterData.video === "string") {
+        newChapter.append("video", chapterData.video);
+      }
+      if (chapterData.pdf instanceof File) {
+        newChapter.append("pdf", chapterData.pdf);
+      } else if (typeof chapterData.pdf === "string") {
+        newChapter.append("pdf", chapterData.pdf);
+      }
       newChapter.append("title", chapterData.title);
       newChapter.append("description", chapterData.description);
       newChapter.append("duration", chapterData.duration.toString());
-      newChapter.append("video", chapterData.video);
-      newChapter.append("pdf", chapterData.pdf);
       newChapter.append("course_id", course.id.toString());
       const response = await makeApiCall(
         "POST",
@@ -257,12 +396,12 @@ export function CourseListItem({ course }: CourseListItemProps) {
         newChapter,
         "application/form-data",
         authToken,
-        "courseChapterCreate"
+        "createCourseChapter"
       );
       if (response.status === 200) {
-        setEditedCourse({
-          ...editedCourse,
-          chapters: [...editedCourse.chapters, response.data],
+        setEditingCourse({
+          ...editingCourse,
+          chapters: [...editingCourse.chapters, response.data],
         });
         toast.success("Chapter added successfully");
       } else {
@@ -270,24 +409,48 @@ export function CourseListItem({ course }: CourseListItemProps) {
       }
     }
   };
-
-  const handleDeleteChapter = (chapterId: number, chapterTitle: string) => {
+  const handleDeleteChapter = (chapterId: number) => {
     confirmDialog({
-      message: `Are you sure you want to delete the chapter "${chapterTitle}"? This action cannot be undone.`,
+      message: `Are you sure you want to delete the chapter? This action cannot be undone.`,
       header: "Delete Chapter",
       icon: "pi pi-exclamation-triangle",
       acceptClassName: "p-button-danger",
       accept: () => {
-        setEditedCourse({
-          ...editedCourse,
-          chapters: editedCourse.chapters.filter((c) => c.id !== chapterId),
-        });
-        toast.success("Chapter deleted successfully");
+        deleteCourseChapter(chapterId);
       },
       reject: () => {
         // Do nothing on reject
       },
     });
+  };
+  const deleteCourseChapter = async (chapterId: number) => {
+    const response = await makeApiCall(
+      "DELETE",
+      API_ENDPOINT.DELETE_COURSE_CHAPTER(chapterId),
+      null,
+      "application/json",
+      authToken,
+      "deleteCourse"
+    );
+    if (response.status === 200) {
+      setCourses((prev: Course[]) =>
+        prev.map((item: any) =>
+          item.id !== course.id
+            ? item
+            : {
+                ...item,
+                chapters: item.chapters.filter((c: any) => c.id !== chapterId),
+              }
+        )
+      );
+      setEditingCourse({
+        ...editingCourse,
+        chapters: editingCourse.chapters.filter((c) => c.id !== chapterId),
+      });
+      toast.success("Chapter deleted successfully");
+    } else {
+      toast.error("Failed to delete chapter");
+    }
   };
   const handleDeleteCourse = () => {
     confirmDialog({
@@ -295,12 +458,23 @@ export function CourseListItem({ course }: CourseListItemProps) {
       header: "Delete Course",
       icon: "pi pi-exclamation-triangle",
       acceptClassName: "p-button-danger",
-      accept: () => {
-        // Call the API to delete the course
-        toast.success("Course deleted successfully");
-      },
-      reject: () => {
-        // Do nothing on reject
+      accept: async () => {
+        const response = await makeApiCall(
+          "DELETE",
+          API_ENDPOINT.DELETE_COURSE(course.id),
+          null,
+          "application/json",
+          authToken,
+          "deleteCourse"
+        );
+        if (response.status === 200) {
+          toast.success("Course deleted successfully");
+          setCourses((prev: Course[]) =>
+            prev.filter((item: Course) => item.id !== course.id)
+          );
+        } else {
+          toast.error("Failed to delete course");
+        }
       },
     });
   };
@@ -363,10 +537,10 @@ export function CourseListItem({ course }: CourseListItemProps) {
                       <div>
                         <Label>Title</Label>
                         <Input
-                          value={editedCourse.title}
+                          value={editingCourse.title}
                           onChange={(e) => {
-                            setEditedCourse({
-                              ...editedCourse,
+                            setEditingCourse({
+                              ...editingCourse,
                               title: e.target.value,
                             });
                           }}
@@ -375,10 +549,10 @@ export function CourseListItem({ course }: CourseListItemProps) {
                       <div>
                         <Label>Description</Label>
                         <Textarea
-                          value={editedCourse.description}
+                          value={editingCourse.description}
                           onChange={(e) => {
-                            setEditedCourse({
-                              ...editedCourse,
+                            setEditingCourse({
+                              ...editingCourse,
                               description: e.target.value,
                             });
                           }}
@@ -389,10 +563,10 @@ export function CourseListItem({ course }: CourseListItemProps) {
                           <Label>Price</Label>
                           <Input
                             type="number"
-                            value={editedCourse.price}
+                            value={editingCourse.price}
                             onChange={(e) => {
-                              setEditedCourse({
-                                ...editedCourse,
+                              setEditingCourse({
+                                ...editingCourse,
                                 price: parseInt(e.target.value),
                               });
                             }}
@@ -402,10 +576,10 @@ export function CourseListItem({ course }: CourseListItemProps) {
                           <Label>Commission</Label>
                           <Input
                             type="number"
-                            value={editedCourse.commission}
+                            value={editingCourse.commission}
                             onChange={(e) => {
-                              setEditedCourse({
-                                ...editedCourse,
+                              setEditingCourse({
+                                ...editingCourse,
                                 commission: parseInt(e.target.value),
                               });
                             }}
@@ -414,10 +588,10 @@ export function CourseListItem({ course }: CourseListItemProps) {
                       </div>
                       <div className="flex items-center space-x-2">
                         <Switch
-                          checked={editedCourse.visible}
+                          checked={editingCourse.visible}
                           onCheckedChange={(checked) => {
-                            setEditedCourse({
-                              ...editedCourse,
+                            setEditingCourse({
+                              ...editingCourse,
                               visible: checked,
                             });
                           }}
@@ -433,14 +607,14 @@ export function CourseListItem({ course }: CourseListItemProps) {
                         <Label>Thumbnail</Label>
                         <div className="mt-2 flex items-center gap-4">
                           <div className="relative w-64 h-36 rounded-lg overflow-hidden border-2 border-dashed border-gray-300 hover:border-primary/50 transition-colors">
-                            {editedCourse.thumbnail ? (
+                            {editingCourse.thumbnail ? (
                               <>
                                 <img
                                   src={
-                                    typeof editedCourse.thumbnail === "string"
-                                      ? editedCourse.thumbnail
+                                    typeof editingCourse.thumbnail === "string"
+                                      ? editingCourse.thumbnail
                                       : URL.createObjectURL(
-                                          editedCourse.thumbnail
+                                          editingCourse.thumbnail
                                         )
                                   }
                                   alt="Course thumbnail"
@@ -461,8 +635,8 @@ export function CourseListItem({ course }: CourseListItemProps) {
                                           e.target as HTMLInputElement
                                         ).files?.[0];
                                         if (file) {
-                                          setEditedCourse({
-                                            ...editedCourse,
+                                          setEditingCourse({
+                                            ...editingCourse,
                                             thumbnail: file,
                                           });
                                         }
@@ -502,8 +676,8 @@ export function CourseListItem({ course }: CourseListItemProps) {
                               onChange={(e) => {
                                 const file = e.target.files?.[0];
                                 if (file) {
-                                  setEditedCourse({
-                                    ...editedCourse,
+                                  setEditingCourse({
+                                    ...editingCourse,
                                     thumbnail: file,
                                   });
                                 }
@@ -527,14 +701,15 @@ export function CourseListItem({ course }: CourseListItemProps) {
                         <Label>Intro Video</Label>
                         <div className="mt-2 flex items-center gap-4">
                           <div className="relative w-64 h-36 rounded-lg overflow-hidden border-2 border-dashed border-gray-300 hover:border-primary/50 transition-colors bg-gray-100">
-                            {editedCourse.intro_video ? (
+                            {editingCourse.intro_video ? (
                               <>
                                 <video
                                   src={
-                                    typeof editedCourse.intro_video === "string"
-                                      ? editedCourse.intro_video
+                                    typeof editingCourse.intro_video ===
+                                    "string"
+                                      ? editingCourse.intro_video
                                       : URL.createObjectURL(
-                                          editedCourse.intro_video
+                                          editingCourse.intro_video
                                         )
                                   }
                                   className="w-full h-full object-cover"
@@ -554,8 +729,8 @@ export function CourseListItem({ course }: CourseListItemProps) {
                                           e.target as HTMLInputElement
                                         ).files?.[0];
                                         if (file) {
-                                          setEditedCourse({
-                                            ...editedCourse,
+                                          setEditingCourse({
+                                            ...editingCourse,
                                             intro_video: file,
                                           });
                                         }
@@ -595,8 +770,8 @@ export function CourseListItem({ course }: CourseListItemProps) {
                               onChange={(e) => {
                                 const file = e.target.files?.[0];
                                 if (file) {
-                                  setEditedCourse({
-                                    ...editedCourse,
+                                  setEditingCourse({
+                                    ...editingCourse,
                                     intro_video: file,
                                   });
                                 }
@@ -628,15 +803,15 @@ export function CourseListItem({ course }: CourseListItemProps) {
                       <Label>Landing Page Thumbnail</Label>
                       <div className="mt-2 flex items-center gap-4">
                         <div className="relative w-64 h-36 rounded-lg overflow-hidden border-2 border-dashed border-gray-300 hover:border-primary/50 transition-colors">
-                          {editedCourse.landing_page?.thumbnail ? (
+                          {editingCourse.landing_page?.thumbnail ? (
                             <>
                               <img
                                 src={
-                                  typeof editedCourse.landing_page.thumbnail ===
-                                  "string"
-                                    ? editedCourse.landing_page.thumbnail
+                                  typeof editingCourse.landing_page
+                                    .thumbnail === "string"
+                                    ? editingCourse.landing_page.thumbnail
                                     : URL.createObjectURL(
-                                        editedCourse.landing_page.thumbnail
+                                        editingCourse.landing_page.thumbnail
                                       )
                                 }
                                 alt="Landing page thumbnail"
@@ -657,10 +832,10 @@ export function CourseListItem({ course }: CourseListItemProps) {
                                         e.target as HTMLInputElement
                                       ).files?.[0];
                                       if (file) {
-                                        setEditedCourse({
-                                          ...editedCourse,
+                                        setEditingCourse({
+                                          ...editingCourse,
                                           landing_page: {
-                                            ...editedCourse.landing_page,
+                                            ...editingCourse.landing_page,
                                             thumbnail: file,
                                           },
                                         });
@@ -701,10 +876,10 @@ export function CourseListItem({ course }: CourseListItemProps) {
                             onChange={(e) => {
                               const file = e.target.files?.[0];
                               if (file) {
-                                setEditedCourse({
-                                  ...editedCourse,
+                                setEditingCourse({
+                                  ...editingCourse,
                                   landing_page: {
-                                    ...editedCourse.landing_page,
+                                    ...editingCourse.landing_page,
                                     thumbnail: file,
                                   },
                                 });
@@ -728,13 +903,13 @@ export function CourseListItem({ course }: CourseListItemProps) {
                     <div>
                       <Label>Super Heading</Label>
                       <Input
-                        value={editedCourse.landing_page?.superHeading}
+                        value={editingCourse.landing_page?.top_heading}
                         onChange={(e) => {
-                          setEditedCourse({
-                            ...editedCourse,
+                          setEditingCourse({
+                            ...editingCourse,
                             landing_page: {
-                              ...editedCourse.landing_page,
-                              superHeading: e.target.value,
+                              ...editingCourse.landing_page,
+                              top_heading: e.target.value,
                             },
                           });
                         }}
@@ -744,13 +919,13 @@ export function CourseListItem({ course }: CourseListItemProps) {
                     <div>
                       <Label>Main Heading</Label>
                       <Input
-                        value={editedCourse.landing_page?.mainHeading}
+                        value={editingCourse.landing_page?.main_heading}
                         onChange={(e) => {
-                          setEditedCourse({
-                            ...editedCourse,
+                          setEditingCourse({
+                            ...editingCourse,
                             landing_page: {
-                              ...editedCourse?.landing_page,
-                              mainHeading: e.target.value,
+                              ...editingCourse?.landing_page,
+                              main_heading: e.target.value,
                             },
                           });
                         }}
@@ -760,13 +935,13 @@ export function CourseListItem({ course }: CourseListItemProps) {
                     <div>
                       <Label>Sub Heading</Label>
                       <Input
-                        value={editedCourse.landing_page?.subHeading}
+                        value={editingCourse.landing_page?.sub_heading}
                         onChange={(e) => {
-                          setEditedCourse({
-                            ...editedCourse,
+                          setEditingCourse({
+                            ...editingCourse,
                             landing_page: {
-                              ...editedCourse?.landing_page,
-                              subHeading: e.target.value,
+                              ...editingCourse?.landing_page,
+                              sub_heading: e.target.value,
                             },
                           });
                         }}
@@ -778,13 +953,13 @@ export function CourseListItem({ course }: CourseListItemProps) {
                         Highlight Words of Main Heading (comma separated)
                       </Label>
                       <Input
-                        value={editedCourse?.landing_page?.highlightWords}
+                        value={editingCourse?.landing_page?.highlight_words}
                         onChange={(e) => {
-                          setEditedCourse({
-                            ...editedCourse,
+                          setEditingCourse({
+                            ...editingCourse,
                             landing_page: {
-                              ...editedCourse?.landing_page,
-                              highlightWords: e.target.value,
+                              ...editingCourse?.landing_page,
+                              highlight_words: e.target.value,
                             },
                           });
                         }}
@@ -796,7 +971,11 @@ export function CourseListItem({ course }: CourseListItemProps) {
 
                 {/* Save Changes Button */}
                 <div className="flex justify-end pt-4 border-t">
-                  <Button onClick={handleSaveChanges} className="gap-2">
+                  <Button
+                    loading={fetching && fetchType == "updateCourse"}
+                    onClick={handleSaveChanges}
+                    className="gap-2"
+                  >
                     <Save className="h-4 w-4" />
                     Save Changes
                   </Button>
@@ -809,7 +988,7 @@ export function CourseListItem({ course }: CourseListItemProps) {
                     <Button onClick={handleAddChapter}>Add Chapter</Button>
                   </div>
                   <div className="space-y-4">
-                    {editedCourse.chapters.map((chapter) => (
+                    {editingCourse.chapters.map((chapter) => (
                       <div
                         key={chapter.id}
                         className="flex items-center justify-between p-4 bg-gray-50 rounded-lg border"
@@ -834,9 +1013,7 @@ export function CourseListItem({ course }: CourseListItemProps) {
                           <Button
                             variant="outline"
                             size="sm"
-                            onClick={() =>
-                              handleDeleteChapter(chapter.id, chapter.title)
-                            }
+                            onClick={() => handleDeleteChapter(chapter.id)}
                           >
                             <Trash2 className="h-4 w-4" />
                           </Button>
@@ -859,6 +1036,11 @@ export function CourseListItem({ course }: CourseListItemProps) {
         }}
         onSubmit={handleChapterSubmit}
         initialData={editingChapter || undefined}
+        loading={
+          fetching &&
+          (fetchType == "createCourseChapter" ||
+            fetchType == "updateCourseChapter")
+        }
       />
     </>
   );

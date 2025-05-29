@@ -61,22 +61,49 @@ async def update_course(
   description: str | None = Form(None),
   price: float | None = Form(None),
   commission: float | None = Form(None),
-  visible: bool | None = Form(None)
+  visible: bool | None = Form(None),
+  intro_video: UploadFile | None = File(None),
+  main_heading: str | None = Form(None),
+  top_heading: str | None = Form(None),
+  sub_heading: str | None = Form(None),
+  highlight_words: str | None = Form(None),
+  landing_thumbnail: UploadFile | None = File(None),
+  current_user: User = Depends(is_admin_user)
+  
 ):
   db_course = crud_course.get_course_by_id(db,course_id)
   if not db_course:
     raise HTTPException(status_code=404,detail="Course not found")
-  thumbnail_url = await crud_course.update_thumbnail_file(thumbnail,db_course)
+  if thumbnail:
+    thumbnail_url = await crud_course.update_thumbnail_file(thumbnail,db_course)
+  if intro_video:
+    intro_video_url = await crud_course.update_into_video_file(intro_video,db_course)
+  
+  
   update_data = {
     "title": title if title is not None else db_course.title,
     "description": description if description is not None else db_course.description,
     "price": price if price is not None else db_course.price,
     "commission": commission if commission is not None else db_course.commission,
     "visible": visible if visible is not None else db_course.visible,
-    "thumbnail": thumbnail_url
-
+    "thumbnail": thumbnail_url if thumbnail else db_course.thumbnail,
+    "intro_video": intro_video_url if intro_video else db_course.intro_video,
   }
   course = crud_course.update_course(db,db_course,update_data)
+  # update course landing page
+  db_landing_page =  crud_course.get_landing_page_by_course_id(db,course.id)
+  if not db_landing_page:
+    db_landing_page = crud_course.create_landing_page(db,course.id)
+  if landing_thumbnail and db_landing_page:
+    landing_thumbnail_url = await crud_course.update_landing_thumbnail_file(landing_thumbnail,db_landing_page)
+  update_data = {
+    "main_heading": main_heading if main_heading is not None  else db_landing_page.main_heading ,
+    "sub_heading": sub_heading if sub_heading is not None  else db_landing_page.sub_heading ,
+    "top_heading": top_heading if top_heading is not None  else db_landing_page.top_heading ,
+    "highlight_words": highlight_words if highlight_words is not None else db_landing_page.highlight_words ,
+    "thumbnail": landing_thumbnail_url if landing_thumbnail is not None else db_landing_page.thumbnail,
+  }
+  crud_course.update_landing_page(db,db_landing_page,update_data)
   return course
 
 @router.delete('/delete/{course_id}')
@@ -115,22 +142,24 @@ async def update_course_chapter(
   course_chapter_id:str,
   db: Session = Depends(get_db),
   video: UploadFile | None = File(None),
+  pdf: UploadFile | None = File(None),
   description: str | None= Form(None),
   title: str | None= Form(None),
   duration: str | None= Form(None),
-  visible: bool | None= Form(None)
+
 ):
   db_course_chapter = crud_course.get_course_chapter_by_id(db,course_chapter_id)
   if not db_course_chapter:
     raise HTTPException(status_code=404,detail="Course chapter not found")
+  print(video,pdf)  
   video_url = await crud_course.update_video_file(video,db_course_chapter)
+  pdf_url = await crud_course.update_pdf_file(pdf,db_course_chapter)
   update_data = {
     "title": title if title is not None else db_course_chapter.title,
     "description": description if description is not None else db_course_chapter.description,
     "duration": duration if duration is not None else db_course_chapter.duration,
-    "visible": visible if visible is not None else db_course_chapter.visible,
-    "video": video_url
-
+    "video": video_url if video_url is not None else db_course_chapter.video,
+    "pdf": pdf_url if pdf_url is not None else db_course_chapter.pdf,
   }
   return crud_course.update_course_chapter(db,db_course_chapter,update_data)
 
@@ -141,6 +170,7 @@ async def update_course(course_chapter_id:str,db: Session = Depends(get_db)):
     raise HTTPException(status_code=404,detail="Course chapter not found")
 
   await crud_course.delete_file(db_course_chapter.video)
+  await crud_course.delete_file(db_course_chapter.pdf)
   return crud_course.delete_course_chapter(db,db_course_chapter)
 
 

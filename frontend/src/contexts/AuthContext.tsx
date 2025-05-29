@@ -1,4 +1,5 @@
 import { Loading } from "@/components/ui/loading";
+import { LoadingScreen } from "@/components/ui/LoadingScreen";
 import { IUser } from "@/types/apiTypes";
 import React, { createContext, useContext, useState, useEffect } from "react";
 
@@ -12,6 +13,8 @@ interface AuthContextType {
   login: (user: IUser, token?: string) => void;
   loading: boolean;
   setLoading: (loading: boolean) => void;
+  isCheckedUser: boolean;
+  setIsCheckedUser: (isCheckedUser: boolean) => void;
 }
 
 const AuthContext = createContext<AuthContextType | undefined>(undefined);
@@ -23,6 +26,7 @@ export const AuthProvider = ({ children }: { children: React.ReactNode }) => {
   const [authToken, setAuthToken] = useState<string | null>(null);
   const [loading, setLoading] = useState(false);
   const [isCheckedToken, setIsCheckedToken] = useState(false);
+  const [isCheckedUser, setIsCheckedUser] = useState(false);
 
   useEffect(() => {
     const token = localStorage.getItem("auth_token");
@@ -53,9 +57,7 @@ export const AuthProvider = ({ children }: { children: React.ReactNode }) => {
 
   if (!isCheckedToken) {
     return (
-      <div className="flex items-center justify-center h-screen">
-        <Loading />
-      </div>
+      <LoadingScreen />
     );
   }
   return (
@@ -70,6 +72,8 @@ export const AuthProvider = ({ children }: { children: React.ReactNode }) => {
         login,
         loading,
         setLoading,
+        isCheckedUser,
+        setIsCheckedUser,
       }}
     >
       {loading && (

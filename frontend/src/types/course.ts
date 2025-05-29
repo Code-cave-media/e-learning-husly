@@ -8,10 +8,10 @@ export interface Course {
   intro_video: File | string | null;
   visible: boolean;
   landing_page?: {
-    superHeading: string;
-    mainHeading: string;
-    subHeading: string;
-    highlightWords: string;
+    top_heading: string;
+    main_heading: string;
+    sub_heading: string;
+    highlight_words: string;
     thumbnail: File | string | null;
   };
   created_at: string | null;
