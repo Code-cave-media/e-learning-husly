@@ -182,6 +182,8 @@ export function EbookListItem({ ebook, setEbook }: EbookListItemProps) {
     if (editingEbook.pdf instanceof File) {
       formData.append("pdf", editingEbook.pdf);
     }
+    formData.append("is_featured", editingEbook.is_featured.toString());
+    formData.append("is_new", editingEbook.is_new.toString());
     if (editingEbook.landing_page?.thumbnail instanceof File) {
       formData.append(
         "landing_thumbnail",
@@ -249,7 +251,7 @@ export function EbookListItem({ ebook, setEbook }: EbookListItemProps) {
       const updatedContent = {
         title: contentData.title,
         page_number: contentData.page,
-      }
+      };
 
       const response = await makeApiCall(
         "PUT",
@@ -290,7 +292,7 @@ export function EbookListItem({ ebook, setEbook }: EbookListItemProps) {
         title: contentData.title,
         page_number: contentData.page,
         ebook_id: ebook.id,
-      }
+      };
       const response = await makeApiCall(
         "POST",
         API_ENDPOINT.CREATE_EBOOK_CHAPTER,
@@ -502,6 +504,30 @@ export function EbookListItem({ ebook, setEbook }: EbookListItemProps) {
                           }}
                         />
                         <Label>Visible</Label>
+                      </div>
+                      <div className="flex items-center space-x-2">
+                        <Switch
+                          checked={editingEbook.is_featured}
+                          onCheckedChange={(checked) => {
+                            setEditingEbook({
+                              ...editingEbook,
+                              is_featured: checked,
+                            });
+                          }}
+                        />
+                        <Label>Featured Ebook</Label>
+                      </div>
+                      <div className="flex items-center space-x-2">
+                        <Switch
+                          checked={editingEbook.is_new}
+                          onCheckedChange={(checked) => {
+                            setEditingEbook({
+                              ...editingEbook,
+                              is_new: checked,
+                            });
+                          }}
+                        />
+                        <Label>New Ebook</Label>
                       </div>
                     </div>
                   </div>

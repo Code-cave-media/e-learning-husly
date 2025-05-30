@@ -38,6 +38,8 @@ export default function CoursesManagement() {
     price: 0,
     commission: 0,
     visible: false,
+    is_featured: false,
+    is_new: false,
   });
   const { makeApiCall, fetching, fetchType } = useAPICall();
   const { authToken } = useAuth();
@@ -66,6 +68,8 @@ export default function CoursesManagement() {
     course.append("thumbnail", newCourse.thumbnail);
     course.append("visible", newCourse.visible.toString());
     course.append("intro_video", newCourse.intro_video);
+    course.append("is_featured", newCourse.is_featured.toString());
+    course.append("is_new", newCourse.is_new.toString());
 
     const response = await makeApiCall(
       "POST",
@@ -85,6 +89,8 @@ export default function CoursesManagement() {
         price: 0,
         commission: 0,
         visible: false,
+        is_featured: false,
+        is_new: false,
       });
     }
   };
@@ -250,6 +256,24 @@ export default function CoursesManagement() {
                 }
               />
               <Label>Visible</Label>
+            </div>
+            <div className="flex items-center space-x-2">
+              <Switch
+                checked={newCourse.is_featured}
+                onCheckedChange={(checked) =>
+                  setNewCourse({ ...newCourse, is_featured: checked })
+                }
+              />
+              <Label>Featured Course</Label>
+            </div>
+            <div className="flex items-center space-x-2">
+              <Switch
+                checked={newCourse.is_new}
+                onCheckedChange={(checked) =>
+                  setNewCourse({ ...newCourse, is_new: checked })
+                }
+              />
+              <Label>New Course</Label>
             </div>
             <div className="flex justify-end gap-4">
               <Button

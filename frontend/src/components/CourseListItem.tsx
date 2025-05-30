@@ -85,8 +85,6 @@ function ChapterDialog({
     }
   }, [isOpen, initialData]);
 
-  console.log(formData.video, formData.pdf);
-
   const handleSubmit = (e: React.FormEvent) => {
     e.preventDefault();
     if (
@@ -265,6 +263,9 @@ export function CourseListItem({ course, setCourses }: CourseListItemProps) {
     if (editingCourse.intro_video instanceof File) {
       formData.append("intro_video", editingCourse.intro_video);
     }
+    console.log(editingCourse);
+    formData.append("is_featured", editingCourse.is_featured.toString());
+    formData.append("is_new", editingCourse.is_new.toString());
     formData.append("main_heading", editingCourse.landing_page?.main_heading);
     formData.append("sub_heading", editingCourse.landing_page?.sub_heading);
     formData.append("top_heading", editingCourse.landing_page?.top_heading);
@@ -597,6 +598,30 @@ export function CourseListItem({ course, setCourses }: CourseListItemProps) {
                           }}
                         />
                         <Label>Visible</Label>
+                      </div>
+                      <div className="flex items-center space-x-2">
+                        <Switch
+                          checked={editingCourse.is_featured}
+                          onCheckedChange={(checked) => {
+                            setEditingCourse({
+                              ...editingCourse,
+                              is_featured: checked,
+                            });
+                          }}
+                        />
+                        <Label>Featured Course</Label>
+                      </div>
+                      <div className="flex items-center space-x-2">
+                        <Switch
+                          checked={editingCourse.is_new}
+                          onCheckedChange={(checked) => {
+                            setEditingCourse({
+                              ...editingCourse,
+                              is_new: checked,
+                            });
+                          }}
+                        />
+                        <Label>New Course</Label>
                       </div>
                     </div>
                   </div>

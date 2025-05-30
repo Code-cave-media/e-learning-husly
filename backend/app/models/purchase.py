@@ -3,11 +3,11 @@ from db.base import Base
 from .utils import TimestampMixin
 from datetime import datetime
 
-class Purchase(Base):
+class Purchase(TimestampMixin,Base):
     __tablename__ = "purchase"
     id = Column(Integer, primary_key=True, index=True)
     purchased_user_id = Column(Integer, ForeignKey("user.id"))
-    item_id = Column(Integer, ForeignKey("course.id"))
+    item_id = Column(Integer)
     item_type = Column(String)
     affiliate_user_id = Column(Integer, ForeignKey("user.id"),nullable=True)
 
@@ -21,11 +21,11 @@ class Transaction(TimestampMixin,Base):
     provider = Column(String)                     # e.g., 'razorpay'
     utr_id = Column(String)                       # UPI transaction ID / RRN
     method = Column(String)                       # 'upi', 'card', 'wallet'
-    vpa = Column(String, nullable=True)           # if UPI
+    vpa = Column(String, nullable=True)           
     email = Column(String)
     contact = Column(String)
     currency = Column(String)
-    amount = Column(Integer)                      # in paise
+    amount = Column(Integer)                        
     base_amount = Column(Integer)
     fee = Column(Integer, nullable=True)
     tax = Column(Integer, nullable=True)

@@ -7,6 +7,8 @@ export interface Ebook {
   thumbnail: File | null | string;
   intro_video: File | null | string;
   visible: boolean;
+  is_featured: boolean;
+  is_new: boolean;
   pdf: File | null | string;
   landing_page: {
     top_heading: string;

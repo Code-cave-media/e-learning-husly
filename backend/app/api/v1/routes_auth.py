@@ -1,7 +1,7 @@
 from fastapi import APIRouter,Depends,HTTPException
 from sqlalchemy.orm import Session
 from schemas.user import *
-from crud import user as crud_user
+from crud import auth as crud_auth
 from core.security import create_access_token
 from core.deps import get_current_user,is_admin_user
 from models.user import User
@@ -10,17 +10,17 @@ router = APIRouter()
 
 @router.post('/register',response_model=UserResponse)
 def register(user_in:UserCreate,db:Session=Depends(get_db)):
-  existing_user = crud_user.get_user_by_email(db,user_in.email)
+  existing_user = crud_auth.get_user_by_email(db,user_in.email)
   if existing_user:
     raise HTTPException(status_code=400,detail="Email Already Exist")
-  db_user = crud_user.create_user(db,user_in)
-  crud_user.create_affiliate_account(db,db_user.id)
+  db_user = crud_auth.create_user(db,user_in)
+  crud_auth.create_affiliate_account(db,db_user.id)
   return db_user
 
 @router.post('/login',response_model=LoginResponse)
 def login(request:LoginRequest,db:Session=Depends(get_db)):
-  user = crud_user.get_user_by_email(db,request.email)
-  if not user or not crud_user.verify_password(request.password,user.password):
+  user = crud_auth.get_user_by_email(db,request.email)
+  if not user or not crud_auth.verify_password(request.password,user.password):
     raise HTTPException(status_code=400,detail="Invalid credentials")
   token = create_access_token(data={'sub':user.email})
   return {'token':token,'user':UserResponse.from_orm(user)} 

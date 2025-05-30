@@ -33,6 +33,8 @@ class EBook(TimestampMixin, Base):
     landing_page = relationship("EBookLandingPage", backref="ebook", uselist=False)
     chapters = relationship("EBookTableContent", backref="ebook", cascade="all, delete-orphan")
     intro_video = Column(String)
+    is_new = Column(Boolean, default=True)
+    is_featured = Column(Boolean, default=False)
 
 
 

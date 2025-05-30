@@ -1,4 +1,12 @@
-import React, { useState } from "react";
+import { Button } from "@/components/ui/button";
+import { Loading } from "@/components/ui/loading";
+import { API_ENDPOINT } from "@/config/backend";
+import { useAuth } from "@/contexts/AuthContext";
+import { useAPICall } from "@/hooks/useApiCall";
+import { CheckoutResponse } from "@/types/apiTypes";
+import React, { useEffect, useState } from "react";
+import toast from "react-hot-toast";
+import { useNavigate, useParams, useSearchParams } from "react-router-dom";
 
 const mockAffiliate = { name: "John Doe" };
 const mockProduct = {
@@ -10,7 +18,6 @@ const mockProduct = {
 };
 
 const Checkout = () => {
-  // User info state
   const [form, setForm] = useState({
     name: "",
     email: "",
@@ -18,166 +25,252 @@ const Checkout = () => {
     password: "",
     confirmPassword: "",
   });
-  // Coupon state
+  const { id, type } = useParams();
+  const [searchParams] = useSearchParams();
+  const ref = searchParams.get("ref");
   const [coupon, setCoupon] = useState("");
-  const [appliedCoupon, setAppliedCoupon] = useState("");
-  const [discount, setDiscount] = useState(0);
-
+  const { isAuthenticated, isAdmin, user } = useAuth();
+  const [data, setData] = useState<CheckoutResponse | null>(null);
+  const { fetchType, fetching, isFetched, makeApiCall } = useAPICall();
+  const [error, setError] = useState<string>("");
+  const navigate = useNavigate();
+  useEffect(() => {
+    const fetchData = async () => {
+      const response = await makeApiCall(
+        "GET",
+        API_ENDPOINT.GET_CHECKOUT_DATA(id, type, ref, user?.user_id),
+        null,
+        "application/json"
+      );
+      if (response.status === 200) {
+        setData({
+          ...response.data,
+          item_data: { ...response.data.item_data, discount: 0, coupon: null },
+        });
+      } else {
+        setError(response.error);
+      }
+    };
+    fetchData();
+  }, []);
   const handleFormChange = (e) => {
     setForm({ ...form, [e.target.name]: e.target.value });
   };
 
-  const handleApplyCoupon = (e) => {
+  const handleApplyCoupon = async (e) => {
     e.preventDefault();
     // Mock coupon logic
-    if (coupon.trim().toLowerCase() === "save20") {
-      setDiscount(20);
-      setAppliedCoupon(coupon);
+    const response = await makeApiCall(
+      "POST",
+      API_ENDPOINT.APPLY_COUPON,
+      {
+        amount: data.item_data.price,
+        code: coupon,
+      },
+      "application/json",
+      null,
+      "couponApply"
+    );
+    if (response.status === 200) {
+      setData({
+        ...data,
+        item_data: {
+          ...data.item_data,
+          discount: response.data.discount,
+          coupon: coupon,
+        },
+      });
+      toast.success("Coupon applied successfully");
     } else {
-      setDiscount(0);
-      setAppliedCoupon("");
-      alert("Invalid coupon code");
+      toast.error(response.error);
     }
   };
 
-  const total = mockProduct.price - discount;
-
-  return (
-    <div className="min-h-screen bg-gradient-to-b from-black to-[#1a2a4a] flex flex-col items-center p-4 relative pb-16">
-      {/* Razorpay secure payment fixed badge */}
-      <div className="fixed bottom-4 right-4 flex items-center gap-2 bg-[#181f2a] px-4 py-2 rounded-lg shadow-lg z-50 border border-[#00b0ff]">
-        <img
-          src="https://encrypted-tbn0.gstatic.com/images?q=tbn:ANd9GcSe32vAJ7iuV_GjZlu-EyKf7GQ-You53h-wNg&s"
-          alt="Razorpay Secure"
-          className="w-8 h-8 object-contain"
-        />
-        <span className="text-sm text-white font-semibold">
-          Secure payment with <span className="text-[#00b0ff]">Razorpay</span>
-        </span>
+  if (fetching && fetchType !== "couponApply") {
+    return (
+      <div className="min-h-screen bg-gradient-to-b from-black to-[#1a2a4a] flex flex-col items-center p-4 relative pb-16">
+        <Loading />
       </div>
+    );
+  }
 
-      <div className="w-full max-w-lg bg-[#0d1117] rounded-lg shadow-lg p-6 mt-10 text-white">
-        {/* Affiliate User Details */}
-        <div className="mb-4">
-          <span className="text-gray-400 text-sm">Referred by:</span>
-          <div className="font-bold text-lg">{mockAffiliate.name}</div>
+  if (isFetched && !data) {
+    return (
+      <div className="flex flex-col items-center justify-center min-h-screen bg-gradient-to-b from-black to-[#1a2a4a] text-white p-4">
+        <div className="text-center max-w-md">
+          <div className="mb-6">
+            <svg
+              className="w-24 h-24 mx-auto text-red-500"
+              fill="none"
+              stroke="currentColor"
+              viewBox="0 0 24 24"
+              xmlns="http://www.w3.org/2000/svg"
+            >
+              <path
+                strokeLinecap="round"
+                strokeLinejoin="round"
+                strokeWidth={2}
+                d="M12 9v2m0 4h.01m-6.938 4h13.856c1.54 0 2.502-1.667 1.732-3L13.732 4c-.77-1.333-2.694-1.333-3.464 0L3.34 16c-.77 1.333.192 3 1.732 3z"
+              />
+            </svg>
+          </div>
+          <h1 className="text-2xl font-bold mb-4">Something went wrong</h1>
+          <p className="text-gray-300 mb-8">{error}</p>
+          <Button
+            onClick={() => {
+              navigate(-1);
+            }}
+            className="bg-[#00b0ff] text-white px-8 py-3 rounded-lg hover:opacity-90 transition-opacity"
+          >
+            Return to landing
+          </Button>
+        </div>
+      </div>
+    );
+  }
+  if (data) {
+    return (
+      <div className="min-h-screen bg-gradient-to-b from-black to-[#1a2a4a] flex flex-col items-center p-4 relative pb-16">
+        {/* Razorpay secure payment fixed badge */}
+        <div className="fixed bottom-4 right-4 flex items-center gap-2 bg-[#181f2a] px-4 py-2 rounded-lg shadow-lg z-50 border border-[#00b0ff]">
+          <img
+            src="https://encrypted-tbn0.gstatic.com/images?q=tbn:ANd9GcSe32vAJ7iuV_GjZlu-EyKf7GQ-You53h-wNg&s"
+            alt="Razorpay Secure"
+            className="w-8 h-8 object-contain"
+          />
+          <span className="text-sm text-white font-semibold">
+            Secure payment with <span className="text-[#00b0ff]">Razorpay</span>
+          </span>
         </div>
 
-        {/* User Information Form (no submit button) */}
-        <form
-          className="flex flex-col gap-3 mb-6"
-          onSubmit={(e) => e.preventDefault()}
-        >
-          <input
-            type="text"
-            name="name"
-            placeholder="Name"
-            value={form.name}
-            onChange={handleFormChange}
-            className="bg-gray-800 border border-gray-600 p-2 rounded text-white outline-none"
-            required
-          />
-          <input
-            type="email"
-            name="email"
-            placeholder="Email"
-            value={form.email}
-            onChange={handleFormChange}
-            className="bg-gray-800 border border-gray-600 p-2 rounded text-white outline-none"
-            required
-          />
-          <input
-            type="tel"
-            name="phone"
-            placeholder="Phone"
-            value={form.phone}
-            onChange={handleFormChange}
-            className="bg-gray-800 border border-gray-600 p-2 rounded text-white outline-none"
-            required
-          />
-          <input
-            type="password"
-            name="password"
-            placeholder="Password"
-            value={form.password}
-            onChange={handleFormChange}
-            className="bg-gray-800 border border-gray-600 p-2 rounded text-white outline-none"
-            required
-          />
-          <input
-            type="password"
-            name="confirmPassword"
-            placeholder="Confirm Password"
-            value={form.confirmPassword}
-            onChange={handleFormChange}
-            className="bg-gray-800 border border-gray-600 p-2 rounded text-white outline-none"
-            required
-          />
-        </form>
-
-        {/* Cart/Product Details */}
-        <div className="mb-4 border-t border-gray-700 pt-4">
-          <div className="flex items-center gap-4">
-            <img
-              src={mockProduct.thumbnail}
-              alt={mockProduct.title}
-              className="w-20 h-20 rounded object-cover"
-            />
-            <div className="flex-1">
-              <div className="font-bold text-lg">{mockProduct.title}</div>
-              <div className="text-gray-400 text-sm">
-                Qty: {mockProduct.quantity}
+        <div className="w-full max-w-lg bg-[#0d1117] rounded-lg shadow-lg p-6 mt-10 text-white">
+          {/* Affiliate User Details */}
+          {data.affiliate_user && (
+            <div className="mb-4">
+              <span className="text-gray-400 text-sm">Referred by:</span>
+              <div className="font-bold text-lg">
+                {data.affiliate_user.name}
               </div>
             </div>
-            <div className="font-bold text-lg">${mockProduct.price}</div>
-          </div>
-        </div>
+          )}
 
-        {/* Coupon Code Section */}
-        <form onSubmit={handleApplyCoupon} className="flex gap-2 mb-6">
-          <input
-            type="text"
-            placeholder="Coupon code"
-            value={coupon}
-            onChange={(e) => setCoupon(e.target.value)}
-            className="flex-1 bg-gray-800 border border-gray-600 p-2 rounded text-white outline-none"
-          />
-          <button
-            type="submit"
-            className="bg-[#00b0ff] text-white px-4 py-2 rounded hover:opacity-90"
-          >
-            Apply
+          {isAuthenticated && !isAdmin && (
+            <form
+              className="flex flex-col gap-3 mb-6"
+              onSubmit={(e) => e.preventDefault()}
+            >
+              <input
+                type="text"
+                name="name"
+                placeholder="Name"
+                value={form.name}
+                onChange={handleFormChange}
+                className="bg-gray-800 border border-gray-600 p-2 rounded text-white outline-none"
+                required
+              />
+              <input
+                type="email"
+                name="email"
+                placeholder="Email"
+                value={form.email}
+                onChange={handleFormChange}
+                className="bg-gray-800 border border-gray-600 p-2 rounded text-white outline-none"
+                required
+              />
+              <input
+                type="tel"
+                name="phone"
+                placeholder="Phone"
+                value={form.phone}
+                onChange={handleFormChange}
+                className="bg-gray-800 border border-gray-600 p-2 rounded text-white outline-none"
+                required
+              />
+              <input
+                type="password"
+                name="password"
+                placeholder="Password"
+                value={form.password}
+                onChange={handleFormChange}
+                className="bg-gray-800 border border-gray-600 p-2 rounded text-white outline-none"
+                required
+              />
+              <input
+                type="password"
+                name="confirmPassword"
+                placeholder="Confirm Password"
+                value={form.confirmPassword}
+                onChange={handleFormChange}
+                className="bg-gray-800 border border-gray-600 p-2 rounded text-white outline-none"
+                required
+              />
+            </form>
+          )}
+
+          {/* Cart/Product Details */}
+          <div className="mb-4 border-t border-gray-700 pt-4">
+            <div className="flex items-center gap-4">
+              <img
+                src={data?.item_data.thumbnail}
+                alt={data?.item_data.title}
+                className="w-28 h-20 rounded object-cover"
+              />
+              <div className="flex-1">
+                <div className="font-bold text-lg">{mockProduct.title}</div>
+                <div className="text-gray-400 text-sm">Qty: {1}</div>
+              </div>
+              <div className="font-bold text-lg">${data?.item_data.price}</div>
+            </div>
+          </div>
+
+          {/* Coupon Code Section */}
+          <form onSubmit={handleApplyCoupon} className="flex gap-2 mb-6">
+            <input
+              type="text"
+              placeholder="Coupon code"
+              value={coupon}
+              onChange={(e) => setCoupon(e.target.value)}
+              className="flex-1 bg-gray-800 border border-gray-600 p-2 rounded text-white outline-none"
+            />
+            <Button
+              loading={fetching && fetchType === "couponApply"}
+              type="submit"
+              className="bg-[#00b0ff] text-white px-4 py-2 rounded hover:opacity-90 hover:bg-[#00b0ff]"
+            >
+              Apply
+            </Button>
+          </form>
+          {/* {data?.item_data.coupon && (
+            <div className="mb-4 text-green-400 text-sm">
+              Coupon "{data.item_data.coupon}" applied! -$
+              {data.item_data.discount}
+            </div>
+          )} */}
+
+          {/* Price Summary */}
+          <div className="mb-6 border-t border-gray-700 pt-4">
+            <div className="flex justify-between mb-2">
+              <span>Subtotal</span>
+              <span>${data?.item_data.price}</span>
+            </div>
+            <div className="flex justify-between mb-2">
+              <span>Discount</span>
+              <span>-${data?.item_data.discount}</span>
+            </div>
+            <div className="flex justify-between font-bold text-xl">
+              <span>Total</span>
+              <span>${data?.item_data.price - data?.item_data.discount}</span>
+            </div>
+          </div>
+
+          {/* Checkout Button */}
+          <button className="w-full bg-[#00b0ff] text-white py-3 rounded text-lg font-bold hover:opacity-90">
+            Checkout
           </button>
-        </form>
-        {appliedCoupon && (
-          <div className="mb-4 text-green-400 text-sm">
-            Coupon "{appliedCoupon}" applied! -${discount}
-          </div>
-        )}
-
-        {/* Price Summary */}
-        <div className="mb-6 border-t border-gray-700 pt-4">
-          <div className="flex justify-between mb-2">
-            <span>Subtotal</span>
-            <span>${mockProduct.price}</span>
-          </div>
-          <div className="flex justify-between mb-2">
-            <span>Discount</span>
-            <span>-${discount}</span>
-          </div>
-          <div className="flex justify-between font-bold text-xl">
-            <span>Total</span>
-            <span>${total}</span>
-          </div>
         </div>
-
-        {/* Checkout Button */}
-        <button className="w-full bg-[#00b0ff] text-white py-3 rounded text-lg font-bold hover:opacity-90">
-          Checkout
-        </button>
       </div>
-    </div>
-  );
+    );
+  }
 };
 
 export default Checkout;

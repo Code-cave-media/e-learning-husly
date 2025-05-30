@@ -20,9 +20,9 @@ interface EbookCardProps {
   description: string;
   price: number;
   thumbnail?: string;
-  isNew?: boolean;
-  isFeatured?: boolean;
-  isPurchased?: boolean;
+  is_new?: boolean;
+  is_featured?: boolean;
+  is_purchased?: boolean;
   isHomePage?: boolean; // Optional prop to indicate if it's on the home page
 }
 
@@ -32,9 +32,9 @@ const EbookCard = ({
   description,
   price,
   thumbnail,
-  isNew = false,
-  isFeatured = false,
-  isPurchased = false,
+  is_new = false,
+  is_featured = false,
+  is_purchased = false,
   isHomePage,
 }: EbookCardProps) => {
   const { isAuthenticated } = useAuth();
@@ -63,8 +63,8 @@ const EbookCard = ({
           className="w-full h-full object-contain"
         />
         <div className="absolute top-2 right-2 flex flex-wrap gap-2">
-          {isNew && <span className="tag-new">New</span>}
-          {isFeatured && <span className="tag-featured">Featured</span>}
+          {is_new && <span className="tag-new">New</span>}
+          {is_featured && <span className="tag-featured">Featured</span>}
         </div>
         {isAuthenticated && (
           <Dialog>
@@ -107,7 +107,7 @@ const EbookCard = ({
       <CardFooter className="border-t pt-0 pb-4">
         {isAuthenticated && !isHomePage && (
           <>
-            {isPurchased ? (
+            {is_purchased ? (
               <Button asChild className="w-full">
                 <Link to={`/ebook/read/${id}`}>Read Now</Link>
               </Button>

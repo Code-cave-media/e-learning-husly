@@ -17,6 +17,17 @@ async def create_course(
     raise HTTPException(status_code=404,detail="Course not found")
   return db_course
 
+@router.get('/get/landing/{course_id}',response_model=CourseLandingResponse)
+async def get_course_landing_page(  
+  course_id:str,
+  db:Session=Depends(get_db)   
+):  
+  db_course = crud_course.get_course_by_id(db,course_id)
+  if not db_course:
+    raise HTTPException(status_code=404,detail="Course not found")
+
+  return db_course
+
 @router.get('/list',response_model=PaginationResponse[CourseResponse])
 async def list_courses(
   db: Session = Depends(get_db),
@@ -36,6 +47,8 @@ async def create_course(
   commission: float = Form(...),
   visible: bool = Form(...),
   intro_video: UploadFile  = File(...),
+  is_featured: bool = Form(False),
+  is_new: bool = Form(False),
 ):
   thumbnail_url = await crud_course.upload_thumbnail(thumbnail)
   intro_video_url = await crud_course.upload_intro_video(intro_video)
@@ -47,6 +60,8 @@ async def create_course(
     "visible": visible,
     "thumbnail":thumbnail_url,
     "intro_video": intro_video_url,
+    "is_featured": is_featured,
+    "is_new": is_new,
   }
   course = crud_course.create_course(db=db,data=data)
   db_landing = crud_course.create_landing_page(db,course.id)
@@ -68,6 +83,9 @@ async def update_course(
   sub_heading: str | None = Form(None),
   highlight_words: str | None = Form(None),
   landing_thumbnail: UploadFile | None = File(None),
+  is_featured: bool = Form(False),
+  is_new: bool = Form(False),
+
   current_user: User = Depends(is_admin_user)
   
 ):
@@ -88,6 +106,8 @@ async def update_course(
     "visible": visible if visible is not None else db_course.visible,
     "thumbnail": thumbnail_url if thumbnail else db_course.thumbnail,
     "intro_video": intro_video_url if intro_video else db_course.intro_video,
+    "is_featured": is_featured if is_featured is not None else db_course.is_featured,
+    "is_new": is_new if is_new is not None else db_course.is_new,
   }
   course = crud_course.update_course(db,db_course,update_data)
   # update course landing page

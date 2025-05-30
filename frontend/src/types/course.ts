@@ -7,6 +7,8 @@ export interface Course {
   thumbnail: File | string | null;
   intro_video: File | string | null;
   visible: boolean;
+  is_featured: boolean;
+  is_new: boolean;
   landing_page?: {
     top_heading: string;
     main_heading: string;

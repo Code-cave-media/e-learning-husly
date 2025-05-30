@@ -37,7 +37,8 @@ class EBookResponse(BaseModel):
     commission: float 
     chapters: list[EBookChapterResponse] = []
     landing_page: LandingPageResponse
-    
+    is_featured: bool
+    is_new : bool
     class Config:
         orm_mode = True
 
@@ -50,5 +51,31 @@ class EBookChapterCreate(BaseModel):
 class EBookChapterUpdate(BaseModel):
     title: str | None = None
     page_number: int | None = None
+    class Config:
+        orm_mode = True
+
+class EbookListResponse(BaseModel):
+    id: int
+    title: str
+    description: str
+    is_featured: bool
+    is_new : bool
+    price: float
+    thumbnail: str
+    class Config:
+        orm_mode = True
+
+
+class EbookLandingResponse(BaseModel):
+    id: int
+    title : str
+    description : str
+    price : float
+    commission : float
+    thumbnail:str
+    landing_page: LandingPageResponse
+    intro_video: str 
+    is_featured: bool
+    is_new : bool
     class Config:
         orm_mode = True

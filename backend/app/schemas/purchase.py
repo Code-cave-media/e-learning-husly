@@ -7,3 +7,17 @@ class PaymentRequest(BaseModel):
   email : str | None = None
   password : str | None = None
 
+class AffiliateUser(BaseModel):
+  id: int
+  name : str
+  user_id: str
+  class Config:
+    orm_mode = True
+
+class CheckoutResponse(BaseModel):
+  id: str
+  title: str
+  price: int
+  thumbnail :str
+  class Config:
+    orm_mode = True

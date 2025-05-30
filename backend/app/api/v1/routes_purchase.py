@@ -1,14 +1,14 @@
-from fastapi import HTTPException,APIRouter,status,Depends,Request
+from fastapi import HTTPException,APIRouter,status,Depends,Request,Query
 from db.session import get_db
 from sqlalchemy.orm import Session
-from schemas.transaction import PaymentRequest
+from schemas.purchase import PaymentRequest
 from core.gateway import client
-from crud.user import get_user_by_email
-from crud.user import *
+from crud.auth import get_user_by_email
+from crud.auth import *
 from crud.purchase import *
 from crud.course import get_course_by_id
 from crud.ebook import get_ebook_by_id
-
+from schemas.purchase import CheckoutResponse,AffiliateUser
 router = APIRouter()
 
 @router.post('/e-book-course')
@@ -106,3 +106,30 @@ async def payment_webhook(request: Request, db: Session = Depends(get_db)):
         return {"payment_status": "failed"}
 
     return {"payment_status": "unknown"}
+
+
+@router.get('/checkout/{type}/{item_id}')
+def get_transaction(type: str,
+    item_id:str,
+    ref: str | None = Query(None),  
+    db: Session = Depends(get_db),
+    user_id:str = Query(None)
+    ):
+    if(type not in ['course', 'ebook']):
+        raise HTTPException(status_code=status.HTTP_400_BAD_REQUEST, detail="Invalid type")
+    if type == 'course':
+        db_item = get_course_by_id(db, item_id)
+    else:
+        db_item = get_ebook_by_id(db, item_id)  
+    if not db_item:
+        raise HTTPException(status_code=status.HTTP_404_NOT_FOUND, detail="Item not found")
+    if ref:
+        affiliate_user = get_user_by_user_id(db, ref)
+        if not affiliate_user:
+            raise HTTPException(status_code=status.HTTP_404_NOT_FOUND, detail="Affiliate user not found")
+        if user_id and user_id == affiliate_user.user_id:
+            raise HTTPException(status_code=status.HTTP_400_BAD_REQUEST, detail="You cannot refer yourself")
+    return {
+      "item_data":CheckoutResponse.from_orm(db_item),
+      "affiliate_user": AffiliateUser.from_orm(affiliate_user) if ref else None,
+    }

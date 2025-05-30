@@ -25,4 +25,11 @@ class CouponCodeResponse(BaseModel):
     no_of_use: int
 
     class Config:
-      from_attributes = True
+      orm_mode = True
+
+class CouponCodeApply(BaseModel):
+    code: str
+    amount: float
+
+    class Config:
+      orm_mode = True

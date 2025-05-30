@@ -17,6 +17,16 @@ async def create_ebook(
     raise HTTPException(status_code=404,detail="Ebook not found")
   return db_ebook
 
+@router.get('/get/landing/{ebook_id}',response_model=EbookLandingResponse)
+async def get_course_landing_page(  
+  ebook_id:str,
+  db:Session=Depends(get_db)   
+):  
+  db_ebook = crud_ebook.get_ebook_by_id(db,ebook_id)
+  if not db_ebook:
+    raise HTTPException(status_code=404,detail="Ebook not found")
+  return db_ebook
+
 @router.get('/list',response_model=PaginationResponse[EBookResponse])
 async def list_courses(
   db: Session = Depends(get_db),
@@ -35,7 +45,9 @@ async def create_ebook(
   price: float = Form(...),
   commission: float = Form(...),
   pdf : UploadFile = File(...),
-  visible: bool = Form(...)
+  visible: bool = Form(...),
+  is_featured: bool = Form(False),
+  is_new: bool = Form(False),
 ):
   thumbnail_url = await crud_ebook.upload_thumbnail(thumbnail)
   pdf_url = await crud_ebook.upload_pdf_file(pdf)
@@ -47,6 +59,8 @@ async def create_ebook(
     "visible": visible,
     "thumbnail":thumbnail_url,
     "pdf":pdf_url,
+    "is_featured": is_featured,
+    "is_new": is_new,
   }
   ebook = crud_ebook.create_ebook(db=db,data=data)
   create_ebook_landing_page = crud_ebook.create_ebook_landing_page(db,ebook.id,)
@@ -69,7 +83,9 @@ async def update_ebook(
   top_heading: str | None = Form(None),
   sub_heading: str | None = Form(None),
   highlight_words: str | None = Form(None),
-  landing_thumbnail: UploadFile | None = File(None)
+  landing_thumbnail: UploadFile | None = File(None),
+  is_featured: bool = Form(False),
+  is_new: bool = Form(False),
 ):
   db_ebook = crud_ebook.get_ebook_by_id(db,ebook_id)
   if not db_ebook:
@@ -89,6 +105,8 @@ async def update_ebook(
     "intro_video": intro_video_url if intro_video else db_ebook.intro_video,
     "thumbnail": thumbnail_url if thumbnail else db_ebook.thumbnail,
     "pdf": pdf_url if pdf else db_ebook.pdf,
+    "is_featured": is_featured if is_featured is not None else db_ebook.is_featured,
+    "is_new": is_new if is_new is not None else db_ebook.is_new,
   }
   ebook = crud_ebook.update_ebook(db,db_ebook,update_data)
 
@@ -116,9 +134,6 @@ async def delete_ebook(ebook_id:str,db: Session = Depends(get_db)):
   await crud_ebook.delete_ebook_files(db_course)
   return crud_ebook.delete_ebook(db,db_course)
 
-
-
-
 @router.post('/chapter/create', response_model=EBookChapterResponse)
 async def create_ebook_chapter(
     data:EBookChapterCreate,
@@ -133,7 +148,6 @@ async def create_ebook_chapter(
                                               title=data.title, 
                                               page_number=data.page_number)
     return chapter
-
 
 @router.put('/chapter/update/{chapter_id}', response_model=EBookChapterResponse)  
 async def update_ebook_chapter(

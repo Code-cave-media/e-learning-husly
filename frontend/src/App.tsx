@@ -49,6 +49,8 @@ import { ConfirmDialog } from "primereact/confirmdialog";
 import "primereact/resources/themes/lara-light-cyan/theme.css";
 import "primereact/resources/primereact.min.css"; // Required base CSS
 import "primeicons/primeicons.css"; // Required for icons
+import UserDashboardCoursesPage from "./pages/userDashboard/CoursesPage";
+import UserDashboardEbooksPage from "./pages/userDashboard/EbooksPage";
 
 const queryClient = new QueryClient();
 
@@ -167,7 +169,7 @@ const AppRoutes = () => {
         }
       />
       <Route path="/landing/:type/:id" element={<LandingPage />} />
-      <Route path="/landing/:type/:id/checkout" element={<Checkout />} />
+      <Route path="/checkout/:type/:id" element={<Checkout />} />
 
       {/* Protected Dashboard Routes */}
       <Route
@@ -201,7 +203,7 @@ const AppRoutes = () => {
         element={
           <ProtectedRoute>
             <DashboardLayout>
-              <CoursesPage />
+              <UserDashboardCoursesPage />
             </DashboardLayout>
           </ProtectedRoute>
         }
@@ -211,7 +213,7 @@ const AppRoutes = () => {
         element={
           <ProtectedRoute>
             <DashboardLayout>
-              <EbooksPage />
+              <UserDashboardEbooksPage />
             </DashboardLayout>
           </ProtectedRoute>
         }
@@ -378,7 +380,7 @@ const UserVerification = ({ children }) => {
                 "/login",
                 "/learning",
                 "/landing/:type/:id",
-                "/landing/:type/:id/checkout",
+                "/checkout/:type/:id",
               ]
             )
           ) {

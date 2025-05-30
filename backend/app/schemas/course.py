@@ -26,6 +26,7 @@ class LandingPageResponse(BaseModel):
   thumbnail: str
   class Config:
     orm_mode = True
+
 class CourseResponse(BaseModel):
   id: int
   title : str
@@ -39,6 +40,8 @@ class CourseResponse(BaseModel):
   created_at:datetime
   updated_at:datetime
   intro_video: str | None = None
+  is_featured: bool
+  is_new : bool
   class Config:
     orm_mode = True
 
@@ -66,6 +69,33 @@ class EBookResponse(BaseModel):
       setattr(instance,'thumbnail',absolute_media_url(instance.thumbnail))
       setattr(instance,'file',absolute_media_url(instance.file))
       return instance
+    
 
+    class Config:
+        orm_mode = True
+
+
+class CourseListResponse(BaseModel):
+    id: int
+    title: str
+    description: str
+    is_featured: bool
+    is_new : bool
+    price: float
+    thumbnail: str
+    class Config: 
+      orm_mode = True
+
+class CourseLandingResponse(BaseModel):
+    id: int
+    title : str
+    description : str
+    price : float
+    commission : float
+    thumbnail:str
+    landing_page: LandingPageResponse
+    intro_video: str 
+    is_featured: bool
+    is_new : bool
     class Config:
         orm_mode = True

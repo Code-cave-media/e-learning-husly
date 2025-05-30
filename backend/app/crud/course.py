@@ -124,3 +124,4 @@ def update_landing_page(db:Session,db_landing_page:CourseLandingPage,update_data
 
 def get_landing_page_by_course_id(db:Session,course_id:int):
     return db.query(CourseLandingPage).filter(CourseLandingPage.course_id==course_id).first()
+

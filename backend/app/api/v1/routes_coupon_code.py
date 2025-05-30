@@ -39,3 +39,16 @@ def create_coupon(coupon_id:str,db:Session=Depends(get_db)):
   if not db_coupon:
     raise HTTPException(status_code=400,detail="Coupon not found")
   return crud_coupon.delete_coupon_code(db,db_coupon.id)
+
+@router.post('/apply',response_model=CouponCodeResponse)
+def apply_coupon_code(data:CouponCodeApply,db:Session=Depends(get_db)):
+    print(data)
+    db_coupon = crud_coupon.get_coupon_by_code(db,data.code)
+    if not db_coupon:
+        raise HTTPException(status_code=400,detail="Coupon code not found")
+    if db_coupon.no_of_use <= 0:
+        raise HTTPException(status_code=400,detail="Coupon code has no uses left")
+    if  db_coupon.type=='fixed' and db_coupon.min_purchase and data.amount < db_coupon.min_purchase:
+        raise HTTPException(status_code=400,detail="Minimum purchase amount not met")
+    
+    return CouponCodeResponse.from_orm(db_coupon)

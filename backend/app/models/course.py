@@ -12,6 +12,8 @@ class CourseLandingPage(TimestampMixin,Base):
     highlight_words = Column(String, nullable=False)
     thumbnail = Column(String, nullable=False)
     course_id = Column(Integer, ForeignKey("course.id"), unique=True)
+
+
 class Course(TimestampMixin,Base):
     __tablename__ = "course"
     id = Column(Integer, primary_key=True, index=True)
@@ -24,7 +26,22 @@ class Course(TimestampMixin,Base):
     thumbnail = Column(String)
     chapters = relationship("CourseChapter", backref="course", cascade="all, delete-orphan")
     landing_page = relationship("CourseLandingPage", backref="course", uselist=False)
+    is_new = Column(Boolean, default=True)  
+    is_featured = Column(Boolean, default=False)
 
+class CourseProgress(TimestampMixin,Base):
+    __tablename__ = "course_progress"
+    id = Column(Integer, primary_key=True, index=True)
+    user_id = Column(Integer, ForeignKey("user.id"))
+    course_id = Column(Integer, ForeignKey("course.id"))
+    completed = Column(Boolean, default=False)
+    
+class CourseCompletionChapter(TimestampMixin,Base):
+    __tablename__ = "course_completion_chapter"
+    id = Column(Integer, primary_key=True, index=True)
+    user_id = Column(Integer, ForeignKey("user.id"))
+    course_id = Column(Integer, ForeignKey("course.id"))
+    chapter_id = Column(Integer, ForeignKey("course_chapter.id"))
 
 class CourseChapter(TimestampMixin,Base):
     __tablename__ = "course_chapter"
@@ -44,4 +61,5 @@ class CouponCode(TimestampMixin,Base):
     min_purchase = Column(Float,nullable=True)
     code = Column(String, unique=True)
     no_of_use = Column(Integer)
+    used = Column(Integer, default=0)
 

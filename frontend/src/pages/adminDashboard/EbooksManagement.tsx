@@ -37,6 +37,8 @@ export default function EbooksManagement() {
     price: 0,
     commission: 0,
     visible: false,
+    is_featured: false,
+    is_new: false,
     thumbnail: null,
     intro_video: null,
     pdf: null,
@@ -78,6 +80,8 @@ export default function EbooksManagement() {
     formData.append("visible", newEbook.visible.toString());
     formData.append("intro_video", newEbook.intro_video);
     formData.append("pdf", newEbook.pdf);
+    formData.append("is_featured", newEbook.is_featured.toString());
+    formData.append("is_new", newEbook.is_new.toString());
     const response = await makeApiCall(
       "POST",
       API_ENDPOINT.CREATE_EBOOK,
@@ -96,6 +100,8 @@ export default function EbooksManagement() {
         price: 0,
         commission: 0,
         visible: false,
+        is_featured: false,
+        is_new: false,
         thumbnail: null,
         intro_video: null,
         pdf: null,
@@ -292,6 +298,24 @@ export default function EbooksManagement() {
                 }
               />
               <Label>Visible</Label>
+            </div>
+            <div className="flex items-center space-x-2">
+              <Switch
+                checked={newEbook.is_featured}
+                onCheckedChange={(checked) =>
+                  setNewEbook({ ...newEbook, is_featured: checked })
+                }
+              />
+              <Label>Featured Ebook</Label>
+            </div>
+            <div className="flex items-center space-x-2">
+              <Switch
+                checked={newEbook.is_new}
+                onCheckedChange={(checked) =>
+                  setNewEbook({ ...newEbook, is_new: checked })
+                }
+              />
+              <Label>New Ebook</Label>
             </div>
             <div className="flex justify-end gap-4">
               <Button

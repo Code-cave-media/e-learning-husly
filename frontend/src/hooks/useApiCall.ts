@@ -18,6 +18,7 @@ interface ApiResponse {
 export const useAPICall = () => {
   const [fetching, setIsFetching] = useState(false);
   const [fetchType, setFetchType] = useState<string>("");
+  const [isFetched, setIsFetched] = useState(false);
   async function makeApiCall(
     method: string,
     endpoint: string,
@@ -86,11 +87,13 @@ export const useAPICall = () => {
       );
       console.log(responseData.error);
     }
+    setIsFetched(true);
     return responseData;
   }
   return {
     makeApiCall,
     fetching,
     fetchType,
+    isFetched,
   };
 };
