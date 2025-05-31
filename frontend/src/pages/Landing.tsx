@@ -18,11 +18,11 @@ const Landing = () => {
   const [showBuyButton, setShowBuyButton] = useState(false);
   const [dialogOpen, setDialogOpen] = useState(false);
   const navigate = useNavigate();
-  const { isAuthenticated, isAdmin } = useAuth();
+  const { isAuthenticated, isAdmin, authToken } = useAuth();
   const { fetchType, fetching, makeApiCall } = useAPICall();
   const [data, setData] = useState<LandingPage | null>(null);
   const [isLoading, setIsLoading] = useState(true);
-  const [isPlaying,setIsPlaying] = useState(false);
+  const [isPlaying, setIsPlaying] = useState(false);
 
   useEffect(() => {
     const fetchData = async () => {
@@ -30,17 +30,22 @@ const Landing = () => {
       if (type === "course") {
         response = await makeApiCall(
           "GET",
-          API_ENDPOINT.GET_COURSE_LANDING_PAGE(id)
+          API_ENDPOINT.GET_COURSE_LANDING_PAGE(id),
+          null,
+          "application/json",
+          isAuthenticated ? authToken : ""
         );
       } else if (type == "ebook") {
         response = await makeApiCall(
           "GET",
-          API_ENDPOINT.GET_EBOOK_LANDING_PAGE(id)
+          API_ENDPOINT.GET_EBOOK_LANDING_PAGE(id),
+          null,
+          "application/json",
+          isAuthenticated ? authToken : ""
         );
       }
       if (response.status == 200) {
         const videoDuration = await getVideoDuration(response.data.intro_video);
-        console.log(videoDuration);
         setTimeLeft(parseInt(`${videoDuration as number}`));
         setData(response.data);
       }
@@ -48,13 +53,23 @@ const Landing = () => {
     };
     fetchData();
   }, [ref, id, type]);
-
+  useEffect(() => {
+    if(ref){
+      const totalClickedLinksStr = localStorage.getItem("totalClickedLinks");
+      const totalClickedLinks: string[] = totalClickedLinksStr
+      ? JSON.parse(totalClickedLinksStr)
+      : [];
+      if(!totalClickedLinks.includes(`${type}/${id}/${ref}`)){
+        addClickAffiliateLink(totalClickedLinks);
+      }
+    }
+  }, [ref]);
   useEffect(() => {
     if (timeLeft <= 0) {
       setShowBuyButton(true);
       return;
     }
-    if(isPlaying){
+    if (isPlaying) {
       const timerId = setInterval(() => {
         setTimeLeft((prevTime) => prevTime - 1);
       }, 1000);
@@ -69,8 +84,21 @@ const Landing = () => {
     return `${h}:${m}:${s}`;
   };
 
+  const addClickAffiliateLink = async (totalClickedLinks: string[]) => {
+    const response = await makeApiCall(
+      "POST",
+      API_ENDPOINT.ADD_CLICK_AFFILIATE_LINK,
+      { affiliate_user_id: ref }
+    );
+    if (response.status == 200) {
+      localStorage.setItem(
+        "totalClickedLinks",
+        JSON.stringify([...totalClickedLinks, `${type}/${id}/${ref}`])
+      );
+    }
+  };
   const handleBuyNowClick = () => {
-    navigate(`/checkout/${type}/${id}?ref=${ref}`);
+    navigate(`/checkout/${type}/${id}?${ref ? `ref=${ref}` : ""}`);
   };
   const getVideoDuration = (videoUrl: string) => {
     return new Promise((resolve, reject) => {
@@ -143,7 +171,6 @@ const Landing = () => {
       </div>
     );
   }
-
   return (
     <div className="flex flex-col items-center bg-black text-white p-5 font-sans min-h-screen bg-gradient-to-b from-black to-[#1a2a4a]">
       {/* Login Button */}
@@ -241,14 +268,24 @@ const Landing = () => {
         </div>
       )}
 
-      {showBuyButton && (
-        <button
-          onClick={handleBuyNowClick}
-          className="bg-[#00b0ff] text-white px-8 py-3 border-none rounded text-lg cursor-pointer mt-5 transition-opacity hover:opacity-90 w-full max-w-sm"
-        >
-          Buy Now
-        </button>
-      )}
+      {showBuyButton &&
+        (!data.is_purchased ? (
+          <button
+            onClick={handleBuyNowClick}
+            className="bg-[#00b0ff] text-white px-8 py-3 border-none rounded text-lg cursor-pointer mt-5 transition-opacity hover:opacity-90 w-full max-w-sm"
+          >
+            Buy Now
+          </button>
+        ) : (
+          <button
+            onClick={() =>
+              navigate(`/${type}/${type === "course" ? "watch" : "read"}/${id}`)
+            }
+            className="bg-[#00b0ff] text-white px-8 py-3 border-none rounded text-lg cursor-pointer mt-5 transition-opacity hover:opacity-90 w-full max-w-sm"
+          >
+            Watch now
+          </button>
+        ))}
     </div>
   );
 };

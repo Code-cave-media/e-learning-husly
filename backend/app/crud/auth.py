@@ -31,7 +31,7 @@ def get_temp_user_by_id(db:Session,id:str):
 
 def create_temp_user(db:Session,data):
   hashed_pw = pwd_context.hash(data.get('password'))
-  db_user = TempUser(email=data.get('email'),password=hashed_pw)
+  db_user = TempUser(email=data.get('email'),password=hashed_pw,name=data.get('name'),phone=data.get('phone'))
   db.add(db_user)
   db.commit()
   db.refresh(db_user)
@@ -41,6 +41,8 @@ def update_temp_user(db:Session,temp_user:TempUser,data):
   hashed_pw = pwd_context.hash(data.get('password'))
   setattr(temp_user,'password',hashed_pw)
   setattr(temp_user,'email',data.get('email'))
+  setattr(temp_user,'name',data.get('name'))
+  setattr(temp_user,'phone',data.get('phone'))
   db.commit()
   db.refresh(temp_user)
   return temp_user

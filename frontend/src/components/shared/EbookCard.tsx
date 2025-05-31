@@ -13,9 +13,11 @@ import {
 import { toast } from "sonner";
 import { Input } from "@/components/ui/input";
 import { Link as LinkIcon } from "lucide-react";
+import { useAPICall } from "@/hooks/useApiCall";
+import { API_ENDPOINT } from "@/config/backend";
 
 interface EbookCardProps {
-  id: string;
+  id: number | string;
   title: string;
   description: string;
   price: number;
@@ -24,6 +26,8 @@ interface EbookCardProps {
   is_featured?: boolean;
   is_purchased?: boolean;
   isHomePage?: boolean; // Optional prop to indicate if it's on the home page
+  type?: "course" | "ebook";
+  has_affiliate_link?: boolean;
 }
 
 const EbookCard = ({
@@ -36,24 +40,40 @@ const EbookCard = ({
   is_featured = false,
   is_purchased = false,
   isHomePage,
+  has_affiliate_link = false,
 }: EbookCardProps) => {
-  const { isAuthenticated } = useAuth();
+  const { isAuthenticated, user, authToken } = useAuth();
   const [affiliateLink, setAffiliateLink] = React.useState("");
   const [showCopied, setShowCopied] = React.useState(false);
-
-  const createAffiliateLink = () => {
-    const link = `${window.location.origin}/landing/ebook/${id}?ref=affiliate123`;
+  const { fetchType, fetching, makeApiCall } = useAPICall();
+  const createAffiliateLink = async () => {
+    if (!has_affiliate_link) {
+      const response = await makeApiCall(
+        "POST",
+        API_ENDPOINT.CREATE_AFFILIATE_LINK,
+        {
+          item_id: id,
+          item_type: "ebook",
+        },
+        "application/json",
+        authToken,
+        "createAffiliateLink"
+      );
+      if (response.status !== 200) {
+        toast.error("Error generating affiliate link!");
+        return;
+      }
+    }
+    const link = `${window.location.origin}/landing/ebook/${id}?ref=${user?.user_id}`;
     setAffiliateLink(link);
     toast.success("Affiliate link generated successfully!");
   };
-
   const copyAffiliateLink = () => {
     navigator.clipboard.writeText(affiliateLink);
     setShowCopied(true);
     setTimeout(() => setShowCopied(false), 2000);
     toast.success("Link copied to clipboard!");
   };
-  console.log(isAuthenticated);
   return (
     <Card className="overflow-hidden h-full flex flex-col transition-all hover:shadow-md">
       <div className="relative h-[200px] overflow-hidden bg-gray-100">
@@ -85,7 +105,11 @@ const EbookCard = ({
                 {affiliateLink ? (
                   <div className="flex items-center space-x-2">
                     <Input value={affiliateLink} readOnly />
-                    <Button size="sm" onClick={copyAffiliateLink}>
+                    <Button
+                      loading={fetching && fetchType === "createAffiliateLink"}
+                      size="sm"
+                      onClick={copyAffiliateLink}
+                    >
                       {showCopied ? "Copied!" : "Copy"}
                     </Button>
                   </div>

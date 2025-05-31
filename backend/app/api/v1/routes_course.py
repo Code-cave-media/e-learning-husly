@@ -4,7 +4,8 @@ from crud import course as crud_course
 from schemas.course import *
 from db.session import get_db
 from schemas.common import Pagination,PaginationResponse
-from core.deps import is_admin_user,get_current_user
+from core.deps import is_admin_user,get_current_user,get_optional_current_user
+from crud.purchase import get_purchase_by_user_id_and_item_id_and_type
 router = APIRouter()
 from models.user import User
 @router.get('/get/{course_id}',response_model=CourseResponse)
@@ -20,12 +21,14 @@ async def create_course(
 @router.get('/get/landing/{course_id}',response_model=CourseLandingResponse)
 async def get_course_landing_page(  
   course_id:str,
-  db:Session=Depends(get_db)   
+  db:Session=Depends(get_db) ,
+  current_user:User |None= Depends(get_optional_current_user)  
 ):  
   db_course = crud_course.get_course_by_id(db,course_id)
   if not db_course:
     raise HTTPException(status_code=404,detail="Course not found")
-
+  if current_user and get_purchase_by_user_id_and_item_id_and_type(db,current_user.id,db_course.id,'ebook'):
+    db_course.is_purchased = True
   return db_course
 
 @router.get('/list',response_model=PaginationResponse[CourseResponse])

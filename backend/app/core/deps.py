@@ -5,7 +5,7 @@ from core.security import decode_token
 from db.session import SessionLocal
 from crud.auth import get_user_by_email
 from models.user import User
-
+from fastapi import Header
 oauth2_scheme  = OAuth2PasswordBearer(tokenUrl='/api/v1/auth/login')
 
 def get_db():
@@ -31,3 +31,16 @@ def is_admin_user(current_user:User=Depends(get_current_user)):
           detail="You do not have permission to perform this action"
       )
   return current_user
+
+def get_optional_current_user(
+    authorization: str = Header(default=None),
+    db: Session = Depends(get_db)
+):
+    if not authorization or not authorization.startswith("Bearer "):
+        return None
+    token = authorization.split(" ")[1]
+    email = decode_token(token)
+    if not email:
+        return None
+    user = get_user_by_email(db, email)
+    return user

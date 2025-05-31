@@ -1,6 +1,6 @@
 from sqlalchemy import Column, Integer, String, ForeignKey
 from db.base import Base
-
+from models.utils import TimestampMixin
 class AffiliateAccount(Base):
     __tablename__ = "affiliate_account"
     id = Column(Integer, primary_key=True, index=True)
@@ -30,3 +30,15 @@ class UPIDetails(Base):
     id = Column(Integer, ForeignKey("affiliate_account.id"), primary_key=True)
     account_id = Column(Integer)
     upiId = Column(Integer)
+
+
+class AffiliateLink(TimestampMixin,Base):
+    __tablename__ = "affiliate_link"
+    id = Column(Integer, primary_key=True, index=True)
+    user_id = Column(Integer, ForeignKey("user.id"))
+    item_id = Column(Integer)
+    item_type = Column(String)
+    created_at = Column(String)
+    updated_at = Column(String)
+    clicks = Column(Integer, default=0)
+    purchases = Column(Integer, default=0)

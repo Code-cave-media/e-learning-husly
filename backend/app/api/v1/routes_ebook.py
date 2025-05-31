@@ -4,8 +4,10 @@ from crud import ebook as crud_ebook
 from schemas.ebook import *
 from db.session import get_db
 from models.user import User
-from core.deps import is_admin_user
+from core.deps import is_admin_user,get_optional_current_user
 from schemas.common import Pagination,PaginationResponse
+from crud.purchase import get_purchase_by_user_id_and_item_id_and_type
+from crud.affiliate import get_affiliate_link_by_all,add_clicks_to_affiliate_link
 router = APIRouter()
 @router.get('/get/{ebook_id}',response_model=EBookResponse)
 async def create_ebook(
@@ -18,17 +20,20 @@ async def create_ebook(
   return db_ebook
 
 @router.get('/get/landing/{ebook_id}',response_model=EbookLandingResponse)
-async def get_course_landing_page(  
+async def get_ebook_landing_page(  
   ebook_id:str,
-  db:Session=Depends(get_db)   
-):  
+  db:Session=Depends(get_db),
+  current_user:User |None= Depends(get_optional_current_user)
+): 
   db_ebook = crud_ebook.get_ebook_by_id(db,ebook_id)
   if not db_ebook:
     raise HTTPException(status_code=404,detail="Ebook not found")
+  if current_user and get_purchase_by_user_id_and_item_id_and_type(db,current_user.id,ebook_id,'ebook'):
+    db_ebook.is_purchased = True
   return db_ebook
 
 @router.get('/list',response_model=PaginationResponse[EBookResponse])
-async def list_courses(
+async def list_ebooks(
   db: Session = Depends(get_db),
   data: Pagination = Depends(),
   current_user: User = Depends(is_admin_user)

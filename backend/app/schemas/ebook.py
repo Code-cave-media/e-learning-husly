@@ -77,5 +77,6 @@ class EbookLandingResponse(BaseModel):
     intro_video: str 
     is_featured: bool
     is_new : bool
+    is_purchased: bool = False
     class Config:
         orm_mode = True

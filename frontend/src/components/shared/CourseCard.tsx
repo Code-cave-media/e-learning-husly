@@ -13,6 +13,8 @@ import { Input } from "@/components/ui/input";
 import { toast } from "sonner";
 import { useAuth } from "@/contexts/AuthContext";
 import { Link as LinkIcon } from "lucide-react";
+import { useAPICall } from "@/hooks/useApiCall";
+import { API_ENDPOINT } from "@/config/backend";
 
 interface CourseCardProps {
   id: number;
@@ -24,6 +26,8 @@ interface CourseCardProps {
   is_featured?: boolean;
   is_purchased?: boolean;
   isHomePage?: boolean;
+  type?: "course" | "ebook";
+  has_affiliate_link?: boolean;
 }
 
 const CourseCard = ({
@@ -36,15 +40,34 @@ const CourseCard = ({
   is_featured = false,
   is_purchased = false,
   isHomePage = false,
+  has_affiliate_link = false,
 }: CourseCardProps) => {
+  const { isAuthenticated, user, authToken } = useAuth();
   const [affiliateLink, setAffiliateLink] = React.useState("");
   const [showCopied, setShowCopied] = React.useState(false);
-  const { isAuthenticated } = useAuth();
+  const { fetchType, fetching, makeApiCall } = useAPICall();
 
-  const createAffiliateLink = () => {
-    const link = `${window.location.origin}/landing/course/${id}?ref=affiliate123`;
-    setAffiliateLink(link);
-    toast.success("Affiliate link generated successfully!");
+  const createAffiliateLink = async () => {
+    if (!has_affiliate_link) {
+      const response = await makeApiCall(
+        "POST",
+        API_ENDPOINT.CREATE_AFFILIATE_LINK,
+        {
+          item_id: id,
+          item_type: "course",
+        },
+        "application/json",
+        authToken,
+        "createAffiliateLink"
+      );
+      if (response.status !== 200) {
+        toast.error("Error generating affiliate link!");
+        return;
+      }
+      const link = `${window.location.origin}/landing/course/${id}?ref=${user?.user_id}`;
+      setAffiliateLink(link);
+      toast.success("Affiliate link generated successfully!");
+    }
   };
 
   const copyAffiliateLink = () => {
@@ -85,7 +108,11 @@ const CourseCard = ({
                 {affiliateLink ? (
                   <div className="flex items-center space-x-2">
                     <Input value={affiliateLink} readOnly />
-                    <Button size="sm" onClick={copyAffiliateLink}>
+                    <Button
+                      loading={fetching && fetchType === "createAffiliateLink"}
+                      size="sm"
+                      onClick={copyAffiliateLink}
+                    >
                       {showCopied ? "Copied!" : "Copy"}
                     </Button>
                   </div>

@@ -2,12 +2,10 @@ from fastapi import FastAPI
 from api.v1 import routes_user_dashboard
 from db.base import Base
 from db.session import engine
-from api.v1 import routes_auth,routes_coupon_code,routes_course,routes_ebook,routes_purchase
+from api.v1 import routes_auth,routes_coupon_code,routes_course,routes_ebook,routes_purchase,routes_affiliate
 from fastapi.staticfiles import StaticFiles
 from core.config import settings
-from fastapi import APIRouter, UploadFile, File
-import uuid
-import os
+
 from fastapi.middleware.cors import CORSMiddleware
 app = FastAPI()
 
@@ -26,4 +24,5 @@ app.include_router(routes_course.router , prefix='/api/v1/course',tags=['course'
 app.include_router(routes_ebook.router , prefix='/api/v1/ebook',tags=['ebook'])
 app.include_router(routes_purchase.router , prefix='/api/v1/purchase',tags=['purchase'])
 app.include_router(routes_user_dashboard.router , prefix='/api/v1/user-dashboard',tags=['user-dashboard'])
+app.include_router(routes_affiliate.router , prefix='/api/v1/affiliate',tags=['affiliate'])
 app.mount("/media", StaticFiles(directory=settings.MEDIA_PATH), name="media")

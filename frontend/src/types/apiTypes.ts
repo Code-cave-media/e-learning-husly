@@ -17,6 +17,7 @@ export interface LandingPage {
   intro_video: string;
   is_featured: boolean;
   is_new: boolean;
+  is_purchased: boolean;
   landing_page: {
     main_heading: string;
     sub_heading: string;

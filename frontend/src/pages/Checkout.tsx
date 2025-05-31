@@ -19,11 +19,11 @@ const mockProduct = {
 
 const Checkout = () => {
   const [form, setForm] = useState({
-    name: "",
-    email: "",
-    phone: "",
-    password: "",
-    confirmPassword: "",
+    name: "lubina",
+    email: "lubina@gmail.com",
+    phone: "9876543210",
+    password: "irshad1213",
+    confirmPassword: "irshad1213",
   });
   const { id, type } = useParams();
   const [searchParams] = useSearchParams();
@@ -34,6 +34,7 @@ const Checkout = () => {
   const { fetchType, fetching, isFetched, makeApiCall } = useAPICall();
   const [error, setError] = useState<string>("");
   const navigate = useNavigate();
+
   useEffect(() => {
     const fetchData = async () => {
       const response = await makeApiCall(
@@ -53,10 +54,10 @@ const Checkout = () => {
     };
     fetchData();
   }, []);
+  console.log(API_ENDPOINT.GET_CHECKOUT_DATA(id, type, ref, user?.user_id));
   const handleFormChange = (e) => {
     setForm({ ...form, [e.target.name]: e.target.value });
   };
-
   const handleApplyCoupon = async (e) => {
     e.preventDefault();
     // Mock coupon logic
@@ -85,8 +86,81 @@ const Checkout = () => {
       toast.error(response.error);
     }
   };
+  const handleCheckout = async () => {
+    if (
+      !isAuthenticated &&
+      !form.password &&
+      !form.confirmPassword &&
+      !form.name &&
+      !form.email &&
+      !form.phone
+    ) {
+      toast.error("Please enter all the required fields");
+      return;
+    }
+    if (form.password !== form.confirmPassword) {
+      toast.error("Password and confirm password do not match");
+      return;
+    }
+    const requestData = {
+      user_id: user?.user_id,
+      item_id: data?.item_data.id,
+      item_type: type,
+      affiliate_user_id: ref,
+      name: form.name,
+      email: form.email,
+      phone: form.phone,
+      password: form.password,
+      coupon: coupon,
+      discount: data?.item_data.discount,
+    };
 
-  if (fetching && fetchType !== "couponApply") {
+    const response = await makeApiCall(
+      "POST",
+      API_ENDPOINT.CHECKOUT,
+      requestData,
+      "application/json",
+      null,
+      "checkout"
+    );
+    if (response.status === 200) {
+      handleRazorpay(response.data);
+    } else {
+      toast.error(response.error);
+    }
+  };
+  const handleRazorpay = async (orderResponse: {
+    amount: number;
+    id: string;
+  }) => {
+    const options = {
+      key: import.meta.env.VITE_RAZORPAY_TEST_KEY,
+      amount: orderResponse.amount,
+      currency: "INR",
+      name: "Your Site Name",
+      description: "Course / E-Book Purchase",
+      order_id: orderResponse.id,
+      handler: function (response) {
+        navigate("/payment-verification", {
+          state: {
+            transactionId: response.razorpay_payment_id,
+          },
+        });
+      },
+      prefill: {
+        name: user ? user.name : form.name,
+        email: user ? user.email : form.email,
+        contact: user ? user.phone : form.phone,
+      },
+      theme: {
+        color: "#3399cc",
+      },
+    };
+
+    const rzp = new window.Razorpay(options);
+    rzp.open();
+  };
+  if (fetching && fetchType !== "couponApply" && fetchType !== "checkout") {
     return (
       <div className="min-h-screen bg-gradient-to-b from-black to-[#1a2a4a] flex flex-col items-center p-4 relative pb-16">
         <Loading />
@@ -154,7 +228,7 @@ const Checkout = () => {
             </div>
           )}
 
-          {isAuthenticated && !isAdmin && (
+          {!isAuthenticated && (
             <form
               className="flex flex-col gap-3 mb-6"
               onSubmit={(e) => e.preventDefault()}
@@ -264,9 +338,13 @@ const Checkout = () => {
           </div>
 
           {/* Checkout Button */}
-          <button className="w-full bg-[#00b0ff] text-white py-3 rounded text-lg font-bold hover:opacity-90">
+          <Button
+            loading={fetching && fetchType === "checkout"}
+            onClick={handleCheckout}
+            className="w-full bg-[#00b0ff] text-white py-3 rounded text-lg font-bold hover:opacity-90"
+          >
             Checkout
-          </button>
+          </Button>
         </div>
       </div>
     );

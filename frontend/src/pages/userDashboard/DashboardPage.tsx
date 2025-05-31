@@ -8,43 +8,9 @@ import { API_ENDPOINT } from "@/config/backend";
 import { useAuth } from "@/contexts/AuthContext";
 import toast from "react-hot-toast";
 import { Loading } from "@/components/ui/loading";
+import EbookCard from "@/components/shared/EbookCard";
 
 // Mock data for demonstration
-const mockCourses = [
-  {
-    id: "1",
-    title: "Web Development Bootcamp",
-    description: "Learn full-stack web development from scratch",
-    price: 99.99,
-    thumbnail:
-      "https://images.unsplash.com/photo-1498050108023-c5249f4df085?ixlib=rb-4.0.3",
-    isNew: true,
-    isFeatured: true,
-    isPurchased: true,
-  },
-  {
-    id: "2",
-    title: "Digital Marketing Masterclass",
-    description: "Master the art of digital marketing and grow your business",
-    price: 79.99,
-    thumbnail:
-      "https://images.unsplash.com/photo-1460925895917-afdab827c52f?ixlib=rb-4.0.3",
-    isNew: true,
-    isFeatured: false,
-    isPurchased: false,
-  },
-  {
-    id: "3",
-    title: "Data Science Fundamentals",
-    description: "Learn data science and machine learning basics",
-    price: 129.99,
-    thumbnail:
-      "https://images.unsplash.com/photo-1551288049-bebda4e38f71?ixlib=rb-4.0.3",
-    isNew: false,
-    isFeatured: true,
-    isPurchased: false,
-  },
-];
 
 interface CardData {
   total_purchase: number;
@@ -62,6 +28,8 @@ interface CourseEbookData {
   is_new: boolean;
   is_featured: boolean;
   is_purchased: boolean;
+  type: "course" | "ebook";
+  has_affiliate_link: boolean;
 }
 
 const DashboardPage = () => {
@@ -197,13 +165,21 @@ const DashboardPage = () => {
             <>
               {courseEbookData.length > 0 ? (
                 <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-3 gap-6">
-                  {courseEbookData.map((course) => (
-                    <CourseCard
-                      key={course.id}
-                      {...course}
-                      isPurchased={true}
-                    />
-                  ))}
+                  {courseEbookData.map((course) =>
+                    course.type === "course" ? (
+                      <CourseCard
+                        key={course.id}
+                        {...course}
+                        is_purchased={true}
+                      />
+                    ) : (
+                      <EbookCard
+                        key={course.id}
+                        {...course}
+                        is_purchased={true}
+                      />
+                    )
+                  )}
                 </div>
               ) : (
                 <EmptyState

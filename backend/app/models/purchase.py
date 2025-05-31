@@ -2,7 +2,7 @@ from sqlalchemy import Column, Integer, String, ForeignKey, Boolean, Float, Date
 from db.base import Base
 from .utils import TimestampMixin
 from datetime import datetime
-
+from sqlalchemy.orm import relationship
 class Purchase(TimestampMixin,Base):
     __tablename__ = "purchase"
     id = Column(Integer, primary_key=True, index=True)
@@ -14,7 +14,7 @@ class Purchase(TimestampMixin,Base):
 class Transaction(TimestampMixin,Base):
     __tablename__ = "transaction"
     id = Column(Integer, primary_key=True, index=True)
-    purchase_id = Column(Integer, ForeignKey("purchase.id"))
+    purchase_id = Column(Integer, ForeignKey("purchase.id"), nullable=True)
     transaction_id = Column(String, unique=True)  # Razorpay payment ID
     order_id = Column(String)                     # Razorpay order ID
     status = Column(String)                       # e.g., 'captured', 'failed'

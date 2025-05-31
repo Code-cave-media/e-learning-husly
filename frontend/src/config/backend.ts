@@ -45,4 +45,8 @@ export const API_ENDPOINT = {
   ) =>
     `${API_URL}/purchase/checkout/${type}/${id}?ref=${ref}&user_id=${user_id}`,
   APPLY_COUPON: `${API_URL}/coupon/apply`,
+  CHECKOUT: `${API_URL}/purchase/checkout`,
+  PAYMENT_VERIFICATION: `${API_URL}/purchase/checkout/verify`,
+  CREATE_AFFILIATE_LINK: `${API_URL}/affiliate/create`,
+  ADD_CLICK_AFFILIATE_LINK: `${API_URL}/affiliate/click/add`,
 };
