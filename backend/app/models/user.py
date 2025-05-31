@@ -13,6 +13,7 @@ class User(Base):
     is_admin = Column(Boolean,default=False)
     purchases = relationship('Purchase',foreign_keys="Purchase.purchased_user_id",backref="purchaser")
     affiliate_purchases = relationship('Purchase', foreign_keys="Purchase.affiliate_user_id",backref="affiliate_user")
+    affiliate_links = relationship('AffiliateLink', foreign_keys="AffiliateLink.user_id",backref="user")
 class TempUser(Base):
     __tablename__ = "temp_user"
     id = Column(Integer, primary_key=True, index=True)

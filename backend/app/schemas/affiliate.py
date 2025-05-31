@@ -16,6 +16,6 @@ class AffiliateLinkResponse(BaseModel):
         orm_mode = True
 
 class AddAffiliateLinkClicks(BaseModel):
-    affiliate_user_id: int
-    item_id: int
+    affiliate_user_id: str | int
+    item_id: str | int 
     item_type: str

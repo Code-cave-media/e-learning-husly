@@ -49,4 +49,5 @@ export const API_ENDPOINT = {
   PAYMENT_VERIFICATION: `${API_URL}/purchase/checkout/verify`,
   CREATE_AFFILIATE_LINK: `${API_URL}/affiliate/create`,
   ADD_CLICK_AFFILIATE_LINK: `${API_URL}/affiliate/click/add`,
+  USER_DASHBOARD_AFFILIATE: `${API_URL}/user-dashboard/affiliate-dashboard`,
 };

@@ -7,7 +7,7 @@ from models.purchase import Purchase
 from schemas.course import CourseListResponse
 from schemas.ebook import EbookListResponse
 from crud.affiliate import get_affiliate_link_by_all
-
+from crud.affiliate import AffiliateAccount
 
 def get_user_purchased_course_and_ebook(db: Session, user: User,page: int = 1, limit: int = 10):
     user_purchases = user.purchases
@@ -225,8 +225,6 @@ def get_featured_courses(db: Session,user:User, page: int = 1, limit: int = 10):
         "items": paginated_items
     }
 
-
-
 def get_all_ebooks(db: Session, user: User, page: int = 1, limit: int = 10):
     ebooks = db.query(EBook).all()
     res = []
@@ -252,6 +250,7 @@ def get_all_ebooks(db: Session, user: User, page: int = 1, limit: int = 10):
         "total": total,
         "items": paginated_items
     }
+
 def get_new_ebooks(db: Session, user: User, page: int = 1, limit: int = 10):
     ebooks = db.query(EBook).filter(EBook.is_new == True).all()
     res = []
@@ -277,6 +276,7 @@ def get_new_ebooks(db: Session, user: User, page: int = 1, limit: int = 10):
         "total": total,
         "items": paginated_items
     }
+
 def get_featured_ebooks(db: Session, user: User, page: int = 1, limit: int = 10):
     ebooks = db.query(EBook).filter(EBook.is_featured == True).all()
     res = []
@@ -302,3 +302,4 @@ def get_featured_ebooks(db: Session, user: User, page: int = 1, limit: int = 10)
         "total": total,
         "items": paginated_items
     }
+

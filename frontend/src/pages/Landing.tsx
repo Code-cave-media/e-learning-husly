@@ -19,7 +19,7 @@ const Landing = () => {
   const [dialogOpen, setDialogOpen] = useState(false);
   const navigate = useNavigate();
   const { isAuthenticated, isAdmin, authToken } = useAuth();
-  const { fetchType, fetching, makeApiCall } = useAPICall();
+  const { fetchType, fetching, makeApiCall,isFetched } = useAPICall();
   const [data, setData] = useState<LandingPage | null>(null);
   const [isLoading, setIsLoading] = useState(true);
   const [isPlaying, setIsPlaying] = useState(false);
@@ -54,16 +54,18 @@ const Landing = () => {
     fetchData();
   }, [ref, id, type]);
   useEffect(() => {
-    if(ref){
+    if (ref && isFetched) {
       const totalClickedLinksStr = localStorage.getItem("totalClickedLinks");
+
       const totalClickedLinks: string[] = totalClickedLinksStr
-      ? JSON.parse(totalClickedLinksStr)
-      : [];
-      if(!totalClickedLinks.includes(`${type}/${id}/${ref}`)){
+        ? JSON.parse(totalClickedLinksStr)
+        : [];
+      console.log(totalClickedLinks);
+      if (!totalClickedLinks.includes(`${type}/${id}/${ref}`)) {
         addClickAffiliateLink(totalClickedLinks);
       }
     }
-  }, [ref]);
+  }, [ref, isFetched]);
   useEffect(() => {
     if (timeLeft <= 0) {
       setShowBuyButton(true);
@@ -88,7 +90,8 @@ const Landing = () => {
     const response = await makeApiCall(
       "POST",
       API_ENDPOINT.ADD_CLICK_AFFILIATE_LINK,
-      { affiliate_user_id: ref }
+      { affiliate_user_id: ref,item_id:id,item_type:type },
+      "application/json",
     );
     if (response.status == 200) {
       localStorage.setItem(

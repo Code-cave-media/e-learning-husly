@@ -1,4 +1,4 @@
-import React from "react";
+import React, { useEffect } from "react";
 import { Link } from "react-router-dom";
 import { Card, CardContent, CardFooter } from "@/components/ui/card";
 import { Button } from "@/components/ui/button";
@@ -46,6 +46,12 @@ const EbookCard = ({
   const [affiliateLink, setAffiliateLink] = React.useState("");
   const [showCopied, setShowCopied] = React.useState(false);
   const { fetchType, fetching, makeApiCall } = useAPICall();
+  useEffect(() => {
+    if (has_affiliate_link) {
+      const link = `${window.location.origin}/landing/ebook/${id}?ref=${user?.user_id}`;
+      setAffiliateLink(link);
+    }
+  }, [has_affiliate_link]);
   const createAffiliateLink = async () => {
     if (!has_affiliate_link) {
       const response = await makeApiCall(

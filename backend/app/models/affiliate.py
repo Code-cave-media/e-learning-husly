@@ -1,11 +1,13 @@
 from sqlalchemy import Column, Integer, String, ForeignKey
 from db.base import Base
-from models.utils import TimestampMixin
+from models.utils import TimestampMixin,CreatedAtMixin
+from sqlalchemy.orm import relationship
 class AffiliateAccount(Base):
     __tablename__ = "affiliate_account"
     id = Column(Integer, primary_key=True, index=True)
     user_id = Column(Integer, ForeignKey("user.id"))
     balance = Column(Integer)
+    total_earnings = Column(Integer,default=0)
 
 class Withdraw(Base):
     __tablename__ = "withdraw"
@@ -31,6 +33,18 @@ class UPIDetails(Base):
     account_id = Column(Integer)
     upiId = Column(Integer)
 
+class AffiliateLinkClick(CreatedAtMixin,Base):
+    __tablename__ = "affiliate_link_click"
+    id = Column(Integer, primary_key=True)
+    link_id = Column(Integer, ForeignKey("affiliate_link.id", ondelete="CASCADE"))
+    affiliate_link = relationship("AffiliateLink", back_populates="clicks")
+
+class AffiliateLinkPurchase(CreatedAtMixin,Base):
+    __tablename__ = "affiliate_link_purchase"
+    id = Column(Integer, primary_key=True)
+    link_id = Column(Integer, ForeignKey("affiliate_link.id", ondelete="CASCADE"))
+    affiliate_link = relationship("AffiliateLink", back_populates="purchases")
+    amount = Column(Integer)
 
 class AffiliateLink(TimestampMixin,Base):
     __tablename__ = "affiliate_link"
@@ -38,7 +52,5 @@ class AffiliateLink(TimestampMixin,Base):
     user_id = Column(Integer, ForeignKey("user.id"))
     item_id = Column(Integer)
     item_type = Column(String)
-    created_at = Column(String)
-    updated_at = Column(String)
-    clicks = Column(Integer, default=0)
-    purchases = Column(Integer, default=0)
+    clicks = relationship("AffiliateLinkClick",back_populates='affiliate_link',cascade="all, delete-orphan")
+    purchases = relationship("AffiliateLinkPurchase", back_populates="affiliate_link", cascade="all, delete-orphan")

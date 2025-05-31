@@ -3,8 +3,9 @@ from sqlalchemy.orm import Session
 from core.deps import get_current_user
 from db.session import get_db
 from crud.user_dashboard import *
+from crud.affiliate import *
 from fastapi import Query
-
+from crud.affiliate import get_affiliate_account_by_user_id
 router = APIRouter()
 
 @router.get('/list')
@@ -65,3 +66,21 @@ def get_user_dashboard_ebooks(
     elif filter == 'featured':
         return get_featured_ebooks(db,current_user, page, limit)
     return []   
+
+@router.get('/affiliate-dashboard')
+def get_affiliate_dashboard(db:Session=Depends(get_db),current_user:User=Depends(get_current_user)):
+    # fetch the cards details
+    response = {
+        "overview":{},
+        "line_graph":{},
+        "bar_graph":{},
+        "recent_activity":[{}]
+    }
+    response['overview']['total_earnings'] = get_affiliate_account_by_user_id(db,current_user.id).total_earnings
+    total_clicks = get_total_clicks(db,current_user)
+    response['overview']['total_clicks'] = total_clicks
+    total_purchases = get_total_purchases(db,current_user)
+    response['overview']['conversion_rate'] = round((total_purchases / total_clicks) * 100,1)
+    response['overview']['total_active_links'] = get_total_active_links(db,current_user)
+    return response
+

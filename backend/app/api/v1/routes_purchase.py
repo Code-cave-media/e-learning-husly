@@ -12,7 +12,7 @@ from schemas.purchase import CheckoutResponse,AffiliateUser
 from crud.auth import get_user_by_user_id,create_affiliate_account
 from crud.coupon_code import get_coupon_by_code
 from schemas.purchase import PurchaseVerifyRequest
-from crud.affiliate import get_affiliate_account_by_user_id
+from crud.affiliate import *
 router = APIRouter()
 
 @router.post('/checkout')
@@ -108,6 +108,7 @@ async def payment_webhook(request: Request, db: Session = Depends(get_db)):
     try:
         affiliate_account = None
         new_user_affiliate_account = None
+        db_affiliate_link_purchase = None
         if event == "payment.captured" and db_transaction_processing:
             if db_transaction_processing.is_new_user:
                 temp_user = get_temp_user_by_id(db, db_transaction_processing.user_id)
@@ -127,6 +128,9 @@ async def payment_webhook(request: Request, db: Session = Depends(get_db)):
                 db_item = get_item_by_id_and_type(db, db_transaction_processing.item_id, db_transaction_processing.item_type)
                 if affiliate_account:
                     affiliate_account.balance += db_item.commission
+
+                db_affiliate_link = get_affiliate_link_by_all(db,db_transaction_processing.affiliate_user_id,db_transaction_processing.item_id, db_transaction_processing.item_type)
+                db_affiliate_link_purchase = add_purchase_to_affiliate_link(db,db_affiliate_link,db_item.commission,commit=False)
             # Create purchase
             purchase = create_purchase(db, db_transaction_processing, commit=False)
             # Delete transaction processing and temp user
@@ -150,6 +154,8 @@ async def payment_webhook(request: Request, db: Session = Depends(get_db)):
             db.refresh(affiliate_account)
         if new_user_affiliate_account:
             db.refresh(new_user_affiliate_account)
+        if db_affiliate_link_purchase:
+            db.refresh(db_affiliate_link_purchase)
         return {
             "payment_status": event,
             "transaction_id": transaction.id

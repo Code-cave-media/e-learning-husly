@@ -55,3 +55,43 @@ export interface CheckoutResponse {
     user_id: string;
   };
 }
+
+export interface AffiliateDashboard {
+  overview: {
+    total_earnings: number;
+    total_clicks: number;
+    conversion_rate: number;
+    total_active_links: number;
+  };
+  performance: {
+    daily: Array<{
+      date: string;
+      clicks: number;
+      conversions: number;
+      earnings: number;
+    }>;
+  };
+  monthlyEarnings: Array<{
+    month: string; // format "YYYY-MM"
+    earnings: number;
+  }>;
+  products: Array<{
+    id: number;
+    name: string;
+    clicks: number;
+    conversions: number;
+    earnings: number;
+  }>;
+  withdrawHistory: Array<{
+    id: string;
+    date: string; // format "YYYY-MM-DD"
+    amount: number;
+    status: string; // e.g. "completed"
+    method: string; // e.g. "Bank Transfer", "PayPal"
+  }>;
+  withdrawSummary: {
+    totalEarnings: number;
+    totalWithdrawn: number;
+    pendingWithdraw: number;
+  };
+}

@@ -1,4 +1,4 @@
-import React from "react";
+import React, { useEffect } from "react";
 import { Link } from "react-router-dom";
 import { Card, CardContent, CardFooter } from "@/components/ui/card";
 import { Button } from "@/components/ui/button";
@@ -46,9 +46,15 @@ const CourseCard = ({
   const [affiliateLink, setAffiliateLink] = React.useState("");
   const [showCopied, setShowCopied] = React.useState(false);
   const { fetchType, fetching, makeApiCall } = useAPICall();
-
+  useEffect(() => {
+    if (has_affiliate_link) {
+      const link = `${window.location.origin}/landing/course/${id}?ref=${user?.user_id}`;
+      setAffiliateLink(link);
+    }
+  }, [has_affiliate_link]);
   const createAffiliateLink = async () => {
-    if (!has_affiliate_link) {
+    console.log(has_affiliate_link);
+    if (has_affiliate_link == false) {
       const response = await makeApiCall(
         "POST",
         API_ENDPOINT.CREATE_AFFILIATE_LINK,
@@ -64,10 +70,10 @@ const CourseCard = ({
         toast.error("Error generating affiliate link!");
         return;
       }
-      const link = `${window.location.origin}/landing/course/${id}?ref=${user?.user_id}`;
-      setAffiliateLink(link);
-      toast.success("Affiliate link generated successfully!");
     }
+    const link = `${window.location.origin}/landing/course/${id}?ref=${user?.user_id}`;
+    setAffiliateLink(link);
+    toast.success("Affiliate link generated successfully!");
   };
 
   const copyAffiliateLink = () => {

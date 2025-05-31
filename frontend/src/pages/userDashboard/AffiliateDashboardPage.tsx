@@ -1,4 +1,4 @@
-import { useState } from "react";
+import { useEffect, useState } from "react";
 import { Card, CardContent } from "@/components/ui/card";
 import { Tabs, TabsContent, TabsList, TabsTrigger } from "@/components/ui/tabs";
 import { Button } from "@/components/ui/button";
@@ -61,6 +61,10 @@ import {
   SelectContent,
   SelectItem,
 } from "@/components/ui/select";
+import { API_ENDPOINT } from "@/config/backend";
+import { useAPICall } from "@/hooks/useApiCall";
+import { useAuth } from "@/contexts/AuthContext";
+import { AffiliateDashboard } from "@/types/apiTypes";
 
 // Mock data - In a real app, this would come from an API
 const dashboardData = {
@@ -95,10 +99,7 @@ const dashboardData = {
     { month: "2024-02", earnings: 2200.0 },
     { month: "2024-03", earnings: 2400.0 },
   ],
-  salesDistribution: [
-    { name: "Courses", value: 65, color: "#0088FE" },
-    { name: "Ebooks", value: 35, color: "#00C49F" },
-  ],
+
   topProducts: [
     {
       id: "1",
@@ -156,7 +157,9 @@ const AffiliateDashboardPage = () => {
   const { toast } = useToast();
   const [activeTab, setActiveTab] = useState("overview");
   const [isWithdrawDialogOpen, setIsWithdrawDialogOpen] = useState(false);
+  const [data,setData] = useState<AffiliateDashboard>()
   const [showMoreCards, setShowMoreCards] = useState(false);
+  const {authToken} = useAuth()
   const [withdrawMethod, setWithdrawMethod] = useState<"upi" | "bank">("upi");
   const [searchQuery, setSearchQuery] = useState("");
   const [withdrawForm, setWithdrawForm] = useState({
@@ -166,7 +169,20 @@ const AffiliateDashboardPage = () => {
     accountNumber: "",
     ifsc: "",
   });
-
+  const { fetchType, fetching, makeApiCall } = useAPICall();
+  useEffect(() => {
+    const fetchAffiliateData = async () => {
+      const response = await makeApiCall(
+        "GET",
+        API_ENDPOINT.USER_DASHBOARD_AFFILIATE,
+        {},
+        "application/json",
+        authToken,
+        "fetchAffiliateData"
+      );
+    }
+    fetchAffiliateData()
+  }, []);
   // Filter products based on search query
   const filteredProducts = dashboardData.topProducts.filter((product) =>
     product.name.toLowerCase().includes(searchQuery.toLowerCase())
