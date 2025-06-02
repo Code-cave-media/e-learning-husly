@@ -151,8 +151,8 @@ const Landing = () => {
           <h1 className="text-2xl font-bold mb-4">Content Not Available</h1>
           <p className="text-gray-300 mb-8">
             {type === "course"
-              ? "This course is either not found or not currently available for viewing."
-              : "This ebook is either not found or not currently available for viewing."}
+              ? "This Training is either not found or not currently available for viewing."
+              : "This BluePrint is either not found or not currently available for viewing."}
           </p>
           <Button
             onClick={() => {

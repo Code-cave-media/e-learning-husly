@@ -50,4 +50,11 @@ export const API_ENDPOINT = {
   CREATE_AFFILIATE_LINK: `${API_URL}/affiliate/create`,
   ADD_CLICK_AFFILIATE_LINK: `${API_URL}/affiliate/click/add`,
   USER_DASHBOARD_AFFILIATE: `${API_URL}/user-dashboard/affiliate-dashboard`,
+  GET_WITHDRAW_HISTORY: (page: number, limit: number) =>
+    `${API_URL}/user-dashboard/withdraw-history?&page=${page}&limit=${limit}`,
+  GET_ALL_PRODUCT: (query: string, page: number, limit: number) =>
+    `${API_URL}/user-dashboard/product-history?query=${query}&page=${page}&limit=${limit}`,
+  CREATE_WITHDRAW: `${API_URL}/affiliate/withdraw`,
+  GET_WITHDRAW_DETAILS: `${API_URL}/affiliate/withdraw-account-details`,
+  UPDATE_WITHDRAW_DETAILS: `${API_URL}/affiliate/update-withdraw-account-details`,
 };

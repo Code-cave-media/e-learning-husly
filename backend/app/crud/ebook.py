@@ -52,8 +52,11 @@ def get_list_of_ebooks(db:Session,page:int=1,limit:int=10):
     query = db.query(EBook).order_by(EBook.created_at.desc())
     return to_pagination_response(query,EBookResponse,page,limit)
 
-def get_ebook_by_id(db:Session,ebook_id:int):
-    return db.query(EBook).filter(EBook.id == ebook_id).first()
+def get_ebook_by_id(db:Session,ebook_id:int,is_admin:bool=False):
+    if is_admin:
+        return db.query(EBook).filter(EBook.id == ebook_id).first()
+    else:
+        return db.query(EBook).filter(EBook.id == ebook_id,EBook.visible==True).first()
 
 def create_ebook(db:Session,data:dict):
     db_ebook = EBook(**data)

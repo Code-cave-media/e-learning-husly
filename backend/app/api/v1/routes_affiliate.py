@@ -10,6 +10,7 @@ from crud.affiliate import *
 from core.deps import get_current_user
 from crud.auth import get_user_by_user_id
 from crud.purchase import get_item_by_id_and_type
+from models.affiliate import UPIDetails,BankDetails
 router = APIRouter()
 
 @router.post('/create', response_model=AffiliateLinkResponse)
@@ -26,7 +27,7 @@ def create_affiliate_link_(
     affiliate_link = create_affiliate_link(db, data_dict)
     return affiliate_link
 
-@router.post('/click/add', response_model=AffiliateLinkResponse)       
+@router.post('/click/add')       
 def add_clicks_to_affiliate_link_(
     data:AddAffiliateLinkClicks,
     db: Session = Depends(get_db),
@@ -46,4 +47,40 @@ def add_clicks_to_affiliate_link_(
             'item_type': data.item_type,
         })
     updated_link = add_clicks_to_affiliate_link(db, affiliate_link)
-    return updated_link
+    return {'status':True}
+
+@router.post('/withdraw', response_model=WithdrawResponse)
+def create_user_dashboard_withdraw(
+    data: WithdrawCreate,
+    db: Session = Depends(get_db),
+    current_user=Depends(get_current_user)
+):
+    affiliate_account = get_affiliate_account_by_user_id(db, user_id=current_user.id)
+    if affiliate_account.balance < data.amount:
+        raise HTTPException(status_code=400, detail='Insufficient balance')
+
+    db_withdraw = create_withdraw(db, current_user, data)
+
+    db.add(db_withdraw) 
+    update_affiliate_account_balance(db, affiliate_account, data.amount, False)
+    
+    db.commit()  
+    db.refresh(db_withdraw)  
+    db.refresh(affiliate_account)
+
+    # update account details
+    update_or_create_account_details(db,affiliate_account,data)
+
+    return db_withdraw
+
+
+@router.get('/withdraw-account-details')
+def get_bank_account_details(db:Session=Depends(get_db),user:User=Depends(get_current_user)):
+    affiliate_account = db.query(AffiliateAccount).filter(AffiliateAccount.id == user.id).first()
+    db_upi  = db.query(UPIDetails).filter(UPIDetails.account_id == affiliate_account.id).first()
+    db_bank = db.query(BankDetails).filter(UPIDetails.account_id == affiliate_account.id).first()
+    res = {
+        "upi_id":UPIDetailsResponse.from_orm(db_upi) if db_upi else None,
+        "bank_details":BankAccountResponse.from_orm(db_bank) if db_bank else None
+    }
+    return res

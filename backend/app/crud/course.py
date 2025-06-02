@@ -25,8 +25,11 @@ async def upload_pdf(file: UploadFile):
     return await upload_file(file,folder)
 
 
-def get_course_by_id(db:Session,course_id:int):
-    return db.query(Course).filter(Course.id==course_id).first()
+def get_course_by_id(db:Session,course_id:int,is_admin:bool=False):
+    if is_admin:
+        return db.query(Course).filter(Course.id==course_id).first()
+    else:
+        return db.query(Course).filter(Course.id==course_id,Course.visible==True).first()
 
 def get_course_chapter_by_id(db:Session,course_chapter_id:int):
     return db.query(CourseChapter).filter(CourseChapter.id==course_chapter_id).first()

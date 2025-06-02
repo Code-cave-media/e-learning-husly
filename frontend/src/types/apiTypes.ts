@@ -58,40 +58,62 @@ export interface CheckoutResponse {
 
 export interface AffiliateDashboard {
   overview: {
-    total_earnings: number;
-    total_clicks: number;
-    conversion_rate: number;
+    total_earnings: { value: number; hike: number };
+    total_clicks: { value: number; hike: number };
+    conversion_rate: { value: number; hike: number };
     total_active_links: number;
   };
-  performance: {
-    daily: Array<{
-      date: string;
-      clicks: number;
-      conversions: number;
-      earnings: number;
-    }>;
-  };
-  monthlyEarnings: Array<{
-    month: string; // format "YYYY-MM"
-    earnings: number;
-  }>;
-  products: Array<{
-    id: number;
-    name: string;
+  performance: Array<{
+    date: string;
     clicks: number;
     conversions: number;
     earnings: number;
   }>;
-  withdrawHistory: Array<{
-    id: string;
-    date: string; // format "YYYY-MM-DD"
-    amount: number;
-    status: string; // e.g. "completed"
-    method: string; // e.g. "Bank Transfer", "PayPal"
+  monthly_earnings: Array<{
+    month: string; // format "YYYY-MM"
+    earnings: number;
   }>;
-  withdrawSummary: {
-    totalEarnings: number;
-    totalWithdrawn: number;
-    pendingWithdraw: number;
+  products: {
+    has_next: boolean;
+    has_prev: boolean;
+    total: number;
+    total_pages: number;
+    items: Array<{
+      id: number;
+      name: string;
+      clicks: number;
+      conversions: number;
+      earnings: number;
+      item_id: number;
+      item_type: string;
+    }>;
+  };
+  withdraw_history: {
+    has_next: boolean;
+    has_prev: boolean;
+    total: number;
+    total_pages: number;
+    items: Array<{
+      id: number;
+      amount: number;
+      created_at: string;
+      status: string;
+      explanation: string | null;
+      account_details: string;
+    }>;
+  };
+  withdraw_summary: {
+    balance: number;
+    total_withdrawn: number;
+    pending_withdraw: number;
+  };
+  withdraw_account_details?: {
+    upi_details: { upiId: string };
+    bank_details: {
+      bank_name: string;
+      account_number: string;
+      ifsc_code: string;
+      account_name: string;
+    };
   };
 }

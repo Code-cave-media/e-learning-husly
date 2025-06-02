@@ -92,7 +92,7 @@ async def update_course(
   current_user: User = Depends(is_admin_user)
   
 ):
-  db_course = crud_course.get_course_by_id(db,course_id)
+  db_course = crud_course.get_course_by_id(db,course_id,is_admin=True)
   if not db_course:
     raise HTTPException(status_code=404,detail="Course not found")
   if thumbnail:
@@ -131,8 +131,8 @@ async def update_course(
 
 @router.delete('/delete/{course_id}')
 async def update_course(course_id:str,db: Session = Depends(get_db)):
-  db_course = crud_course.get_course_by_id(db,course_id)
-  if not db_course:
+  db_course = crud_course.get_course_by_id(db,course_id,is_admin=True)
+  if not db_course: 
     raise HTTPException(status_code=404,detail="Course not found")
   await crud_course.delete_course_files(db_course)
   return crud_course.delete_course(db,db_course)
@@ -146,7 +146,7 @@ async def create_course_chapter(
   title: str = Form(...),
   duration: str = Form(...),
 ):
-  db_course = crud_course.get_course_by_id(db,course_id)
+  db_course = crud_course.get_course_by_id(db,course_id,is_admin=True)
   if not db_course:
     raise HTTPException(status_code=404,detail="Course not found")
   video_url = await crud_course.upload_video(video)

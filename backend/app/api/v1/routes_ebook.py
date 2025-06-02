@@ -7,14 +7,16 @@ from models.user import User
 from core.deps import is_admin_user,get_optional_current_user
 from schemas.common import Pagination,PaginationResponse
 from crud.purchase import get_purchase_by_user_id_and_item_id_and_type
-from crud.affiliate import get_affiliate_link_by_all,add_clicks_to_affiliate_link
+
+
 router = APIRouter()
+
 @router.get('/get/{ebook_id}',response_model=EBookResponse)
 async def create_ebook(
   ebook_id:str,
   db:Session=Depends(get_db)
 ):
-  db_ebook = crud_ebook.get_ebook_by_id(db,ebook_id)
+  db_ebook = crud_ebook.get_ebook_by_id(db,ebook_id,is_admin=True)
   if not db_ebook:
     raise HTTPException(status_code=404,detail="Ebook not found")
   return db_ebook
@@ -92,7 +94,7 @@ async def update_ebook(
   is_featured: bool = Form(False),
   is_new: bool = Form(False),
 ):
-  db_ebook = crud_ebook.get_ebook_by_id(db,ebook_id)
+  db_ebook = crud_ebook.get_ebook_by_id(db,ebook_id,is_admin=True)
   if not db_ebook:
     raise HTTPException(status_code=404,detail="ebook not found")
   if thumbnail :
@@ -133,7 +135,7 @@ async def update_ebook(
 
 @router.delete('/delete/{ebook_id}')
 async def delete_ebook(ebook_id:str,db: Session = Depends(get_db)):
-  db_course = crud_ebook.get_ebook_by_id(db,ebook_id)
+  db_course = crud_ebook.get_ebook_by_id(db,ebook_id,is_admin=True)
   if not db_course:
     raise HTTPException(status_code=404,detail="EBook not found")
   await crud_ebook.delete_ebook_files(db_course)
@@ -145,7 +147,7 @@ async def create_ebook_chapter(
     db: Session = Depends(get_db),
     current_user: User = Depends(is_admin_user)
 ):
-    db_ebook = crud_ebook.get_ebook_by_id(db, ebook_id=data.ebook_id)
+    db_ebook = crud_ebook.get_ebook_by_id(db, ebook_id=data.ebook_id,is_admin=True)
     if not db_ebook:
         raise HTTPException(status_code=404, detail="EBook not found")
     chapter = crud_ebook.create_ebook_chapter(db, 

@@ -53,7 +53,6 @@ const CourseCard = ({
     }
   }, [has_affiliate_link]);
   const createAffiliateLink = async () => {
-    console.log(has_affiliate_link);
     if (has_affiliate_link == false) {
       const response = await makeApiCall(
         "POST",

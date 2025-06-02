@@ -128,6 +128,7 @@ async def payment_webhook(request: Request, db: Session = Depends(get_db)):
                 db_item = get_item_by_id_and_type(db, db_transaction_processing.item_id, db_transaction_processing.item_type)
                 if affiliate_account:
                     affiliate_account.balance += db_item.commission
+                    affiliate_account.total_earnings += db_item.commission
 
                 db_affiliate_link = get_affiliate_link_by_all(db,db_transaction_processing.affiliate_user_id,db_transaction_processing.item_id, db_transaction_processing.item_type)
                 db_affiliate_link_purchase = add_purchase_to_affiliate_link(db,db_affiliate_link,db_item.commission,commit=False)
@@ -184,7 +185,7 @@ def get_transaction(type: str,
     else:
         db_item = get_ebook_by_id(db, item_id)  
     if not db_item:
-        raise HTTPException(status_code=status.HTTP_404_NOT_FOUND, detail="Item not found")
+        raise HTTPException(status_code=status.HTTP_404_NOT_FOUND, detail=f"This {'Training' if type=='course' else 'BluePrint'} is either not found or not currently available for viewing.")
     if user_id and user_id != "" and user_id!='null' and user_id != "undefined":
         user = get_user_by_user_id(db, user_id)
         if not user:
