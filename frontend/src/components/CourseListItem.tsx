@@ -97,6 +97,14 @@ function ChapterDialog({
       return;
     }
     onSubmit(formData);
+    // Reset form data after submission
+    setFormData({
+      title: "",
+      description: "",
+      duration: 0,
+      video: null,
+      pdf: null,
+    });
     onClose();
   };
 
@@ -370,6 +378,7 @@ export function CourseListItem({ course, setCourses }: CourseListItemProps) {
           ),
         });
         toast.success("Chapter updated successfully");
+        setEditingChapter(null);
       } else {
         toast.error("Failed to update chapter");
         setIsChapterDialogOpen(false);
@@ -404,6 +413,7 @@ export function CourseListItem({ course, setCourses }: CourseListItemProps) {
           ...editingCourse,
           chapters: [...editingCourse.chapters, response.data],
         });
+        setEditingChapter(null);
         toast.success("Chapter added successfully");
       } else {
         toast.error("Failed to add chapter");

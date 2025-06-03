@@ -29,19 +29,22 @@ class Course(TimestampMixin,Base):
     is_new = Column(Boolean, default=True)  
     is_featured = Column(Boolean, default=False)
 
-class CourseProgress(TimestampMixin,Base):
+class CourseProgress(TimestampMixin, Base):
     __tablename__ = "course_progress"
+
     id = Column(Integer, primary_key=True, index=True)
-    user_id = Column(Integer, ForeignKey("user.id"))
-    course_id = Column(Integer, ForeignKey("course.id"))
+    user_id = Column(Integer, ForeignKey("user.id"), nullable=False)
+    course_id = Column(Integer, ForeignKey("course.id"), nullable=False)
     completed = Column(Boolean, default=False)
-    
-class CourseCompletionChapter(TimestampMixin,Base):
+    chapters = relationship('CourseCompletionChapter',foreign_keys="CourseCompletionChapter.course_progress_id",backref="course_progress")
+
+class CourseCompletionChapter(TimestampMixin, Base):
     __tablename__ = "course_completion_chapter"
+
     id = Column(Integer, primary_key=True, index=True)
-    user_id = Column(Integer, ForeignKey("user.id"))
-    course_id = Column(Integer, ForeignKey("course.id"))
-    chapter_id = Column(Integer, ForeignKey("course_chapter.id"))
+    chapter_id = Column(Integer, ForeignKey("course_chapter.id"), nullable=False)
+    course_progress_id = Column(Integer, ForeignKey("course_progress.id"), nullable=False)
+
 
 class CourseChapter(TimestampMixin,Base):
     __tablename__ = "course_chapter"

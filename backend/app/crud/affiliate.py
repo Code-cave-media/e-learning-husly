@@ -6,6 +6,7 @@ from datetime import datetime, timedelta
 from datetime import datetime, timedelta, timezone
 from sqlalchemy import func
 from schemas.affiliate import  WithdrawCreate
+
 def create_affiliate_link(db:Session,data:dict):
     affiliate_link = AffiliateLink(
       **data
@@ -24,6 +25,7 @@ def get_affiliate_link_by_all(db: Session, user_id: int, item_id: int, item_type
 
 def get_affiliate_account_by_user_id(db: Session, user_id: int):
     return db.query(AffiliateAccount).filter(AffiliateAccount.user_id == user_id).first()
+
 def get_affiliate_account_by_id(db: Session, id: int):
     return db.query(AffiliateAccount).filter(AffiliateAccount.id == id).first()
 
@@ -87,9 +89,6 @@ def get_total_purchases(db: Session, user: User):
             elif start_of_last_month <= purchase.created_at <= end_of_last_month:
                 last_month_purchases += 1
             total_purchases += 1
-
-    
-
     return total_purchases,current_month_purchases,last_month_purchases
 
 def find_conversion_rate(t_clicks, t_purchases, c_purchases, l_purchases, c_clicks, l_clicks):
@@ -165,7 +164,6 @@ def get_total_earnings(db: Session, user: User):
         "hike": round(hike, 2)
     }
 
-
 def create_withdraw(db:Session,user:User,data:WithdrawCreate,commit=False):
     account_details = None
     if data.upi_id:
@@ -186,7 +184,6 @@ def update_affiliate_account_balance(db:Session,account:AffiliateAccount,amount:
         db.commit()
         db.refresh(account)
     return account
-
 
 def update_or_create_account_details(db:Session,affiliate_account:AffiliateAccount,data:dict):
     db_upi = db.query(UPIDetails).filter(UPIDetails.account_id == affiliate_account.id).first()

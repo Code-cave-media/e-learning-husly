@@ -50,7 +50,7 @@ def get_random_mock_url(file_name: str) -> str:
     elif file_name.lower().endswith(('.jpg', '.jpeg', '.png', '.gif', '.webp')):
         return random.choice(image_urls)
     elif file_name.lower().endswith('.pdf'):    
-        return "https://www.w3.org/WAI/ER/tests/xhtml/testfiles/resources/pdf/dummy.pdf"
+        return "https://www.drishtiias.com/images/pdf/Copy%20of%20science%20class%207.pdf"
     else:
         return random.choice(image_urls + video_urls)
 

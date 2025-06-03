@@ -27,7 +27,7 @@ def get_user_dashboard_home_data(db: Session = Depends(get_db),current_user=Depe
 @router.get('/card')
 def get_user_dashboard_home_card(db: Session = Depends(get_db), current_user=Depends(get_current_user)):
     return {
-        "total_purchase":get_total_purchases(db,current_user),
+        "total_purchase":get_total_user_purchases(current_user),
         "total_progressing_course":get_total_progressing_courses(db,current_user),
         "total_ebooks":get_total_purchased_ebooks(current_user),
         "total_courses":get_total_purchased_courses(current_user),

@@ -19,6 +19,18 @@ async def create_ebook(
   db_ebook = crud_ebook.get_ebook_by_id(db,ebook_id,is_admin=True)
   if not db_ebook:
     raise HTTPException(status_code=404,detail="Ebook not found")
+  
+  return db_ebook
+
+@router.get('/get/read/{ebook_id}',response_model=EBookResponse)
+async def create_ebook(
+  ebook_id:str,
+  db:Session=Depends(get_db)
+):
+  db_ebook = crud_ebook.get_ebook_by_id(db,ebook_id)
+  if not db_ebook:
+    raise HTTPException(status_code=404,detail="Ebook not found")
+  
   return db_ebook
 
 @router.get('/get/landing/{ebook_id}',response_model=EbookLandingResponse)

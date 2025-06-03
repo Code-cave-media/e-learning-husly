@@ -568,7 +568,7 @@ const AffiliateDashboardPage = () => {
                           {new Date(day.date).toLocaleDateString()}
                         </p>
                         <p className="text-sm text-muted-foreground">
-                          {day.clicks} clicks • {day.conversions} conversions
+                          {day.clicks} clicks • {day.conversions}% conversions
                         </p>
                       </div>
                     </div>

@@ -234,9 +234,7 @@ const AppRoutes = () => {
         path="/course/watch/:courseId"
         element={
           <ProtectedRoute>
-            <DashboardLayout>
-              <CourseWatchPage />
-            </DashboardLayout>
+            <CourseWatchPage />
           </ProtectedRoute>
         }
       />
@@ -244,9 +242,7 @@ const AppRoutes = () => {
         path="/ebook/read/:ebookId"
         element={
           <ProtectedRoute>
-            <DashboardLayout>
-              <EbookViewPage />
-            </DashboardLayout>
+            <EbookViewPage />
           </ProtectedRoute>
         }
       />

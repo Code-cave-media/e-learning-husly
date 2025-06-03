@@ -20,6 +20,7 @@ from sqlalchemy import desc  # if you want descending order
 from crud.utils import to_pagination_response
 from models.affiliate import UPIDetails,BankDetails
 from schemas.affiliate import UPIDetailsResponse,BankAccountResponse
+from crud.course import get_or_create_course_progress
 def get_user_purchased_course_and_ebook(db: Session, user: User,page: int = 1, limit: int = 10):
     user_purchases = user.purchases
     res = []
@@ -119,7 +120,7 @@ def get_user_purchased_ebooks(db: Session, user: User, page: int = 1, limit: int
         "items": paginated_items
     }
 
-def get_total_purchases(user: User):
+def get_total_user_purchases(user: User):
     return len(user.purchases)
 
 def get_total_progressing_courses(db:Session,user: User):
@@ -127,12 +128,16 @@ def get_total_progressing_courses(db:Session,user: User):
     res = 0
     for purchase in purchases:
         if purchase.item_type == 'course':
-            course = db.query(CourseProgress).filter(
+            course_progress = db.query(CourseProgress).filter(
                 CourseProgress.user_id == user.id,
                 CourseProgress.course_id == purchase.item_id,
-                CourseProgress.completed == True
             ).first()
-            res += 0 if course else 1
+            course = db.query(Course).filter(
+                Course.id == purchase.item_id,
+                Course.visible == True
+            ).first()
+            if (len(course_progress.chapters) != len(course.chapters)):
+                res += 1
     return res
 
 def get_total_purchased_ebooks(user: User):

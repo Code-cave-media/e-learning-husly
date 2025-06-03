@@ -99,3 +99,21 @@ class CourseLandingResponse(BaseModel):
     is_new : bool
     class Config:
         orm_mode = True
+
+
+class CourseCompletionChapterResponse(BaseModel):
+  id:int
+  chapter_id:int
+  course_progress_id:int
+  class Config:
+    orm_mode = True
+class CourseProgressResponse(BaseModel):
+  id:int
+  course_id:int
+  user_id:int
+  updated_at:datetime
+  completed:bool
+  chapters:List[CourseCompletionChapterResponse] = []
+  class Config:
+    orm_mode = True
+    

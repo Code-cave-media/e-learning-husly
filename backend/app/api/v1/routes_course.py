@@ -8,15 +8,30 @@ from core.deps import is_admin_user,get_current_user,get_optional_current_user
 from crud.purchase import get_purchase_by_user_id_and_item_id_and_type
 router = APIRouter()
 from models.user import User
-@router.get('/get/{course_id}',response_model=CourseResponse)
+@router.get('/get/watch/{course_id}')
 async def create_course(
   course_id:str,
-  db:Session=Depends(get_db)
+  db:Session=Depends(get_db),
+  current_user:User = Depends(get_current_user)
 ):
   db_course = crud_course.get_course_by_id(db,course_id)
   if not db_course:
     raise HTTPException(status_code=404,detail="Course not found")
-  return db_course
+  db_course_progress = crud_course.get_or_create_course_progress(db,current_user.id,db_course.id)
+
+  res = CourseResponse.from_orm(db_course).dict()
+  for i,chapter in enumerate(db_course.chapters):
+    db_course_completion_chapter = crud_course.get_course_completion_chapter_by_course_progress_id(db,db_course_progress.id,chapter.id)
+    if db_course_completion_chapter:
+      res['chapters'][i]['completed'] = True
+    else:
+      res['chapters'][i]['completed'] = False
+  if len(db_course_progress.chapters) == len(db_course.chapters):
+    res['completed'] = True
+  else:
+    res['completed'] = False
+  res['course_progress'] = CourseProgressResponse.from_orm(db_course_progress).dict()
+  return res
 
 @router.get('/get/landing/{course_id}',response_model=CourseLandingResponse)
 async def get_course_landing_page(  
@@ -198,3 +213,24 @@ async def update_course(course_chapter_id:str,db: Session = Depends(get_db)):
 
 
 
+@router.post('/chapter/complete/{course_chapter_id}')
+async def complete_chapter(
+  course_chapter_id:int,  
+  db:Session=Depends(get_db),
+  current_user:User = Depends(get_current_user)
+):
+  db_course_chapter = crud_course.get_course_chapter_by_id(db,course_chapter_id)
+  if not db_course_chapter:
+    raise HTTPException(status_code=404,detail="Course chapter not found")
+  db_course_progress = crud_course.get_or_create_course_progress(db,current_user.id,db_course_chapter.course_id)
+  db_course_completion_chapter = crud_course.get_course_completion_chapter_by_course_progress_id(db,db_course_progress.id,db_course_chapter.id)
+  if db_course_completion_chapter:
+    raise HTTPException(status_code=400,detail="Chapter already completed")
+  db_course_completion_chapter = crud_course.create_course_completion_chapter(db,data={'course_progress_id':db_course_progress.id,'chapter_id':db_course_chapter.id})
+  db_course = crud_course.get_course_by_id(db,db_course_chapter.course_id)
+  if len(db_course_progress.chapters) == len(db_course.chapters):
+    db_course_progress.completed = True
+    db.commit()
+  return {"course_completed":db_course_progress.completed,
+          "course_chapter_completion":CourseCompletionChapterResponse.from_orm(db_course_completion_chapter).dict()
+          }

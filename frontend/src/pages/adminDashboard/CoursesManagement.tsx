@@ -108,14 +108,7 @@ export default function CoursesManagement() {
       setCourses(response.data.items);
     }
   };
-  console.log(courses);
-  const handleUpdateCourse = (updatedCourse: Course) => {
-    setCourses(
-      courses.map((course) =>
-        course.id === updatedCourse.id ? updatedCourse : course
-      )
-    );
-  };
+
 
   return (
     <div className="container mx-auto py-6">

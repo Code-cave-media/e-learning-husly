@@ -57,4 +57,8 @@ export const API_ENDPOINT = {
   CREATE_WITHDRAW: `${API_URL}/affiliate/withdraw`,
   GET_WITHDRAW_DETAILS: `${API_URL}/affiliate/withdraw-account-details`,
   UPDATE_WITHDRAW_DETAILS: `${API_URL}/affiliate/update-withdraw-account-details`,
+  GET_COURSE_WATCH_PAGE: (id: string) => `${API_URL}/course/get/watch/${id}`,
+  COURSE_CHAPTER_COMPLETE: (id: string) =>
+    `${API_URL}/course/chapter/complete/${id}`,
+  GET_EBOOK_READ_PAGE: (id: string) => `${API_URL}/ebook/get/read/${id}`,
 };
