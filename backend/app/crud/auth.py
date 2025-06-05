@@ -50,6 +50,10 @@ def update_temp_user(db:Session,temp_user:TempUser,data):
 def verify_password(plain_password, hashed_password):
   return pwd_context.verify(plain_password, hashed_password)
 
+def get_user_by_id(db:Session,id:str):
+  return db.query(User).filter(User.id == id).first()
+
+
 def get_user_by_user_id(db:Session,user_id:str):
   return db.query(User).filter(User.user_id == user_id).first()
 

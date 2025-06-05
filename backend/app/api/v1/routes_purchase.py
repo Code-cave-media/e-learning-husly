@@ -11,10 +11,11 @@ from crud.ebook import get_ebook_by_id
 from schemas.purchase import CheckoutResponse,AffiliateUser
 from crud.auth import get_user_by_user_id,create_affiliate_account
 from crud.coupon_code import get_coupon_by_code
-from schemas.purchase import PurchaseVerifyRequest
+from schemas.purchase import PurchaseVerifyRequest,PurchaseCreateRequest,PurchaseResponse
 from crud.affiliate import *
 from schemas.common import PaginationResponse
 from core.deps import is_admin_user
+from crud.user_dashboard import get_item_by_id_and_type
 router = APIRouter()
 
 @router.post('/checkout')
@@ -243,3 +244,34 @@ def get_transaction_history(db:Session=Depends(get_db),current_user:User=Depends
     elif filter == "ebook":
         return get_success_transactions(db,page,limit,search)
     
+@router.post("/create",response_model=PurchaseResponse)
+def create_purchase_from_admin(data:PurchaseCreateRequest,db:Session=Depends(get_db),current_user:User=Depends(is_admin_user)):
+    
+    #verify user and items first 
+    if data.user_id:
+        user = get_user_by_user_id(db,data.user_id)
+        if not user:
+            user = get_user_by_id(db,data.user_id)
+            if not user:
+                raise HTTPException(status_code=status.HTTP_404_NOT_FOUND, detail="User not found")
+    if data.item_type == "course":
+        db_item = get_course_by_id(db,data.item_id)
+        if not db_item:
+            raise HTTPException(status_code=status.HTTP_404_NOT_FOUND, detail="Course not found")
+    if data.affiliate_user_id:
+        user = get_user_by_user_id(db,data.affiliate_user_id)
+        if not user:
+            user = get_user_by_id(db,data.affiliate_user_id)
+            if not user:
+                raise HTTPException(status_code=status.HTTP_404_NOT_FOUND, detail="User not found") 
+    db_purchase = create_purchase(db,data,commit=False)
+    if data.affiliate_user_id:
+        affiliate_account = get_or_create_affiliate_account(db,data.affiliate_user_id)
+        add_purchase_commission_to_affiliate_account(db,affiliate_account,db_item.commission,commit=False)
+    db.add(db_purchase)
+    db.commit()
+    db.refresh(db_purchase)
+    if data.affiliate_user_id:
+        db.refresh(affiliate_account)
+    return db_purchase
+

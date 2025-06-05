@@ -7,6 +7,7 @@ const Pagination = ({
   hasPrev,
   total,
   pageSize,
+  itemsSize,
   onPageChange,
 }: {
   currentPage: number;
@@ -14,33 +15,36 @@ const Pagination = ({
   hasPrev: boolean;
   total: number;
   pageSize: number;
+  itemsSize: number;
   onPageChange: (page: number) => void;
 }) => {
   const totalPages = Math.ceil(total / pageSize);
   return (
-    <div className="flex items-center justify-center gap-2 mt-4">
-      <Button
-        variant="outline"
-        size="sm"
-        onClick={() => onPageChange(currentPage - 1)}
-        disabled={!hasPrev}
-      >
-        <ChevronLeft className="h-4 w-4" />
-      </Button>
-      <div className="flex items-center gap-1">
-        <span className="text-sm font-medium">Page</span>
-        <span className="text-sm">{currentPage}</span>
-        <span className="text-sm text-muted-foreground">of</span>
-        <span className="text-sm">{totalPages}</span>
+    <div className="flex items-center justify-between mt-4">
+      <div className="text-sm text-muted-foreground">
+        Showing {itemsSize} of {total} purchases
       </div>
-      <Button
-        variant="outline"
-        size="sm"
-        onClick={() => onPageChange(currentPage + 1)}
-        disabled={!hasNext}
-      >
-        <ChevronRight className="h-4 w-4" />
-      </Button>
+      <div className="flex items-center gap-2">
+        <Button
+          variant="outline"
+          size="sm"
+          onClick={() => onPageChange(currentPage - 1)}
+          disabled={!hasPrev}
+        >
+          Previous
+        </Button>
+        <span className="text-sm">
+          Page {currentPage} of {totalPages}
+        </span>
+        <Button
+          variant="outline"
+          size="sm"
+          onClick={() => onPageChange(currentPage + 1)}
+          disabled={!hasNext}
+        >
+          Next
+        </Button>
+      </div>
     </div>
   );
 };

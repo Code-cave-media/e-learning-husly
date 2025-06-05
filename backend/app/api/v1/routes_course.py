@@ -234,3 +234,5 @@ async def complete_chapter(
   return {"course_completed":db_course_progress.completed,
           "course_chapter_completion":CourseCompletionChapterResponse.from_orm(db_course_completion_chapter).dict()
           }
+
+    

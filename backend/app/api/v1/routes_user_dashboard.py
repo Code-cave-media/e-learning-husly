@@ -8,6 +8,10 @@ from fastapi import Query
 from crud.affiliate import find_conversion_rate
 from crud.affiliate import *
 import time
+from core.deps import is_admin_user
+from schemas.course import ItemListResponse
+from crud.auth import get_user_by_user_id,get_user_by_id
+from schemas.user import UserResponse
 router = APIRouter()
 
 @router.get('/list')
@@ -113,3 +117,18 @@ def get_user_dashboard_product_history(
     return get_all_products(db,current_user,query,page,limit)
 
 
+@router.get("/verify/item/{item_type}/{item_id}",response_model=ItemListResponse)
+def get_purchase_by_id(item_type:str,item_id:str,db:Session=Depends(get_db),current_user:User=Depends(is_admin_user)):
+    db_item =  get_item_by_id_and_type(db,item_id,item_type)
+    if not db_item:
+        raise HTTPException(status_code=404,detail="Item not found")
+    return ItemListResponse.from_orm(db_item)
+
+@router.get('/verify/user/{user_id}',response_model=UserResponse)
+def verify_user(user_id:str,db:Session=Depends(get_db),current_user:User=Depends(is_admin_user)):
+    db_user = get_user_by_user_id(db,user_id)
+    if not db_user:
+        db_user = get_user_by_id(db,user_id)
+        if not db_user:
+            raise HTTPException(status_code=404,detail="User not found")
+    return UserResponse.from_orm(db_user).dict()

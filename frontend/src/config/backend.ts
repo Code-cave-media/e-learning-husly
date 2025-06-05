@@ -76,4 +76,8 @@ export const API_ENDPOINT = {
   ) =>
     `${API_URL}/purchase/purchases?page=${page}&limit=${limit}&filter=${filter}&search=${search}`,
   CREATE_PURCHASE: `${API_URL}/purchase/new-user`,
+  VERIFY_ITEM: (type: string, id: string) =>
+    `${API_URL}/user-dashboard/verify/item/${type}/${id}`,
+  CREATE_PURCHASE_VERIFY_USER: (user_id: string) =>
+    `${API_URL}/user-dashboard/verify/user/${user_id}`,
 };

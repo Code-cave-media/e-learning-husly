@@ -14,6 +14,7 @@ import {
   DialogHeader,
   DialogTitle,
   DialogFooter,
+  DialogDescription,
 } from "@/components/ui/dialog";
 import {
   Select,
@@ -37,12 +38,16 @@ import {
   Mail,
   Search,
   IndianRupee,
+  Check,
+  Loader2,
 } from "lucide-react";
+import { Label } from "@/components/ui/label";
 
 import { useAPICall } from "@/hooks/useApiCall";
 import { useAuth } from "@/contexts/AuthContext";
 import { API_ENDPOINT } from "@/config/backend";
 import { Loading } from "@/components/ui/loading";
+import Pagination from "@/components/Pagination";
 
 interface LandingPage {
   id: number;
@@ -79,6 +84,13 @@ interface User {
   name: string;
 }
 
+interface Transaction {
+  transaction_id: string;
+  order_id: string;
+  status: string;
+  method: string;
+}
+
 interface Purchase {
   id: number;
   user_id: number | null;
@@ -88,6 +100,7 @@ interface Purchase {
   user: User;
   affiliate_user: User | null;
   item: Item;
+  transaction: Transaction;
 }
 
 interface PaginatedResponse {
@@ -100,10 +113,37 @@ interface PaginatedResponse {
 }
 
 interface NewPurchase {
+  item_id: string;
   item_type: string;
-  item_id: number;
-  purchased_user_id: number;
-  affiliate_user_id?: number;
+  purchased_user_id: string;
+  affiliate_user_id?: string;
+}
+
+interface VerificationData {
+  item?: {
+    verified: boolean;
+    data?: {
+      id: string;
+      title: string;
+      type: string;
+    };
+  };
+  user?: {
+    verified: boolean;
+    data?: {
+      id: string;
+      name: string;
+      email: string;
+    };
+  };
+  affiliate?: {
+    verified: boolean;
+    data?: {
+      id: string;
+      name: string;
+      email: string;
+    };
+  };
 }
 
 export default function PurchasesManagement() {
@@ -112,9 +152,9 @@ export default function PurchasesManagement() {
   );
   const [isCreateDialogOpen, setIsCreateDialogOpen] = useState(false);
   const [newPurchase, setNewPurchase] = useState<NewPurchase>({
+    item_id: "",
     item_type: "course",
-    item_id: 0,
-    purchased_user_id: 0,
+    purchased_user_id: "",
     affiliate_user_id: undefined,
   });
   const [purchases, setPurchases] = useState<Purchase[]>([]);
@@ -124,18 +164,34 @@ export default function PurchasesManagement() {
   const [hasNext, setHasNext] = useState(false);
   const [hasPrev, setHasPrev] = useState(false);
   const [totalPages, setTotalPages] = useState(0);
-  const { makeApiCall, fetching, isFetched } = useAPICall();
+  const { makeApiCall, fetching, isFetched ,fetchType} = useAPICall();
   const { authToken } = useAuth();
+  const pageSize = 20;
+  const [isVerifying, setIsVerifying] = useState(false);
+  const [verificationStatus, setVerificationStatus] =
+    useState<VerificationData>({});
 
   useEffect(() => {
     fetchPurchases();
   }, [currentPage]);
 
+  useEffect(() => {
+    if (isFetched) {
+      setCurrentPage(1);
+      fetchPurchases();
+    }
+  }, [searchQuery]);
+
   const fetchPurchases = async () => {
     try {
       const response = await makeApiCall(
         "GET",
-        API_ENDPOINT.GET_ALL_PURCHASES(currentPage, 10, "all", searchQuery),
+        API_ENDPOINT.GET_ALL_PURCHASES(
+          currentPage,
+          pageSize,
+          "all",
+          searchQuery
+        ),
         {},
         "application/json",
         authToken,
@@ -154,62 +210,181 @@ export default function PurchasesManagement() {
     }
   };
 
-  const handleSearch = (e: React.FormEvent) => {
-    e.preventDefault();
-    setCurrentPage(1);
-    fetchPurchases();
+  const handleSearch = (e: React.ChangeEvent<HTMLInputElement>) => {
+    setSearchQuery(e.target.value);
   };
 
   const handlePageChange = (newPage: number) => {
     setCurrentPage(newPage);
   };
 
-  const handleCreatePurchase = async () => {
+  const verifyItem = async (itemId: string, itemType: string) => {
+    try {
+      setIsVerifying(true);
+      const response = await makeApiCall(
+        "GET",
+        API_ENDPOINT.VERIFY_ITEM(itemType, itemId),
+        {},
+        "application/json",
+        authToken
+      );
+
+      if (response.status === 200) {
+        setVerificationStatus((prev) => ({
+          ...prev,
+          item: { verified: true, data: response.data },
+        }));
+        toast.success("Item verified successfully");
+      } else {
+        setVerificationStatus((prev) => ({
+          ...prev,
+          item: { verified: false },
+        }));
+        toast.error("Item not found");
+      }
+    } catch (error) {
+      setVerificationStatus((prev) => ({
+        ...prev,
+        item: { verified: false },
+      }));
+      toast.error("Failed to verify item");
+    } finally {
+      setIsVerifying(false);
+    }
+  };
+
+  const verifyUser = async (userId: string) => {
+    try {
+      setIsVerifying(true);
+      const response = await makeApiCall(
+        "GET",
+        API_ENDPOINT.CREATE_PURCHASE_VERIFY_USER(userId),{},
+        "application/json",
+        authToken
+      );
+
+      if (response.status === 200) {
+        setVerificationStatus((prev) => ({
+          ...prev,
+          user: { verified: true, data: response.data },
+        }));
+        toast.success("User verified successfully");
+      } else {
+        setVerificationStatus((prev) => ({
+          ...prev,
+          user: { verified: false },
+        }));
+        toast.error("User not found");
+      }
+    } catch (error) {
+      setVerificationStatus((prev) => ({
+        ...prev,
+        user: { verified: false },
+      }));
+      toast.error("Failed to verify user");
+    } finally {
+      setIsVerifying(false);
+    }
+  };
+
+  const verifyAffiliate = async (userId: string) => {
+    try {
+      setIsVerifying(true);
+      const response = await makeApiCall(
+        "GET",
+        API_ENDPOINT.CREATE_PURCHASE_VERIFY_USER(userId),
+        {},
+        "application/json",
+        authToken
+      );
+
+      if (response.status === 200) {
+        setVerificationStatus((prev) => ({
+          ...prev,
+          affiliate: { verified: true, data: response.data },
+        }));
+        toast.success("Affiliate user verified successfully");
+      } else {
+        setVerificationStatus((prev) => ({
+          ...prev,
+          affiliate: { verified: false },
+        }));
+        toast.error("Affiliate user not found");
+      }
+    } catch (error) {
+      setVerificationStatus((prev) => ({
+        ...prev,
+        affiliate: { verified: false },
+      }));
+      toast.error("Failed to verify affiliate user");
+    } finally {
+      setIsVerifying(false);
+    }
+  };
+
+  const handleCreatePurchase = async (e: React.FormEvent) => {
+    e.preventDefault();
+
+    // Check if all required fields are verified
+    if (
+      !verificationStatus.item?.verified ||
+      !verificationStatus.user?.verified
+    ) {
+      toast.error("Please verify all required fields before creating purchase");
+      return;
+    }
+
     try {
       const response = await makeApiCall(
         "POST",
         API_ENDPOINT.CREATE_PURCHASE,
-        newPurchase,
+        {
+          item_id: newPurchase.item_id,
+          item_type: newPurchase.item_type,
+          user_id: newPurchase.purchased_user_id,
+          affiliate_user_id: newPurchase.affiliate_user_id || undefined,
+        },
         "application/json",
-        authToken,
-        "createPurchase"
+        authToken
       );
+
       if (response.status === 201) {
         toast.success("Purchase created successfully");
+        setIsCreateDialogOpen(false);
+        setNewPurchase({
+          item_id: "",
+          item_type: "course",
+          purchased_user_id: "",
+          affiliate_user_id: undefined,
+        });
+        setVerificationStatus({});
         fetchPurchases();
-        resetForm();
+      } else {
+        toast.error(response.error || "Failed to create purchase");
       }
     } catch (error) {
       toast.error("Failed to create purchase");
     }
   };
 
-  const resetForm = () => {
-    setNewPurchase({
-      item_type: "course",
-      item_id: 0,
-      purchased_user_id: 0,
-      affiliate_user_id: undefined,
-    });
-    setIsCreateDialogOpen(false);
-  };
-
   return (
     <div className="container mx-auto py-6">
       <div className="flex justify-between items-center mb-6">
         <h1 className="text-2xl font-bold">Purchases Management</h1>
-        <form onSubmit={handleSearch} className="flex items-center gap-4">
+        <div className="flex items-center gap-4">
           <div className="relative">
             <Search className="absolute left-2 top-2.5 h-4 w-4 text-muted-foreground" />
             <Input
               placeholder="Search purchases..."
               className="pl-8 w-[300px]"
               value={searchQuery}
-              onChange={(e) => setSearchQuery(e.target.value)}
+              onChange={handleSearch}
             />
           </div>
-          <Button type="submit">Search</Button>
-        </form>
+          <Button onClick={() => setIsCreateDialogOpen(true)}>
+            Create Purchase
+          </Button>
+        </div>
       </div>
 
       <div className="bg-white rounded-lg shadow">
@@ -226,7 +401,7 @@ export default function PurchasesManagement() {
             </TableRow>
           </TableHeader>
           <TableBody>
-            {fetching ? (
+            {fetching && fetchType === "fetchPurchases" ? (
               <TableRow>
                 <TableCell colSpan={7} className="h-24 text-center">
                   <Loading />
@@ -251,7 +426,7 @@ export default function PurchasesManagement() {
                   </TableCell>
                   <TableCell>{purchase.item.title}</TableCell>
                   <TableCell>{formatCurrency(purchase.item.price)}</TableCell>
-                  <TableCell>{purchase.user.name}</TableCell>
+                  <TableCell>{purchase?.user?.name}</TableCell>
                   <TableCell>{purchase.affiliate_user?.name || "-"}</TableCell>
                   <TableCell>
                     {new Date(purchase.created_at).toLocaleDateString()}
@@ -274,32 +449,15 @@ export default function PurchasesManagement() {
 
       {/* Only show pagination if there are items */}
       {!fetching && purchases.length > 0 && (
-        <div className="flex items-center justify-between mt-4">
-          <div className="text-sm text-muted-foreground">
-            Showing {purchases.length} of {totalItems} purchases
-          </div>
-          <div className="flex items-center gap-2">
-            <Button
-              variant="outline"
-              size="sm"
-              onClick={() => handlePageChange(currentPage - 1)}
-              disabled={!hasPrev}
-            >
-              Previous
-            </Button>
-            <span className="text-sm">
-              Page {currentPage} of {totalPages}
-            </span>
-            <Button
-              variant="outline"
-              size="sm"
-              onClick={() => handlePageChange(currentPage + 1)}
-              disabled={!hasNext}
-            >
-              Next
-            </Button>
-          </div>
-        </div>
+        <Pagination
+          currentPage={currentPage}
+          hasNext={hasNext}
+          hasPrev={hasPrev}
+          total={totalItems}
+          pageSize={pageSize}
+          itemsSize={purchases.length}
+          onPageChange={handlePageChange}
+        />
       )}
 
       <Dialog
@@ -469,86 +627,256 @@ export default function PurchasesManagement() {
                   </div>
                 </CardContent>
               </Card>
+
+              {/* Transaction Details Card */}
+              <Card>
+                <CardHeader className="pb-2">
+                  <CardTitle className="text-lg flex items-center gap-2">
+                    <Package className="w-5 h-5" />
+                    Transaction Details
+                  </CardTitle>
+                </CardHeader>
+                <CardContent>
+                  <div className="grid grid-cols-2 gap-4">
+                    <div className="space-y-2">
+                      <p className="text-sm text-muted-foreground">
+                        Transaction ID
+                      </p>
+                      <p className="font-medium">
+                        {selectedPurchase.transaction.transaction_id}
+                      </p>
+                    </div>
+                    <div className="space-y-2">
+                      <p className="text-sm text-muted-foreground">Order ID</p>
+                      <p className="font-medium">
+                        {selectedPurchase.transaction.order_id}
+                      </p>
+                    </div>
+                    <div className="space-y-2">
+                      <p className="text-sm text-muted-foreground">Status</p>
+                      <Badge
+                        variant={
+                          selectedPurchase.transaction.status === "captured"
+                            ? "default"
+                            : "destructive"
+                        }
+                        className="capitalize"
+                      >
+                        {selectedPurchase.transaction.status}
+                      </Badge>
+                    </div>
+                    <div className="space-y-2">
+                      <p className="text-sm text-muted-foreground">
+                        Payment Method
+                      </p>
+                      <Badge variant="outline" className="capitalize">
+                        {selectedPurchase.transaction.method}
+                      </Badge>
+                    </div>
+                  </div>
+                </CardContent>
+              </Card>
             </div>
           )}
         </DialogContent>
       </Dialog>
 
       {/* Create Purchase Dialog */}
-      <Dialog open={isCreateDialogOpen} onOpenChange={resetForm}>
-        <DialogContent>
+      <Dialog open={isCreateDialogOpen} onOpenChange={setIsCreateDialogOpen}>
+        <DialogContent className="sm:max-w-[425px]">
           <DialogHeader>
             <DialogTitle>Create New Purchase</DialogTitle>
+            <DialogDescription>
+              Create a new purchase record for a user.
+            </DialogDescription>
           </DialogHeader>
-          <div className="space-y-4">
-            <div className="space-y-2">
-              <label className="text-sm font-medium">Item Type</label>
-              <Select
-                value={newPurchase.item_type}
-                onValueChange={(value) =>
-                  setNewPurchase({ ...newPurchase, item_type: value })
+          <form onSubmit={handleCreatePurchase}>
+            <div className="grid gap-4 py-4">
+              <div className="grid gap-2">
+                <Label htmlFor="item_type">Item Type</Label>
+                <Select
+                  value={newPurchase.item_type}
+                  onValueChange={(value) => {
+                    setNewPurchase((prev) => ({ ...prev, item_type: value }));
+                    setVerificationStatus((prev) => ({
+                      ...prev,
+                      item: undefined,
+                    }));
+                  }}
+                >
+                  <SelectTrigger>
+                    <SelectValue placeholder="Select item type" />
+                  </SelectTrigger>
+                  <SelectContent>
+                    <SelectItem value="course">Course</SelectItem>
+                    <SelectItem value="ebook">Ebook</SelectItem>
+                  </SelectContent>
+                </Select>
+              </div>
+
+              <div className="grid gap-2">
+                <Label htmlFor="item_id">Item ID</Label>
+                <div className="flex gap-2">
+                  <Input
+                    id="item_id"
+                    value={newPurchase.item_id}
+                    onChange={(e) => {
+                      setNewPurchase((prev) => ({
+                        ...prev,
+                        item_id: e.target.value,
+                      }));
+                      setVerificationStatus((prev) => ({
+                        ...prev,
+                        item: undefined,
+                      }));
+                    }}
+                    onKeyDown={(e) => {
+                      if (e.key === "Enter" && newPurchase.item_id) {
+                        e.preventDefault();
+                        verifyItem(newPurchase.item_id, newPurchase.item_type);
+                      }
+                    }}
+                    placeholder="Enter item ID"
+                  />
+                  <Button
+                    type="button"
+                    variant="outline"
+                    onClick={() =>
+                      verifyItem(newPurchase.item_id, newPurchase.item_type)
+                    }
+                    disabled={!newPurchase.item_id || isVerifying}
+                  >
+                    {isVerifying ? (
+                      <Loader2 className="h-4 w-4 animate-spin" />
+                    ) : verificationStatus.item?.verified ? (
+                      <Check className="h-4 w-4 text-green-500" />
+                    ) : (
+                      "Verify"
+                    )}
+                  </Button>
+                </div>
+                {verificationStatus.item?.data && (
+                  <p className="text-sm text-green-500">
+                    Verified: {verificationStatus.item.data.title}
+                  </p>
+                )}
+              </div>
+
+              <div className="grid gap-2">
+                <Label htmlFor="user_id">User ID</Label>
+                <div className="flex gap-2">
+                  <Input
+                    id="user_id"
+                    value={newPurchase.purchased_user_id}
+                    onChange={(e) => {
+                      setNewPurchase((prev) => ({
+                        ...prev,
+                        purchased_user_id: e.target.value,
+                      }));
+                      setVerificationStatus((prev) => ({
+                        ...prev,
+                        user: undefined,
+                      }));
+                    }}
+                    onKeyDown={(e) => {
+                      if (e.key === "Enter" && newPurchase.purchased_user_id) {
+                        e.preventDefault();
+                        verifyUser(newPurchase.purchased_user_id);
+                      }
+                    }}
+                    placeholder="Enter user ID"
+                  />
+                  <Button
+                    type="button"
+                    variant="outline"
+                    onClick={() => verifyUser(newPurchase.purchased_user_id)}
+                    disabled={!newPurchase.purchased_user_id || isVerifying}
+                  >
+                    {isVerifying ? (
+                      <Loader2 className="h-4 w-4 animate-spin" />
+                    ) : verificationStatus.user?.verified ? (
+                      <Check className="h-4 w-4 text-green-500" />
+                    ) : (
+                      "Verify"
+                    )}
+                  </Button>
+                </div>
+                {verificationStatus.user?.data && (
+                  <p className="text-sm text-green-500">
+                    Verified: {verificationStatus.user.data.name}
+                  </p>
+                )}
+              </div>
+
+              <div className="grid gap-2">
+                <Label htmlFor="affiliate_user_id">
+                  Affiliate User ID (Optional)
+                </Label>
+                <div className="flex gap-2">
+                  <Input
+                    id="affiliate_user_id"
+                    value={newPurchase.affiliate_user_id}
+                    onChange={(e) => {
+                      setNewPurchase((prev) => ({
+                        ...prev,
+                        affiliate_user_id: e.target.value,
+                      }));
+                      setVerificationStatus((prev) => ({
+                        ...prev,
+                        affiliate: undefined,
+                      }));
+                    }}
+                    onKeyDown={(e) => {
+                      if (e.key === "Enter" && newPurchase.affiliate_user_id) {
+                        e.preventDefault();
+                        verifyAffiliate(newPurchase.affiliate_user_id);
+                      }
+                    }}
+                    placeholder="Enter affiliate user ID"
+                  />
+                  <Button
+                    type="button"
+                    variant="outline"
+                    onClick={() =>
+                      verifyAffiliate(newPurchase.affiliate_user_id)
+                    }
+                    disabled={!newPurchase.affiliate_user_id || isVerifying}
+                  >
+                    {isVerifying ? (
+                      <Loader2 className="h-4 w-4 animate-spin" />
+                    ) : verificationStatus.affiliate?.verified ? (
+                      <Check className="h-4 w-4 text-green-500" />
+                    ) : (
+                      "Verify"
+                    )}
+                  </Button>
+                </div>
+                {verificationStatus.affiliate?.data && (
+                  <p className="text-sm text-green-500">
+                    Verified: {verificationStatus.affiliate.data.name}
+                  </p>
+                )}
+              </div>
+            </div>
+            <DialogFooter>
+              <Button
+                type="button"
+                variant="outline"
+                onClick={() => setIsCreateDialogOpen(false)}
+              >
+                Cancel
+              </Button>
+              <Button
+                type="submit"
+                disabled={
+                  !verificationStatus.item?.verified ||
+                  !verificationStatus.user?.verified
                 }
               >
-                <SelectTrigger>
-                  <SelectValue placeholder="Select item type" />
-                </SelectTrigger>
-                <SelectContent>
-                  <SelectItem value="course">Course</SelectItem>
-                  <SelectItem value="ebook">Ebook</SelectItem>
-                </SelectContent>
-              </Select>
-            </div>
-            <div className="space-y-2">
-              <label className="text-sm font-medium">Item ID</label>
-              <Input
-                type="number"
-                value={newPurchase.item_id || ""}
-                onChange={(e) =>
-                  setNewPurchase({
-                    ...newPurchase,
-                    item_id: parseInt(e.target.value) || 0,
-                  })
-                }
-                placeholder="Enter item ID"
-              />
-            </div>
-            <div className="space-y-2">
-              <label className="text-sm font-medium">User ID</label>
-              <Input
-                type="number"
-                value={newPurchase.purchased_user_id || ""}
-                onChange={(e) =>
-                  setNewPurchase({
-                    ...newPurchase,
-                    purchased_user_id: parseInt(e.target.value) || 0,
-                  })
-                }
-                placeholder="Enter user ID"
-              />
-            </div>
-            <div className="space-y-2">
-              <label className="text-sm font-medium">
-                Affiliate User ID (Optional)
-              </label>
-              <Input
-                type="number"
-                value={newPurchase.affiliate_user_id || ""}
-                onChange={(e) =>
-                  setNewPurchase({
-                    ...newPurchase,
-                    affiliate_user_id: parseInt(e.target.value) || undefined,
-                  })
-                }
-                placeholder="Enter affiliate user ID"
-              />
-            </div>
-          </div>
-          <DialogFooter>
-            <Button variant="outline" onClick={resetForm}>
-              Cancel
-            </Button>
-            <Button onClick={handleCreatePurchase}>Create Purchase</Button>
-          </DialogFooter>
+                Create Purchase
+              </Button>
+            </DialogFooter>
+          </form>
         </DialogContent>
       </Dialog>
     </div>

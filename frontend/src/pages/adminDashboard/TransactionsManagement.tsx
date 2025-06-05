@@ -76,6 +76,7 @@ export default function TransactionsManagement() {
   const [transactions, setTransactions] = useState<TransactionResponse | null>(
     null
   );
+  const pageSize = 20;
   const { fetchType, fetching, makeApiCall } = useAPICall();
   const { authToken } = useAuth();
 
@@ -92,7 +93,12 @@ export default function TransactionsManagement() {
   const fetchTransactions = async (page: number) => {
     const response = await makeApiCall(
       "GET",
-      API_ENDPOINT.GET_ALL_TRANSACTIONS(page, 20, statusFilter, searchQuery),
+      API_ENDPOINT.GET_ALL_TRANSACTIONS(
+        page,
+        pageSize,
+        statusFilter,
+        searchQuery
+      ),
       {},
       "application/json",
       authToken,
@@ -239,14 +245,16 @@ export default function TransactionsManagement() {
       </div>
 
       {/* Pagination */}
-      {transactions && filteredTransactions.length > 0 && (
+      {transactions && filteredTransactions.length > 0 && !fetching && (
         <Pagination
           currentPage={currentPage}
           hasNext={transactions.has_next}
           hasPrev={transactions.has_prev}
           total={transactions.total}
-          pageSize={20}
+          pageSize={pageSize}
           onPageChange={handlePageChange}
+          itemsSize={transactions.items.length}
+
         />
       )}
 

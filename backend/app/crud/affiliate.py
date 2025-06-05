@@ -178,6 +178,13 @@ def create_withdraw(db:Session,user:User,data:WithdrawCreate,commit=False):
         db.refresh(db_withdraw)
     return db_withdraw
 
+def add_purchase_commission_to_affiliate_account(db:Session,account:AffiliateAccount,amount:float,commit=False):
+    account.balance += amount
+    if commit:
+        db.commit()
+        db.refresh(account)
+    return account
+
 def update_affiliate_account_balance(db:Session,account:AffiliateAccount,amount:float,commit=False):
     account.balance -= amount
     if commit:
@@ -206,3 +213,13 @@ def update_or_create_account_details(db:Session,affiliate_account:AffiliateAccou
     db.commit()
     db.refresh(db_upi)
     db.refresh(db_bank)
+
+
+def get_or_create_affiliate_account(db:Session,user_id:int):
+    db_affiliate_account = get_affiliate_account_by_user_id(db,user_id)
+    if not db_affiliate_account:
+        db_affiliate_account = AffiliateAccount(user_id=user_id)
+        db.add(db_affiliate_account)
+        db.commit()
+        db.refresh(db_affiliate_account)
+    return db_affiliate_account

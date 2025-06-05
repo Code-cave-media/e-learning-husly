@@ -49,7 +49,6 @@ class PurchaseVerifyRequest(BaseModel):
 
 
 class TransactionResponse (BaseModel):
-    purchase_id: int | None = None
     transaction_id: str
     order_id: str
     status: str
@@ -70,6 +69,19 @@ class TransactionResponse (BaseModel):
     class Config:
       orm_mode = True
   
+class ListTransactionResponse(BaseModel):
+    transaction_id: str
+    order_id: str
+    status: str
+    method: str
+    class Config:
+        orm_mode = True
+
+class PurchaseCreateRequest(BaseModel):
+  item_id: int
+  item_type: str
+  user_id: int | None = None
+  affiliate_user_id: int | None = None
 
 class PurchaseResponse(BaseModel):
   id: int | None = None
@@ -79,6 +91,6 @@ class PurchaseResponse(BaseModel):
   created_at: datetime | None = None
   user: UserResponse | None = None
   affiliate_user: UserResponse | None = None
-
+  transaction: ListTransactionResponse | None = None
   class Config:
     orm_mode = True

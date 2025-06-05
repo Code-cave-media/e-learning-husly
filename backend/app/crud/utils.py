@@ -24,7 +24,6 @@ def to_pagination_response(
     total_count = query.count()
     items = query.offset(skip).limit(page_size).all()
     total_pages = math.ceil(total_count / page_size) if page_size else 0
-    
     return {
         "has_prev":page > 1,
         "has_next":(page * page_size) < total_count,
