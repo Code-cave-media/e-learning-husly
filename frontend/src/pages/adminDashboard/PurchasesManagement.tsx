@@ -1,4 +1,4 @@
-import { useState } from "react";
+import { useEffect, useState } from "react";
 import {
   Table,
   TableBody,
@@ -22,6 +22,7 @@ import {
   SelectTrigger,
   SelectValue,
 } from "@/components/ui/select";
+import { Input } from "@/components/ui/input";
 import { formatCurrency } from "@/lib/utils";
 import { toast } from "react-hot-toast";
 import { Card, CardContent, CardHeader, CardTitle } from "@/components/ui/card";
@@ -34,72 +35,68 @@ import {
   BookOpen,
   FileText,
   Mail,
+  Search,
+  IndianRupee,
 } from "lucide-react";
-import {
-  Command,
-  CommandInput,
-  CommandList,
-  CommandItem,
-  CommandEmpty,
-} from "@/components/ui/command";
-import { Combobox } from "@/components/ui/combobox";
 
-// Dummy data
-const dummyCourses = [
-  { id: 1, title: "Web Development Bootcamp", price: 4999 },
-  { id: 2, title: "Data Science Fundamentals", price: 5999 },
-  { id: 3, title: "Mobile App Development", price: 6999 },
-];
+import { useAPICall } from "@/hooks/useApiCall";
+import { useAuth } from "@/contexts/AuthContext";
+import { API_ENDPOINT } from "@/config/backend";
+import { Loading } from "@/components/ui/loading";
 
-const dummyEbooks = [
-  { id: 1, title: "Python Programming Guide", price: 999 },
-  { id: 2, title: "JavaScript Mastery", price: 1499 },
-  { id: 3, title: "UI/UX Design Principles", price: 1999 },
-];
+interface LandingPage {
+  id: number;
+  main_heading: string;
+  sub_heading: string;
+  top_heading: string;
+  highlight_words: string;
+  thumbnail: string;
+}
 
-const dummyUsers = [
-  { id: 1, name: "John Doe", email: "john@example.com" },
-  { id: 2, name: "Jane Smith", email: "jane@example.com" },
-  { id: 3, name: "Bob Johnson", email: "bob@example.com" },
-];
+interface Item {
+  id: number;
+  title: string;
+  description: string;
+  price: number;
+  pdf?: string;
+  thumbnail: string;
+  intro_video: string;
+  visible: boolean;
+  created_at: string;
+  updated_at: string;
+  commission: number;
+  landing_page: LandingPage;
+  is_featured: boolean;
+  is_new: boolean;
+}
 
-const dummyPurchases = [
-  {
-    id: 1,
-    item_type: "course",
-    item: dummyCourses[0],
-    purchased_user: dummyUsers[0],
-    affiliate_user: dummyUsers[1],
-    created_at: "2024-03-15T10:00:00Z",
-  },
-  {
-    id: 2,
-    item_type: "ebook",
-    item: dummyEbooks[1],
-    purchased_user: dummyUsers[2],
-    created_at: "2024-03-14T15:30:00Z",
-  },
-];
+interface User {
+  id: number;
+  email: string;
+  user_id: string;
+  is_admin: boolean;
+  phone: string;
+  name: string;
+}
 
 interface Purchase {
   id: number;
+  user_id: number | null;
+  item_id: number;
   item_type: string;
-  item: {
-    id: number;
-    title: string;
-    price: number;
-  };
-  purchased_user: {
-    id: number;
-    name: string;
-    email: string;
-  };
-  affiliate_user?: {
-    id: number;
-    name: string;
-    email: string;
-  };
   created_at: string;
+  user: User;
+  affiliate_user: User | null;
+  item: Item;
+}
+
+interface PaginatedResponse {
+  has_prev: boolean;
+  has_next: boolean;
+  total: number;
+  items: Purchase[];
+  total_pages: number;
+  limit: number;
 }
 
 interface NewPurchase {
@@ -120,44 +117,71 @@ export default function PurchasesManagement() {
     purchased_user_id: 0,
     affiliate_user_id: undefined,
   });
-  const [purchases, setPurchases] = useState<Purchase[]>(dummyPurchases);
+  const [purchases, setPurchases] = useState<Purchase[]>([]);
+  const [currentPage, setCurrentPage] = useState(1);
+  const [searchQuery, setSearchQuery] = useState("");
+  const [totalItems, setTotalItems] = useState(0);
+  const [hasNext, setHasNext] = useState(false);
+  const [hasPrev, setHasPrev] = useState(false);
+  const [totalPages, setTotalPages] = useState(0);
+  const { makeApiCall, fetching, isFetched } = useAPICall();
+  const { authToken } = useAuth();
 
-  const handleCreatePurchase = () => {
-    const selectedItem =
-      newPurchase.item_type === "course"
-        ? dummyCourses.find((c) => c.id === newPurchase.item_id)
-        : dummyEbooks.find((e) => e.id === newPurchase.item_id);
+  useEffect(() => {
+    fetchPurchases();
+  }, [currentPage]);
 
-    const purchasedUser = dummyUsers.find(
-      (u) => u.id === newPurchase.purchased_user_id
-    );
-    const affiliateUser = newPurchase.affiliate_user_id
-      ? dummyUsers.find((u) => u.id === newPurchase.affiliate_user_id)
-      : undefined;
-
-    if (!selectedItem || !purchasedUser) {
-      toast.error("Please select all required fields");
-      return;
+  const fetchPurchases = async () => {
+    try {
+      const response = await makeApiCall(
+        "GET",
+        API_ENDPOINT.GET_ALL_PURCHASES(currentPage, 10, "all", searchQuery),
+        {},
+        "application/json",
+        authToken,
+        "fetchPurchases"
+      );
+      if (response.status === 200) {
+        const data: PaginatedResponse = response.data;
+        setPurchases(data.items);
+        setTotalItems(data.total);
+        setHasNext(data.has_next);
+        setHasPrev(data.has_prev);
+        setTotalPages(data.total_pages);
+      }
+    } catch (error) {
+      toast.error("Failed to fetch purchases");
     }
+  };
 
-    const newPurchaseItem: Purchase = {
-      id: purchases.length + 1,
-      item_type: newPurchase.item_type,
-      item: selectedItem,
-      purchased_user: purchasedUser,
-      affiliate_user: affiliateUser,
-      created_at: new Date().toISOString(),
-    };
+  const handleSearch = (e: React.FormEvent) => {
+    e.preventDefault();
+    setCurrentPage(1);
+    fetchPurchases();
+  };
 
-    setPurchases([...purchases, newPurchaseItem]);
-    setIsCreateDialogOpen(false);
-    setNewPurchase({
-      item_type: "course",
-      item_id: 0,
-      purchased_user_id: 0,
-      affiliate_user_id: undefined,
-    });
-    toast.success("Purchase created successfully");
+  const handlePageChange = (newPage: number) => {
+    setCurrentPage(newPage);
+  };
+
+  const handleCreatePurchase = async () => {
+    try {
+      const response = await makeApiCall(
+        "POST",
+        API_ENDPOINT.CREATE_PURCHASE,
+        newPurchase,
+        "application/json",
+        authToken,
+        "createPurchase"
+      );
+      if (response.status === 201) {
+        toast.success("Purchase created successfully");
+        fetchPurchases();
+        resetForm();
+      }
+    } catch (error) {
+      toast.error("Failed to create purchase");
+    }
   };
 
   const resetForm = () => {
@@ -174,9 +198,18 @@ export default function PurchasesManagement() {
     <div className="container mx-auto py-6">
       <div className="flex justify-between items-center mb-6">
         <h1 className="text-2xl font-bold">Purchases Management</h1>
-        <Button onClick={() => setIsCreateDialogOpen(true)}>
-          Create New Purchase
-        </Button>
+        <form onSubmit={handleSearch} className="flex items-center gap-4">
+          <div className="relative">
+            <Search className="absolute left-2 top-2.5 h-4 w-4 text-muted-foreground" />
+            <Input
+              placeholder="Search purchases..."
+              className="pl-8 w-[300px]"
+              value={searchQuery}
+              onChange={(e) => setSearchQuery(e.target.value)}
+            />
+          </div>
+          <Button type="submit">Search</Button>
+        </form>
       </div>
 
       <div className="bg-white rounded-lg shadow">
@@ -185,6 +218,7 @@ export default function PurchasesManagement() {
             <TableRow>
               <TableHead>Item Type</TableHead>
               <TableHead>Item Title</TableHead>
+              <TableHead>Price</TableHead>
               <TableHead>Purchased By</TableHead>
               <TableHead>Affiliate</TableHead>
               <TableHead>Date</TableHead>
@@ -192,35 +226,87 @@ export default function PurchasesManagement() {
             </TableRow>
           </TableHeader>
           <TableBody>
-            {purchases.map((purchase) => (
-              <TableRow key={purchase.id}>
-                <TableCell>{purchase.item_type}</TableCell>
-                <TableCell>{purchase.item.title}</TableCell>
-                <TableCell>{purchase.purchased_user.name}</TableCell>
-                <TableCell>{purchase.affiliate_user?.name || "-"}</TableCell>
-                <TableCell>
-                  {new Date(purchase.created_at).toLocaleDateString()}
-                </TableCell>
-                <TableCell>
-                  <Button
-                    variant="outline"
-                    size="sm"
-                    onClick={() => setSelectedPurchase(purchase)}
-                  >
-                    View Details
-                  </Button>
+            {fetching ? (
+              <TableRow>
+                <TableCell colSpan={7} className="h-24 text-center">
+                  <Loading />
                 </TableCell>
               </TableRow>
-            ))}
+            ) : isFetched && purchases.length == 0 ? (
+              <TableRow>
+                <TableCell colSpan={7} className="h-24 text-center">
+                  <div className="flex flex-col items-center justify-center gap-2">
+                    <Package className="h-8 w-8 text-muted-foreground" />
+                    <p className="text-muted-foreground">No purchases found</p>
+                  </div>
+                </TableCell>
+              </TableRow>
+            ) : (
+              purchases.map((purchase) => (
+                <TableRow key={purchase.id}>
+                  <TableCell>
+                    <Badge variant="outline" className="capitalize">
+                      {purchase.item_type}
+                    </Badge>
+                  </TableCell>
+                  <TableCell>{purchase.item.title}</TableCell>
+                  <TableCell>{formatCurrency(purchase.item.price)}</TableCell>
+                  <TableCell>{purchase.user.name}</TableCell>
+                  <TableCell>{purchase.affiliate_user?.name || "-"}</TableCell>
+                  <TableCell>
+                    {new Date(purchase.created_at).toLocaleDateString()}
+                  </TableCell>
+                  <TableCell>
+                    <Button
+                      variant="outline"
+                      size="sm"
+                      onClick={() => setSelectedPurchase(purchase)}
+                    >
+                      View Details
+                    </Button>
+                  </TableCell>
+                </TableRow>
+              ))
+            )}
           </TableBody>
         </Table>
       </div>
+
+      {/* Only show pagination if there are items */}
+      {!fetching && purchases.length > 0 && (
+        <div className="flex items-center justify-between mt-4">
+          <div className="text-sm text-muted-foreground">
+            Showing {purchases.length} of {totalItems} purchases
+          </div>
+          <div className="flex items-center gap-2">
+            <Button
+              variant="outline"
+              size="sm"
+              onClick={() => handlePageChange(currentPage - 1)}
+              disabled={!hasPrev}
+            >
+              Previous
+            </Button>
+            <span className="text-sm">
+              Page {currentPage} of {totalPages}
+            </span>
+            <Button
+              variant="outline"
+              size="sm"
+              onClick={() => handlePageChange(currentPage + 1)}
+              disabled={!hasNext}
+            >
+              Next
+            </Button>
+          </div>
+        </div>
+      )}
 
       <Dialog
         open={!!selectedPurchase}
         onOpenChange={() => setSelectedPurchase(null)}
       >
-        <DialogContent className="">
+        <DialogContent className="max-w-3xl">
           <DialogHeader className="flex-shrink-0">
             <DialogTitle className="text-2xl font-bold flex items-center gap-2">
               <Package className="w-6 h-6" />
@@ -228,7 +314,7 @@ export default function PurchasesManagement() {
             </DialogTitle>
           </DialogHeader>
           {selectedPurchase && (
-            <div className="space-y-6 overflow-y-auto pr-2">
+            <div className="space-y-6 overflow-y-auto pr-2 max-h-[80vh]">
               {/* Item Information Card */}
               <Card>
                 <CardHeader className="pb-2">
@@ -250,8 +336,11 @@ export default function PurchasesManagement() {
                       </Badge>
                     </div>
                     <div className="space-y-2">
-                      <p className="text-sm text-muted-foreground">Price</p>
-                      <p className="font-medium text-lg">
+                      <p className="text-sm text-muted-foreground flex items-center gap-2">
+                        <IndianRupee className="w-4 h-4" />
+                        Price
+                      </p>
+                      <p className="font-medium">
                         {formatCurrency(selectedPurchase.item.price)}
                       </p>
                     </div>
@@ -259,6 +348,14 @@ export default function PurchasesManagement() {
                       <p className="text-sm text-muted-foreground">Title</p>
                       <p className="font-medium">
                         {selectedPurchase.item.title}
+                      </p>
+                    </div>
+                    <div className="space-y-2 col-span-2">
+                      <p className="text-sm text-muted-foreground">
+                        Description
+                      </p>
+                      <p className="font-medium">
+                        {selectedPurchase.item.description}
                       </p>
                     </div>
                   </div>
@@ -280,7 +377,7 @@ export default function PurchasesManagement() {
                       <div className="flex items-center gap-2">
                         <User className="w-4 h-4 text-muted-foreground" />
                         <p className="font-medium">
-                          {selectedPurchase.purchased_user.name}
+                          {selectedPurchase.user.name}
                         </p>
                       </div>
                     </div>
@@ -291,10 +388,44 @@ export default function PurchasesManagement() {
                           Purchaser Email
                         </p>
                         <p className="font-medium">
-                          {selectedPurchase.purchased_user.email}
+                          {selectedPurchase.user.email}
                         </p>
                       </div>
-                      {selectedPurchase.affiliate_user && (
+                      <div className="space-y-2">
+                        <p className="text-sm text-muted-foreground flex items-center gap-2">
+                          <Users className="w-4 h-4" />
+                          Phone
+                        </p>
+                        <p className="font-medium">
+                          {selectedPurchase.user.phone}
+                        </p>
+                      </div>
+                    </div>
+                  </div>
+                </CardContent>
+              </Card>
+
+              {/* Affiliate Information Card */}
+              {selectedPurchase.affiliate_user && (
+                <Card>
+                  <CardHeader className="pb-2">
+                    <CardTitle className="text-lg flex items-center gap-2">
+                      <Users className="w-5 h-5" />
+                      Affiliate Information
+                    </CardTitle>
+                  </CardHeader>
+                  <CardContent>
+                    <div className="space-y-4">
+                      <div className="space-y-2">
+                        <p className="text-sm text-muted-foreground">Name</p>
+                        <div className="flex items-center gap-2">
+                          <User className="w-4 h-4 text-muted-foreground" />
+                          <p className="font-medium">
+                            {selectedPurchase.affiliate_user.name}
+                          </p>
+                        </div>
+                      </div>
+                      <div className="grid grid-cols-2 gap-4">
                         <div className="space-y-2">
                           <p className="text-sm text-muted-foreground flex items-center gap-2">
                             <Mail className="w-4 h-4" />
@@ -304,11 +435,20 @@ export default function PurchasesManagement() {
                             {selectedPurchase.affiliate_user.email}
                           </p>
                         </div>
-                      )}
+                        <div className="space-y-2">
+                          <p className="text-sm text-muted-foreground flex items-center gap-2">
+                            <Users className="w-4 h-4" />
+                            Phone
+                          </p>
+                          <p className="font-medium">
+                            {selectedPurchase.affiliate_user.phone}
+                          </p>
+                        </div>
+                      </div>
                     </div>
-                  </div>
-                </CardContent>
-              </Card>
+                  </CardContent>
+                </Card>
+              )}
 
               {/* Purchase Details Card */}
               <Card>
@@ -341,62 +481,67 @@ export default function PurchasesManagement() {
             <DialogTitle>Create New Purchase</DialogTitle>
           </DialogHeader>
           <div className="space-y-4">
-            {/* Course Combobox */}
-            <Combobox
-              label="Course"
-              options={dummyCourses.map((course) => ({
-                value: course.id.toString(),
-                label: course.title,
-              }))}
-              value={newPurchase.item_id ? newPurchase.item_id.toString() : ""}
-              onChange={(val) =>
-                setNewPurchase({ ...newPurchase, item_id: parseInt(val) })
-              }
-              placeholder="Select course"
-            />
-            {/* Purchased User Combobox */}
-            <Combobox
-              label="Purchased User"
-              options={dummyUsers.map((user) => ({
-                value: user.id.toString(),
-                label: user.name,
-              }))}
-              value={
-                newPurchase.purchased_user_id
-                  ? newPurchase.purchased_user_id.toString()
-                  : ""
-              }
-              onChange={(val) =>
-                setNewPurchase({
-                  ...newPurchase,
-                  purchased_user_id: parseInt(val),
-                })
-              }
-              placeholder="Select user"
-            />
-            {/* Affiliate User Combobox */}
-            <Combobox
-              label="Affiliate User (Optional)"
-              options={[
-                { value: "none", label: "None" },
-                ...dummyUsers.map((user) => ({
-                  value: user.id.toString(),
-                  label: user.name,
-                })),
-              ]}
-              value={
-                typeof newPurchase.affiliate_user_id === "number"
-                  ? newPurchase.affiliate_user_id.toString()
-                  : "none"
-              }
-              onChange={(val) =>
-                setNewPurchase({
-                  ...newPurchase,
-                  affiliate_user_id: val === "none" ? undefined : parseInt(val),
-                })
-              }
-              placeholder="Select affiliate"
-            />
+            <div className="space-y-2">
+              <label className="text-sm font-medium">Item Type</label>
+              <Select
+                value={newPurchase.item_type}
+                onValueChange={(value) =>
+                  setNewPurchase({ ...newPurchase, item_type: value })
+                }
+              >
+                <SelectTrigger>
+                  <SelectValue placeholder="Select item type" />
+                </SelectTrigger>
+                <SelectContent>
+                  <SelectItem value="course">Course</SelectItem>
+                  <SelectItem value="ebook">Ebook</SelectItem>
+                </SelectContent>
+              </Select>
+            </div>
+            <div className="space-y-2">
+              <label className="text-sm font-medium">Item ID</label>
+              <Input
+                type="number"
+                value={newPurchase.item_id || ""}
+                onChange={(e) =>
+                  setNewPurchase({
+                    ...newPurchase,
+                    item_id: parseInt(e.target.value) || 0,
+                  })
+                }
+                placeholder="Enter item ID"
+              />
+            </div>
+            <div className="space-y-2">
+              <label className="text-sm font-medium">User ID</label>
+              <Input
+                type="number"
+                value={newPurchase.purchased_user_id || ""}
+                onChange={(e) =>
+                  setNewPurchase({
+                    ...newPurchase,
+                    purchased_user_id: parseInt(e.target.value) || 0,
+                  })
+                }
+                placeholder="Enter user ID"
+              />
+            </div>
+            <div className="space-y-2">
+              <label className="text-sm font-medium">
+                Affiliate User ID (Optional)
+              </label>
+              <Input
+                type="number"
+                value={newPurchase.affiliate_user_id || ""}
+                onChange={(e) =>
+                  setNewPurchase({
+                    ...newPurchase,
+                    affiliate_user_id: parseInt(e.target.value) || undefined,
+                  })
+                }
+                placeholder="Enter affiliate user ID"
+              />
+            </div>
           </div>
           <DialogFooter>
             <Button variant="outline" onClick={resetForm}>

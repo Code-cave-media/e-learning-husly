@@ -537,7 +537,7 @@ const AffiliateDashboardPage = () => {
                       radius={[4, 4, 0, 0]}
                     />
                     <Bar
-                      dataKey="conversions"
+                      dataKey="purchases"
                       fill="#82ca9d"
                       name="Conversions"
                       animationDuration={5000}

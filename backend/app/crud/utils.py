@@ -29,6 +29,7 @@ def to_pagination_response(
         "has_prev":page > 1,
         "has_next":(page * page_size) < total_count,
         "total":total_count,
-        "items":[schema.from_orm(item) for item in items],
-        "total_pages":total_pages
+        "items":[dict(schema.from_orm(item)) for item in items],
+        "total_pages":total_pages,
+        "limit":page_size
     }

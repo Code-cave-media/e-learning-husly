@@ -1,4 +1,7 @@
-from pydantic import BaseModel, root_validator, ValidationError
+from pydantic import BaseModel, root_validator, ValidationError,EmailStr
+from datetime import datetime
+from schemas.user import UserResponse
+from models.user import User
 class PaymentRequest(BaseModel):
   user_id : str | None = None
   item_id : int
@@ -43,3 +46,39 @@ class CheckoutResponse(BaseModel):
 
 class PurchaseVerifyRequest(BaseModel):
   transaction_id: str
+
+
+class TransactionResponse (BaseModel):
+    purchase_id: int | None = None
+    transaction_id: str
+    order_id: str
+    status: str
+    provider: str
+    utr_id: str
+    method: str
+    vpa: str | None = None
+    email: EmailStr | None = None
+    contact: str | None = None
+    currency: str
+    amount: int
+    base_amount: int
+    fee: int | None = None
+    tax: int | None = None
+    error_code: str | None = None
+    error_description: str | None = None
+    created_at : datetime
+    class Config:
+      orm_mode = True
+  
+
+class PurchaseResponse(BaseModel):
+  id: int | None = None
+  user_id: int | None = None
+  item_id: int | None = None
+  item_type: str | None = None
+  created_at: datetime | None = None
+  user: UserResponse | None = None
+  affiliate_user: UserResponse | None = None
+
+  class Config:
+    orm_mode = True

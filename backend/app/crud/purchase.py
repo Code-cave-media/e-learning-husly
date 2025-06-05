@@ -3,6 +3,12 @@ from models.purchase import TransactionProcessing,Transaction,Purchase
 import hmac
 import hashlib
 from datetime import datetime
+from crud.utils import to_pagination_response
+from schemas.purchase import TransactionResponse,PurchaseResponse
+from sqlalchemy import or_
+from models.user import User
+from schemas.ebook import EBookResponse
+from schemas.course import CourseResponse
 def get_purchase(db: Session, purchase_id: int):
     return db.query(Purchase).filter(Purchase.id == purchase_id).first()
 
@@ -113,3 +119,49 @@ def get_item_by_id_and_type(db: Session, item_id: int, item_type: str):
         return db.query(Course).filter(Course.id == item_id).first()
     else:
         return None  # or raise an exception if needed
+    
+
+
+def get_all_transactions(db:Session,page:int=1,limit:int=10,search:str=''):
+    query = db.query(Transaction).order_by(Transaction.created_at.desc())
+    if search:
+        print('enter') 
+        query = query.filter(or_(Transaction.transaction_id.like(f"%{search}%"),Transaction.order_id.like(f"%{search}%")))
+    return to_pagination_response(query,TransactionResponse,page,limit)
+
+def get_success_transactions(db:Session,page:int=1,limit:int=10,search:str=''):
+    query = db.query(Transaction).filter(Transaction.status == "captured").order_by(Transaction.created_at.desc())
+    if search:
+        print('enter')
+        query = query.filter(or_(Transaction.transaction_id.like(f"%{search}%"),Transaction.order_id.like(f"%{search}%")))
+    return to_pagination_response(query,TransactionResponse,page,limit)
+
+def get_failed_transactions(db:Session,page:int=1,limit:int=10,search:str=''):
+    query = db.query(Transaction).filter(Transaction.status == "failed").order_by(Transaction.created_at.desc())
+    if search:
+        query = query.filter(or_(Transaction.transaction_id.like(f"%{search}%"),Transaction.order_id.like(f"%{search}%")))
+    return to_pagination_response(query,TransactionResponse,page,limit)
+
+def get_transaction_by_id(db:Session,transaction_id:str):
+    return db.query(Transaction).filter(Transaction.id == transaction_id).first()
+
+def get_all_purchases(db:Session,page:int=1,limit:int=10,search:str=''):
+    query = db.query(Purchase).order_by(Purchase.created_at.desc())
+    if search:
+        query = query.filter(
+            or_(
+                User.name.like(f"%{search}%"),
+                User.email.like(f"%{search}%")
+            )
+        ) 
+    data =  to_pagination_response(query,PurchaseResponse,page,limit)
+    items = data.get('items', [])
+    for i, item in enumerate(items):
+        db_item = get_item_by_id_and_type(db, item.get('item_id'), item.get('item_type'))
+        if db_item:
+            if item.get('item_type') == "ebook":
+                items[i]['item'] = EBookResponse.from_orm(db_item)
+            elif item.get('item_type') == "course":
+                items[i]['item'] = CourseResponse.from_orm(db_item)
+    data['items'] = items
+    return data

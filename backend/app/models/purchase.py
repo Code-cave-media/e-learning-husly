@@ -7,9 +7,12 @@ class Purchase(TimestampMixin,Base):
     __tablename__ = "purchase"
     id = Column(Integer, primary_key=True, index=True)
     purchased_user_id = Column(Integer, ForeignKey("user.id"))
+    
     item_id = Column(Integer)
     item_type = Column(String)
     affiliate_user_id = Column(Integer, ForeignKey("user.id"),nullable=True)
+    user = relationship("User", foreign_keys=[purchased_user_id], back_populates="purchases")
+    affiliate_user = relationship("User", foreign_keys=[affiliate_user_id], back_populates="affiliate_purchases")
 
 class Transaction(TimestampMixin,Base):
     __tablename__ = "transaction"

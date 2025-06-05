@@ -420,7 +420,8 @@ def get_click_conversion_week(db: Session, user: User):
             "date": full_date,
             "clicks": clicks,
             "conversions": conversions,
-            "earnings": purchases_data["earnings"]
+            "earnings": purchases_data["earnings"],
+            "purchases": purchases_data["purchases"]
         })
 
     return this_week_performance

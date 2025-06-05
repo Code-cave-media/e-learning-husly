@@ -68,6 +68,7 @@ export interface AffiliateDashboard {
     clicks: number;
     conversions: number;
     earnings: number;
+    purchases: number;
   }>;
   monthly_earnings: Array<{
     month: string; // format "YYYY-MM"

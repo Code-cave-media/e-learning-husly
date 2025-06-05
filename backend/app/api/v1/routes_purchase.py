@@ -13,6 +13,8 @@ from crud.auth import get_user_by_user_id,create_affiliate_account
 from crud.coupon_code import get_coupon_by_code
 from schemas.purchase import PurchaseVerifyRequest
 from crud.affiliate import *
+from schemas.common import PaginationResponse
+from core.deps import is_admin_user
 router = APIRouter()
 
 @router.post('/checkout')
@@ -211,3 +213,33 @@ def verify_transaction(data: PurchaseVerifyRequest, db: Session = Depends(get_db
     if not db_transaction_processing:
         raise HTTPException(status_code=status.HTTP_404_NOT_FOUND, detail="Transaction not found")
     return { "status" :db_transaction_processing.status }
+
+
+
+@router.get("/transactions",response_model=PaginationResponse)
+def get_transaction_history(db:Session=Depends(get_db),current_user:User=Depends(is_admin_user),
+                            page:int=Query(1),
+                            limit:int=Query(10),
+                            filter:str=Query(''),
+                            search:str=Query(''),
+                            ):
+    if filter == "all":
+        return get_all_transactions(db,page,limit,search)
+    elif filter == "success":
+        return get_success_transactions(db,page,limit,search)
+    elif filter == "failed":
+        return get_failed_transactions(db,page,limit,search)
+
+
+@router.get("/purchases")
+def get_transaction_history(db:Session=Depends(get_db),current_user:User=Depends(is_admin_user),
+                            page:int=Query(1),
+                            limit:int=Query(10),
+                            filter:str=Query(''),
+                            search:str=Query(''),
+                            ):
+    if filter == "all":
+        return get_all_purchases(db,page,limit,search)
+    elif filter == "ebook":
+        return get_success_transactions(db,page,limit,search)
+    

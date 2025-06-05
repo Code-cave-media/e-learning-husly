@@ -61,4 +61,19 @@ export const API_ENDPOINT = {
   COURSE_CHAPTER_COMPLETE: (id: string) =>
     `${API_URL}/course/chapter/complete/${id}`,
   GET_EBOOK_READ_PAGE: (id: string) => `${API_URL}/ebook/get/read/${id}`,
+  GET_ALL_TRANSACTIONS: (
+    page: number,
+    limit: number,
+    filter: string,
+    search: string
+  ) =>
+    `${API_URL}/purchase/transactions?page=${page}&limit=${limit}&filter=${filter}&search=${search}`,
+  GET_ALL_PURCHASES: (
+    page: number,
+    limit: number,
+    filter: string,
+    search: string
+  ) =>
+    `${API_URL}/purchase/purchases?page=${page}&limit=${limit}&filter=${filter}&search=${search}`,
+  CREATE_PURCHASE: `${API_URL}/purchase/new-user`,
 };
