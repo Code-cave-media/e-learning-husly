@@ -1,4 +1,5 @@
 from sqlalchemy.orm import Session
+from sqlalchemy import or_
 from models.user import User
 from models.course import Course,CourseProgress
 from models.ebook import EBook
@@ -21,6 +22,7 @@ from crud.utils import to_pagination_response
 from models.affiliate import UPIDetails,BankDetails
 from schemas.affiliate import UPIDetailsResponse,BankAccountResponse
 from crud.course import get_or_create_course_progress
+
 def get_user_purchased_course_and_ebook(db: Session, user: User,page: int = 1, limit: int = 10):
     user_purchases = user.purchases
     res = []
@@ -474,17 +476,20 @@ def get_withdraw_summary(db: Session, user: User):
     # Total withdrawn = sum of all completed withdraws
     total_withdrawn = db.query(func.coalesce(func.sum(Withdraw.amount), 0)).filter(
         Withdraw.user_id == user.id,
-        Withdraw.status == 'completed'
+        Withdraw.status == 'success'
     ).scalar()
 
     # Pending withdraws = sum of all pending withdraws
     pending_withdraw = db.query(func.coalesce(func.sum(Withdraw.amount), 0)).filter(
         Withdraw.user_id == user.id,
-        Withdraw.status == 'pending'
+        or_(
+            Withdraw.status == 'pending',
+            Withdraw.status == 'failed'
+        )
     ).scalar()
 
     total_earnings = affiliate_account.total_earnings if affiliate_account else 0
-    balance = total_earnings - total_withdrawn - pending_withdraw
+    balance = affiliate_account.balance
 
     return {
         "total_withdrawn": total_withdrawn,

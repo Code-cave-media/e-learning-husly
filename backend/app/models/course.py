@@ -56,13 +56,4 @@ class CourseChapter(TimestampMixin,Base):
     duration = Column(String)
     pdf = Column(String, nullable=True)
 
-class CouponCode(TimestampMixin,Base):
-    __tablename__ = "coupon_code"
-    id = Column(Integer, primary_key=True, index=True)
-    type = Column(String,default='fixed')
-    discount = Column(Float)
-    min_purchase = Column(Float,nullable=True)
-    code = Column(String, unique=True)
-    no_of_use = Column(Integer)
-    used = Column(Integer, default=0)
 

@@ -211,8 +211,6 @@ async def update_course(course_chapter_id:str,db: Session = Depends(get_db)):
   await crud_course.delete_file(db_course_chapter.pdf)
   return crud_course.delete_course_chapter(db,db_course_chapter)
 
-
-
 @router.post('/chapter/complete/{course_chapter_id}')
 async def complete_chapter(
   course_chapter_id:int,  
@@ -234,5 +232,3 @@ async def complete_chapter(
   return {"course_completed":db_course_progress.completed,
           "course_chapter_completion":CourseCompletionChapterResponse.from_orm(db_course_completion_chapter).dict()
           }
-
-    

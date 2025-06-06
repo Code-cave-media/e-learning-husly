@@ -3,7 +3,7 @@ import { get } from "http";
 export const API_URL = "http://localhost:8000/api/v1";
 export const API_ENDPOINT = {
   PURCHASE_NEW_USER: `${API_URL}/purchase/e-book-course`,
-  VERIFY_USER: `${API_URL}/auth/me`,
+  VERIFY_USER: `${API_URL}/auth/me `,
   LOGIN: `${API_URL}/auth/login`,
   REGISTER: `${API_URL}/auth/register`,
   CREATE_COURSE: `${API_URL}/course/create`,
@@ -75,9 +75,28 @@ export const API_ENDPOINT = {
     search: string
   ) =>
     `${API_URL}/purchase/purchases?page=${page}&limit=${limit}&filter=${filter}&search=${search}`,
-  CREATE_PURCHASE: `${API_URL}/purchase/new-user`,
+  CREATE_PURCHASE: `${API_URL}/purchase/create`,
   VERIFY_ITEM: (type: string, id: string) =>
     `${API_URL}/user-dashboard/verify/item/${type}/${id}`,
   CREATE_PURCHASE_VERIFY_USER: (user_id: string) =>
     `${API_URL}/user-dashboard/verify/user/${user_id}`,
+  GET_ALL_WITHDRAWALS: (
+    page: number,
+    limit: number,
+    filter?: string,
+    search?: string
+  ) =>
+    `${API_URL}/affiliate/withdrawals?page=${page}&limit=${limit}&filter=${filter}&search=${search}`,
+  UPDATE_WITHDRAWAL_STATUS: (withdrawal_id: number) =>
+    `${API_URL}/affiliate/withdraw/${withdrawal_id}/status`,
+  GET_ALL_COUPONS: (
+    page: number,
+    limit: number,
+    filter?: string,
+    search?: string
+  ) =>
+    `${API_URL}/coupon/all?page=${page}&limit=${limit}&filter=${filter}&search=${search}`,
+  CREATE_COUPON: `${API_URL}/coupons`,
+  UPDATE_COUPON: (id: number) => `${API_URL}/coupons/${id}`,
+  DELETE_COUPON: (id: number) => `${API_URL}/coupons/${id}`,
 };

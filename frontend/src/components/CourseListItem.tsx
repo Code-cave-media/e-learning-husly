@@ -492,6 +492,7 @@ export function CourseListItem({ course, setCourses }: CourseListItemProps) {
   return (
     <>
       <TableRow className="">
+        
         <TableCell className="">
           <img
             src={course.thumbnail as string}

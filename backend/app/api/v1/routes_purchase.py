@@ -16,6 +16,7 @@ from crud.affiliate import *
 from schemas.common import PaginationResponse
 from core.deps import is_admin_user
 from crud.user_dashboard import get_item_by_id_and_type
+import random
 router = APIRouter()
 
 @router.post('/checkout')
@@ -24,7 +25,6 @@ def purchase_course(data: PaymentRequest,db:Session=Depends(get_db)):
   db_item = None
   if data.affiliate_user_id:
     affiliate_user = get_user_by_user_id(db,data.affiliate_user_id)
-    print(affiliate_user)
     if not affiliate_user:
       raise HTTPException(detail="Affiliate user not found",status_code=404)
   if data.item_type =='course':
@@ -43,7 +43,7 @@ def purchase_course(data: PaymentRequest,db:Session=Depends(get_db)):
     db_coupon = get_coupon_by_code(db,data.coupon)
     if not db_coupon:
         raise HTTPException(status_code=400,detail="Coupon code not found")
-    if db_coupon.no_of_use <= 0:
+    if db_coupon.no_of_access <= 0:
         raise HTTPException(status_code=400,detail="Coupon code has no uses left")
     if  db_coupon.type=='fixed' and db_coupon.min_purchase and db_item.price < db_coupon.min_purchase:
           raise HTTPException(status_code=400,detail="Minimum purchase amount not met")
@@ -130,8 +130,7 @@ async def payment_webhook(request: Request, db: Session = Depends(get_db)):
                 affiliate_account = get_affiliate_account_by_user_id(db, db_transaction_processing.affiliate_user_id)
                 db_item = get_item_by_id_and_type(db, db_transaction_processing.item_id, db_transaction_processing.item_type)
                 if affiliate_account:
-                    affiliate_account.balance += db_item.commission
-                    affiliate_account.total_earnings += db_item.commission
+                    affiliate_account = add_purchase_commission_to_affiliate_account(db,affiliate_account,db_item.commission,commit=False)
 
                 db_affiliate_link = get_affiliate_link_by_all(db,db_transaction_processing.affiliate_user_id,db_transaction_processing.item_id, db_transaction_processing.item_type)
                 db_affiliate_link_purchase = add_purchase_to_affiliate_link(db,db_affiliate_link,db_item.commission,commit=False)
@@ -239,39 +238,107 @@ def get_transaction_history(db:Session=Depends(get_db),current_user:User=Depends
                             filter:str=Query(''),
                             search:str=Query(''),
                             ):
+    print(db.query(Purchase).filter(
+        Purchase.purchased_user_id == 15,
+        Purchase.item_id == 7,
+        Purchase.item_type == 'ebook',
+        Purchase.affiliate_user_id == None,
+    ).first())
     if filter == "all":
         return get_all_purchases(db,page,limit,search)
     elif filter == "ebook":
-        return get_success_transactions(db,page,limit,search)
-    
-@router.post("/create",response_model=PurchaseResponse)
+        return get_all_ebook_purchases(db,page,limit,search)
+    elif filter == "course":
+        return get_all_course_purchases(db,page,limit,search)
+    else:
+        return get_all_dummy_purchases(db,page,limit,search)
+@router.post("/create")
 def create_purchase_from_admin(data:PurchaseCreateRequest,db:Session=Depends(get_db),current_user:User=Depends(is_admin_user)):
-    
-    #verify user and items first 
+    #verify user and items first
+    print('1')
     if data.user_id:
-        user = get_user_by_user_id(db,data.user_id)
-        if not user:
-            user = get_user_by_id(db,data.user_id)
-            if not user:
+        print('2')
+        id = str(data.user_id) if isinstance(data.user_id,int) else data.user_id
+        purchase_user = get_user_by_user_id(db,id)
+        if not purchase_user:
+            id = int(data.user_id) if isinstance(data.user_id,str) else data.user_id
+            print('3')
+            purchase_user = get_user_by_id(db,id)
+            if not purchase_user:
                 raise HTTPException(status_code=status.HTTP_404_NOT_FOUND, detail="User not found")
-    if data.item_type == "course":
-        db_item = get_course_by_id(db,data.item_id)
-        if not db_item:
-            raise HTTPException(status_code=status.HTTP_404_NOT_FOUND, detail="Course not found")
+    print('4')
+    db_item = get_item_by_id_and_type(db,data.item_id, data.item_type)
+    if not db_item:
+        raise HTTPException(status_code=status.HTTP_404_NOT_FOUND, detail="Course not found")
+    print('6')
+    affiliate_user = None
     if data.affiliate_user_id:
-        user = get_user_by_user_id(db,data.affiliate_user_id)
-        if not user:
-            user = get_user_by_id(db,data.affiliate_user_id)
-            if not user:
+        print('7')
+        id = str(data.user_id) if isinstance(data.user_id,int) else data.user_id
+        affiliate_user = get_user_by_user_id(db,id)
+        if not affiliate_user:
+            id = int(data.affiliate_user_id) if isinstance(data.affiliate_user_id,str) else data.affiliate_user_id
+            affiliate_user = get_user_by_id(db,id)
+            if not affiliate_user:
                 raise HTTPException(status_code=status.HTTP_404_NOT_FOUND, detail="User not found") 
-    db_purchase = create_purchase(db,data,commit=False)
-    if data.affiliate_user_id:
-        affiliate_account = get_or_create_affiliate_account(db,data.affiliate_user_id)
-        add_purchase_commission_to_affiliate_account(db,affiliate_account,db_item.commission,commit=False)
-    db.add(db_purchase)
+    print('8')
+    db_purchase = exist_purchase = None
+    if data.user_id :
+        db_purchase = exist_purchase = get_purchase_by_all(db,purchase_user.id,None,data.item_id,data.item_type)
+    print('9',db_purchase)
+    if db_purchase:
+        print('enter')
+        if affiliate_user and not db_purchase.affiliate_user_id:
+            print('updated affiliate user')
+            db_purchase.affiliate_user_id = affiliate_user.id
+        if purchase_user and not db_purchase.purchased_user_id:
+            print('updated purchase user')
+            db_purchase.purchased_user_id = purchase_user.id
+    else:
+        print('not enter')
+        db_purchase = create_purchase(db,data,commit=False) 
+    print('10')
+    affiliate_account = db_link = db_clicks = db_link_purchase =  None
+    total_links = []
+    if affiliate_user:
+        affiliate_account = get_or_create_affiliate_account(db,affiliate_user.id)
+        affiliate_account = add_purchase_commission_to_affiliate_account(db,affiliate_account,db_item.commission,commit=False)
+        db_link = get_or_create_affiliate_link(db,affiliate_user.id,data.item_id,data.item_type)
+        print('data : ',data)
+        if not data.user_id:
+            print('enter',random.randint(1,4))
+            for i in range(random.randint(1,4)):
+                print('iterating')
+                db_clicks = add_clicks_to_affiliate_link(db,db_link)
+                total_links.append(db_clicks)
+                
+        else:
+            db_clicks = add_clicks_to_affiliate_link(db,db_link)
+            total_links.append(db_clicks)
+        db_link_purchase = add_purchase_to_affiliate_link(db,db_link,db_item.commission,commit=False)
+    print('12')
+    if not exist_purchase:
+        print('13')
+        db.add(db_purchase)
+    print('14')
     db.commit()
     db.refresh(db_purchase)
-    if data.affiliate_user_id:
+    print('15')
+    if affiliate_account:
+        print('16')
         db.refresh(affiliate_account)
-    return db_purchase
+    if total_links:
+        print('17')
+        for link in total_links:
+            db.refresh(link)
+    if db_link_purchase:
+        print('18')
+        db.refresh(db_link_purchase)
+    response = PurchaseResponse.from_orm(db_purchase).dict()
+    if data.item_type == 'course':
+        response['item'] = CourseResponse.from_orm(db_item)
+    else:
+        response['item'] = EBookResponse.from_orm(db_item)
+    
+    return response
 

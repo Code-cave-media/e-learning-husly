@@ -70,22 +70,21 @@ class TransactionResponse (BaseModel):
       orm_mode = True
   
 class ListTransactionResponse(BaseModel):
-    transaction_id: str
-    order_id: str
-    status: str
-    method: str
+    transaction_id: str | None = 'dummy'
+    order_id: str | None = 'dummy'
+    status: str | None = 'dummy'
+    method: str | None = 'dummy'
     class Config:
         orm_mode = True
 
 class PurchaseCreateRequest(BaseModel):
   item_id: int
   item_type: str
-  user_id: int | None = None
-  affiliate_user_id: int | None = None
+  user_id: int | str | None = None
+  affiliate_user_id: int | str | None = None
 
 class PurchaseResponse(BaseModel):
   id: int | None = None
-  user_id: int | None = None
   item_id: int | None = None
   item_type: str | None = None
   created_at: datetime | None = None

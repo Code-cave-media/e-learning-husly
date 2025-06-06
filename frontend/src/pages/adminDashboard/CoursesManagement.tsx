@@ -124,6 +124,7 @@ export default function CoursesManagement() {
         <Table>
           <TableHeader>
             <TableRow>
+              <TableHead>Id</TableHead>
               <TableHead>Thumbnail</TableHead>
               <TableHead>Title</TableHead>
               <TableHead>Price</TableHead>

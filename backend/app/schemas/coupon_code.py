@@ -7,14 +7,14 @@ class CouponCodeCreate(BaseModel):
   type : str
   min_purchase:Optional[float]=None
   code:str
-  no_of_use:int
+  no_of_access:int
 
 class CouponCodeUpdate(BaseModel):
     type: Optional[str] = None
     discount: Optional[float] = None
     min_purchase: Optional[float] = None
     code: Optional[str] = None  # only if you're allowing to change it
-    no_of_use: Optional[int] = None
+    no_of_access: Optional[int] = None
 
 class CouponCodeResponse(BaseModel):
     id : int
@@ -22,8 +22,8 @@ class CouponCodeResponse(BaseModel):
     discount:float 
     min_purchase: float | None  = None  # ← Make this optional
     code: str 
-    no_of_use: int
-
+    no_of_access: int
+    used: int
     class Config:
       orm_mode = True
 

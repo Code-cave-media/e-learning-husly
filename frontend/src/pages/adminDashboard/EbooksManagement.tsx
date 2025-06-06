@@ -157,6 +157,7 @@ export default function EbooksManagement() {
         <Table>
           <TableHeader>
             <TableRow>
+              <TableHead>Id</TableHead>
               <TableHead>Thumbnail</TableHead>
               <TableHead>Title</TableHead>
               <TableHead>Price</TableHead>

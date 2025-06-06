@@ -40,8 +40,16 @@ import {
   IndianRupee,
   Check,
   Loader2,
+  Filter,
+  AlertCircle,
 } from "lucide-react";
 import { Label } from "@/components/ui/label";
+import {
+  DropdownMenu,
+  DropdownMenuContent,
+  DropdownMenuItem,
+  DropdownMenuTrigger,
+} from "@/components/ui/dropdown-menu";
 
 import { useAPICall } from "@/hooks/useApiCall";
 import { useAuth } from "@/contexts/AuthContext";
@@ -164,23 +172,21 @@ export default function PurchasesManagement() {
   const [hasNext, setHasNext] = useState(false);
   const [hasPrev, setHasPrev] = useState(false);
   const [totalPages, setTotalPages] = useState(0);
-  const { makeApiCall, fetching, isFetched ,fetchType} = useAPICall();
+  const { makeApiCall, fetching, isFetched, fetchType } = useAPICall();
   const { authToken } = useAuth();
   const pageSize = 20;
   const [isVerifying, setIsVerifying] = useState(false);
   const [verificationStatus, setVerificationStatus] =
-    useState<VerificationData>({});
+    useState<VerificationData>({
+      item: { verified: false },
+      user: { verified: false },
+      affiliate: { verified: false },
+    });
+  const [itemTypeFilter, setItemTypeFilter] = useState<string>("all");
 
   useEffect(() => {
     fetchPurchases();
-  }, [currentPage]);
-
-  useEffect(() => {
-    if (isFetched) {
-      setCurrentPage(1);
-      fetchPurchases();
-    }
-  }, [searchQuery]);
+  }, [currentPage, itemTypeFilter]);
 
   const fetchPurchases = async () => {
     try {
@@ -189,7 +195,7 @@ export default function PurchasesManagement() {
         API_ENDPOINT.GET_ALL_PURCHASES(
           currentPage,
           pageSize,
-          "all",
+          itemTypeFilter,
           searchQuery
         ),
         {},
@@ -258,7 +264,8 @@ export default function PurchasesManagement() {
       setIsVerifying(true);
       const response = await makeApiCall(
         "GET",
-        API_ENDPOINT.CREATE_PURCHASE_VERIFY_USER(userId),{},
+        API_ENDPOINT.CREATE_PURCHASE_VERIFY_USER(userId),
+        {},
         "application/json",
         authToken
       );
@@ -324,45 +331,49 @@ export default function PurchasesManagement() {
 
   const handleCreatePurchase = async (e: React.FormEvent) => {
     e.preventDefault();
-
-    // Check if all required fields are verified
+    console.log(newPurchase.affiliate_user_id);
     if (
-      !verificationStatus.item?.verified ||
-      !verificationStatus.user?.verified
+      (newPurchase.affiliate_user_id &&
+        !verificationStatus.affiliate?.verified) ||
+      (newPurchase.purchased_user_id && !verificationStatus.user?.verified) ||
+      !verificationStatus.item?.verified
     ) {
       toast.error("Please verify all required fields before creating purchase");
       return;
     }
+    if (
+      !verificationStatus.affiliate?.verified &&
+      !verificationStatus.user?.verified
+    ) {
+      toast.error("Please verify either Affiliate or Purchased User");
+      return;
+    }
+    const response = await makeApiCall(
+      "POST",
+      API_ENDPOINT.CREATE_PURCHASE,
+      {
+        item_id: newPurchase.item_id,
+        item_type: newPurchase.item_type,
+        user_id: newPurchase.purchased_user_id,
+        affiliate_user_id: newPurchase.affiliate_user_id,
+      },
+      "application/json",
+      authToken,
+      "createPurchase"
+    );
 
-    try {
-      const response = await makeApiCall(
-        "POST",
-        API_ENDPOINT.CREATE_PURCHASE,
-        {
-          item_id: newPurchase.item_id,
-          item_type: newPurchase.item_type,
-          user_id: newPurchase.purchased_user_id,
-          affiliate_user_id: newPurchase.affiliate_user_id || undefined,
-        },
-        "application/json",
-        authToken
-      );
-
-      if (response.status === 201) {
-        toast.success("Purchase created successfully");
-        setIsCreateDialogOpen(false);
-        setNewPurchase({
-          item_id: "",
-          item_type: "course",
-          purchased_user_id: "",
-          affiliate_user_id: undefined,
-        });
-        setVerificationStatus({});
-        fetchPurchases();
-      } else {
-        toast.error(response.error || "Failed to create purchase");
-      }
-    } catch (error) {
+    if (response.status === 200) {
+      toast.success("Purchase created successfully");
+      setIsCreateDialogOpen(false);
+      setPurchases([response.data, ...purchases]);
+      setNewPurchase({
+        item_id: "",
+        item_type: "course",
+        purchased_user_id: "",
+        affiliate_user_id: undefined,
+      });
+      setVerificationStatus({});
+    } else {
       toast.error("Failed to create purchase");
     }
   };
@@ -372,15 +383,59 @@ export default function PurchasesManagement() {
       <div className="flex justify-between items-center mb-6">
         <h1 className="text-2xl font-bold">Purchases Management</h1>
         <div className="flex items-center gap-4">
-          <div className="relative">
-            <Search className="absolute left-2 top-2.5 h-4 w-4 text-muted-foreground" />
+          <div className="relative flex items-center">
+            <Search className="absolute left-2 h-4 w-4 text-muted-foreground" />
             <Input
-              placeholder="Search purchases..."
-              className="pl-8 w-[300px]"
+              placeholder="Search by Purchase ID..."
               value={searchQuery}
               onChange={handleSearch}
+              className="pl-8 w-[300px]"
             />
+            <Button
+              variant="ghost"
+              size="icon"
+              className="absolute right-2"
+              onClick={() => {
+                setCurrentPage(1);
+                fetchPurchases();
+              }}
+            >
+              <Search className="h-4 w-4" />
+            </Button>
           </div>
+          <DropdownMenu>
+            <DropdownMenuTrigger asChild>
+              <Button
+                variant="outline"
+                className="flex items-center gap-2 capitalize"
+              >
+                <Filter className="w-4 h-4" />
+                {itemTypeFilter === "all"
+                  ? "All Items"
+                  : `Type: ${
+                      itemTypeFilter === "ebook"
+                        ? "BluePrints"
+                        : itemTypeFilter === "course"
+                        ? "Trainings"
+                        : "Dummy"
+                    }`}
+              </Button>
+            </DropdownMenuTrigger>
+            <DropdownMenuContent>
+              <DropdownMenuItem onClick={() => setItemTypeFilter("all")}>
+                All Items
+              </DropdownMenuItem>
+              <DropdownMenuItem onClick={() => setItemTypeFilter("ebook")}>
+                BluePrints
+              </DropdownMenuItem>
+              <DropdownMenuItem onClick={() => setItemTypeFilter("course")}>
+                Trainings
+              </DropdownMenuItem>
+              <DropdownMenuItem onClick={() => setItemTypeFilter("dummy")}>
+                Dummy
+              </DropdownMenuItem>
+            </DropdownMenuContent>
+          </DropdownMenu>
           <Button onClick={() => setIsCreateDialogOpen(true)}>
             Create Purchase
           </Button>
@@ -525,88 +580,66 @@ export default function PurchasesManagement() {
                 <CardHeader className="pb-2">
                   <CardTitle className="text-lg flex items-center gap-2">
                     <User className="w-5 h-5" />
-                    Purchaser Information
+                    User Information
                   </CardTitle>
                 </CardHeader>
                 <CardContent>
-                  <div className="space-y-4">
-                    <div className="space-y-2">
-                      <p className="text-sm text-muted-foreground">Name</p>
-                      <div className="flex items-center gap-2">
-                        <User className="w-4 h-4 text-muted-foreground" />
-                        <p className="font-medium">
-                          {selectedPurchase.user.name}
-                        </p>
-                      </div>
-                    </div>
-                    <div className="grid grid-cols-2 gap-4">
+                  <div className="grid grid-cols-2 gap-4">
+                    {selectedPurchase.user ? (
                       <div className="space-y-2">
-                        <p className="text-sm text-muted-foreground flex items-center gap-2">
-                          <Mail className="w-4 h-4" />
-                          Purchaser Email
+                        <p className="text-sm text-muted-foreground">
+                          Purchased User
                         </p>
-                        <p className="font-medium">
+                        <div className="flex items-center gap-2">
+                          <User className="w-4 h-4 text-muted-foreground" />
+                          <p className="font-medium">
+                            {selectedPurchase.user.name}
+                          </p>
+                        </div>
+                        <p className="text-sm text-muted-foreground">
                           {selectedPurchase.user.email}
                         </p>
                       </div>
+                    ) : (
                       <div className="space-y-2">
-                        <p className="text-sm text-muted-foreground flex items-center gap-2">
-                          <Users className="w-4 h-4" />
-                          Phone
+                        <p className="text-sm text-muted-foreground">
+                          Purchased User
                         </p>
-                        <p className="font-medium">
-                          {selectedPurchase.user.phone}
-                        </p>
+                        <div className="flex items-center gap-2">
+                          <AlertCircle className="w-4 h-4 text-muted-foreground" />
+                          <p className="text-muted-foreground">Not available</p>
+                        </div>
                       </div>
-                    </div>
-                  </div>
-                </CardContent>
-              </Card>
-
-              {/* Affiliate Information Card */}
-              {selectedPurchase.affiliate_user && (
-                <Card>
-                  <CardHeader className="pb-2">
-                    <CardTitle className="text-lg flex items-center gap-2">
-                      <Users className="w-5 h-5" />
-                      Affiliate Information
-                    </CardTitle>
-                  </CardHeader>
-                  <CardContent>
-                    <div className="space-y-4">
+                    )}
+                    {selectedPurchase.affiliate_user ? (
                       <div className="space-y-2">
-                        <p className="text-sm text-muted-foreground">Name</p>
+                        <p className="text-sm text-muted-foreground">
+                          Affiliate User
+                        </p>
                         <div className="flex items-center gap-2">
                           <User className="w-4 h-4 text-muted-foreground" />
                           <p className="font-medium">
                             {selectedPurchase.affiliate_user.name}
                           </p>
                         </div>
+                        <p className="text-sm text-muted-foreground">
+                          {selectedPurchase.affiliate_user.email}
+                        </p>
                       </div>
-                      <div className="grid grid-cols-2 gap-4">
-                        <div className="space-y-2">
-                          <p className="text-sm text-muted-foreground flex items-center gap-2">
-                            <Mail className="w-4 h-4" />
-                            Affiliate Email
-                          </p>
-                          <p className="font-medium">
-                            {selectedPurchase.affiliate_user.email}
-                          </p>
-                        </div>
-                        <div className="space-y-2">
-                          <p className="text-sm text-muted-foreground flex items-center gap-2">
-                            <Users className="w-4 h-4" />
-                            Phone
-                          </p>
-                          <p className="font-medium">
-                            {selectedPurchase.affiliate_user.phone}
-                          </p>
+                    ) : (
+                      <div className="space-y-2">
+                        <p className="text-sm text-muted-foreground">
+                          Affiliate User
+                        </p>
+                        <div className="flex items-center gap-2">
+                          <AlertCircle className="w-4 h-4 text-muted-foreground" />
+                          <p className="text-muted-foreground">Not available</p>
                         </div>
                       </div>
-                    </div>
-                  </CardContent>
-                </Card>
-              )}
+                    )}
+                  </div>
+                </CardContent>
+              </Card>
 
               {/* Purchase Details Card */}
               <Card>
@@ -637,43 +670,56 @@ export default function PurchasesManagement() {
                   </CardTitle>
                 </CardHeader>
                 <CardContent>
-                  <div className="grid grid-cols-2 gap-4">
-                    <div className="space-y-2">
-                      <p className="text-sm text-muted-foreground">
-                        Transaction ID
-                      </p>
-                      <p className="font-medium">
-                        {selectedPurchase.transaction.transaction_id}
-                      </p>
+                  {selectedPurchase.transaction ? (
+                    <div className="grid grid-cols-2 gap-4">
+                      <div className="space-y-2">
+                        <p className="text-sm text-muted-foreground">
+                          Transaction ID
+                        </p>
+                        <p className="font-medium">
+                          {selectedPurchase.transaction.transaction_id}
+                        </p>
+                      </div>
+                      <div className="space-y-2">
+                        <p className="text-sm text-muted-foreground">
+                          Order ID
+                        </p>
+                        <p className="font-medium">
+                          {selectedPurchase.transaction.order_id}
+                        </p>
+                      </div>
+                      <div className="space-y-2">
+                        <p className="text-sm text-muted-foreground">Status</p>
+                        <Badge
+                          variant={
+                            selectedPurchase.transaction.status === "captured"
+                              ? "default"
+                              : "destructive"
+                          }
+                          className="capitalize"
+                        >
+                          {selectedPurchase.transaction.status}
+                        </Badge>
+                      </div>
+                      <div className="space-y-2">
+                        <p className="text-sm text-muted-foreground">
+                          Payment Method
+                        </p>
+                        <Badge variant="outline" className="capitalize">
+                          {selectedPurchase.transaction.method}
+                        </Badge>
+                      </div>
                     </div>
-                    <div className="space-y-2">
-                      <p className="text-sm text-muted-foreground">Order ID</p>
-                      <p className="font-medium">
-                        {selectedPurchase.transaction.order_id}
-                      </p>
+                  ) : (
+                    <div className="flex items-center justify-center p-4">
+                      <div className="text-center">
+                        <AlertCircle className="w-8 h-8 text-muted-foreground mx-auto mb-2" />
+                        <p className="text-muted-foreground">
+                          No transaction details available
+                        </p>
+                      </div>
                     </div>
-                    <div className="space-y-2">
-                      <p className="text-sm text-muted-foreground">Status</p>
-                      <Badge
-                        variant={
-                          selectedPurchase.transaction.status === "captured"
-                            ? "default"
-                            : "destructive"
-                        }
-                        className="capitalize"
-                      >
-                        {selectedPurchase.transaction.status}
-                      </Badge>
-                    </div>
-                    <div className="space-y-2">
-                      <p className="text-sm text-muted-foreground">
-                        Payment Method
-                      </p>
-                      <Badge variant="outline" className="capitalize">
-                        {selectedPurchase.transaction.method}
-                      </Badge>
-                    </div>
-                  </div>
+                  )}
                 </CardContent>
               </Card>
             </div>
@@ -727,7 +773,10 @@ export default function PurchasesManagement() {
                       }));
                       setVerificationStatus((prev) => ({
                         ...prev,
-                        item: undefined,
+                        item: {
+                          verified: false,
+                          data: undefined,
+                        },
                       }));
                     }}
                     onKeyDown={(e) => {
@@ -775,7 +824,10 @@ export default function PurchasesManagement() {
                       }));
                       setVerificationStatus((prev) => ({
                         ...prev,
-                        user: undefined,
+                        user: {
+                          verified: false,
+                          data: undefined,
+                        },
                       }));
                     }}
                     onKeyDown={(e) => {
@@ -809,9 +861,7 @@ export default function PurchasesManagement() {
               </div>
 
               <div className="grid gap-2">
-                <Label htmlFor="affiliate_user_id">
-                  Affiliate User ID (Optional)
-                </Label>
+                <Label htmlFor="affiliate_user_id">Affiliate User ID</Label>
                 <div className="flex gap-2">
                   <Input
                     id="affiliate_user_id"
@@ -823,7 +873,10 @@ export default function PurchasesManagement() {
                       }));
                       setVerificationStatus((prev) => ({
                         ...prev,
-                        affiliate: undefined,
+                        affiliate: {
+                          verified: false,
+                          data: undefined,
+                        },
                       }));
                     }}
                     onKeyDown={(e) => {
@@ -867,11 +920,8 @@ export default function PurchasesManagement() {
                 Cancel
               </Button>
               <Button
+                loading={fetching && fetchType === "createPurchase"}
                 type="submit"
-                disabled={
-                  !verificationStatus.item?.verified ||
-                  !verificationStatus.user?.verified
-                }
               >
                 Create Purchase
               </Button>

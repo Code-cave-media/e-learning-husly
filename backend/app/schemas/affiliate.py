@@ -57,3 +57,19 @@ class BankAccountResponse(BaseModel):
     account_name : str | None
     class Config:
         orm_mode = True
+
+class WithdrawUpdateStatus(BaseModel):
+    status: str
+    explanation: str | None
+
+class WithdrawResponse(BaseModel):
+    id: int
+    user_id: int
+    amount: float
+    created_at: datetime  # Make this a string for the frontend
+    status: str
+    explanation: None | str
+    account_details: str | None
+
+    class Config:
+        orm_mode = True

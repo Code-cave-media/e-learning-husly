@@ -1,23 +1,24 @@
 from sqlalchemy.orm import Session
-from models.course import Course,CouponCode
+from models.coupon import Coupon
 from schemas.coupon_code import CouponCodeCreate,CouponCodeUpdate
 from fastapi import HTTPException
 from core.config import settings
 from schemas.coupon_code import CouponCodeResponse
+from crud.utils import to_pagination_response
 def get_coupon_by_code(db:Session,code:str):
-  return db.query(CouponCode).filter(CouponCode.code == code).first()
+  return db.query(Coupon).filter(Coupon.code == code,Coupon.visible == True).first()
 
 def get_coupon_by_id(db:Session,coupon_id:str):
-  return db.query(CouponCode).filter(CouponCode.id == coupon_id).first()
+  return db.query(Coupon).filter(Coupon.id == coupon_id).first()
 
 def create_coupon_code(db:Session,data:CouponCodeCreate):
-  db_coupon = CouponCode(**data.dict())
+  db_coupon = Coupon(**data.dict())
   db.add(db_coupon)
   db.commit()
   db.refresh(db_coupon)
   return db_coupon
 
-def update_coupon_code(db:Session,db_coupon:CouponCode,data:CouponCodeUpdate):
+def update_coupon_code(db:Session,db_coupon:Coupon,data:CouponCodeUpdate):
   
   for key,value in data.dict(exclude_unset=True).items():
     setattr(db_coupon,key,value)
@@ -33,16 +34,12 @@ def delete_coupon_code(db:Session,coupon_id:int):
   db.commit()
   return {"detail": "Coupon deleted successfully"}
 
-def get_coupons(db:Session,page: int = 0):
-  skip = (page - 1) * settings.COUPONS_PER_PAGE
-  items = coupons = db.query(CouponCode).offset(skip).limit(settings.COUPONS_PER_PAGE).all()
-  total_count = db.query(CouponCode).count()
-  total_pages = (total_count + settings.COUPONS_PER_PAGE - 1 ) // settings.COUPONS_PER_PAGE
-  serialized_coupons = [CouponCodeResponse.from_orm(coupon).model_dump() for coupon in coupons]
-  return {
-    'has_prev':page > 1,
-    "has_next" : page < total_pages,
-    "data":serialized_coupons,
-    "total":total_count
-  }
+def get_all_coupons(db:Session,page: int = 0,limit:int=10,search:str='',filter:str='all'):
+  query = db.query(Coupon)
+  if filter and filter != 'all':
+    query = query.filter(Coupon.type == filter)
+  if search:
+    query = query.filter(Coupon.code.ilike(f"%{search}%"))
+  return to_pagination_response(query,CouponCodeResponse,page,limit)
+
 

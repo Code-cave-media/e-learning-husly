@@ -182,12 +182,16 @@ const AffiliateDashboardPage = () => {
 
   const getStatusColor = (status: string) => {
     switch (status) {
-      case "completed":
-        return "bg-green-100 text-green-800 hover:bg-green-200";
       case "pending":
         return "bg-yellow-100 text-yellow-800 hover:bg-yellow-200";
-      case "rejected":
+      case "processing":
+        return "bg-blue-100 text-blue-800 hover:bg-blue-200";
+      case "success":
+        return "bg-green-100 text-green-800 hover:bg-green-200";
+      case "failed":
         return "bg-red-100 text-red-800 hover:bg-red-200";
+      case "rejected":
+        return "bg-orange-100 text-orange-800 hover:bg-orange-200";
       default:
         return "bg-gray-100 text-gray-800 hover:bg-gray-200";
     }
@@ -237,6 +241,12 @@ const AffiliateDashboardPage = () => {
     if (response.status == 200) {
       setDashboardData((prev: any) => ({
         ...prev,
+        withdraw_summary: {
+          ...prev.withdraw_summary,
+          balance: prev.withdraw_summary.balance - response.data.amount,
+          pending_withdraw:
+            prev.withdraw_summary.pending_withdraw + response.data.amount,
+        },
         withdraw_history: {
           ...prev.withdraw_history,
           items: [response.data, ...prev.withdraw_history.items],
@@ -568,14 +578,15 @@ const AffiliateDashboardPage = () => {
                           {new Date(day.date).toLocaleDateString()}
                         </p>
                         <p className="text-sm text-muted-foreground">
-                          {day.clicks} clicks • {day.conversions}% conversions
+                          {day.clicks} clicks • {Math.ceil(day.conversions)}%
+                          conversions
                         </p>
                       </div>
                     </div>
                     <div className="text-right">
                       <p className="font-medium">${day.earnings.toFixed(2)}</p>
                       <p className="text-sm text-green-600">
-                        +{day.clicks * (day.conversions / 100)} sales
+                        +{day.purchases} sales
                       </p>
                     </div>
                   </div>
@@ -772,6 +783,7 @@ const AffiliateDashboardPage = () => {
                 <Table>
                   <TableHeader>
                     <TableRow>
+                      <TableHead>ID</TableHead>
                       <TableHead>Date</TableHead>
                       <TableHead>Amount</TableHead>
                       <TableHead>Status</TableHead>
@@ -789,6 +801,7 @@ const AffiliateDashboardPage = () => {
                     {!fetching &&
                       dashboardData.withdraw_history.items.map((withdrawal) => (
                         <TableRow key={withdrawal.id}>
+                          <TableCell>{withdrawal.id}</TableCell>
                           <TableCell>
                             {new Date(withdrawal.created_at).toLocaleString()}
                           </TableCell>
@@ -1028,17 +1041,18 @@ const AffiliateDashboardPage = () => {
                   </div>
                 </div>
 
-                {selectedWithdrawal.status === "rejected" &&
-                  selectedWithdrawal.explanation && (
-                    <div className="bg-red-50 border border-red-200 rounded-lg p-4">
-                      <p className="text-sm font-medium text-red-800">
-                        Failure Explanation
-                      </p>
-                      <p className="text-sm text-red-700 mt-1">
-                        {selectedWithdrawal.explanation}
-                      </p>
-                    </div>
-                  )}
+                {selectedWithdrawal.status === "rejected" ||
+                  (selectedWithdrawal.status === "failed" &&
+                    selectedWithdrawal.explanation && (
+                      <div className="bg-red-50 border border-red-200 rounded-lg p-4">
+                        <p className="text-sm font-medium text-red-800">
+                          Failure Explanation
+                        </p>
+                        <p className="text-sm text-red-700 mt-1">
+                          {selectedWithdrawal.explanation}
+                        </p>
+                      </div>
+                    ))}
 
                 <div className="border rounded-lg p-4">
                   <p className="text-sm font-medium mb-2">Account Details</p>

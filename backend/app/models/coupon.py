@@ -8,8 +8,7 @@ class Coupon(TimestampMixin, Base):
     discount: float = Column(Float)
     min_purchase: float = Column(Float, nullable=True)
     code: str = Column(String, unique=True)
-    no_of_use: int = Column(Integer)
+    no_of_access: int = Column(Integer)
     used: int = Column(Integer, default=0)
-    is_active: bool = Column(Boolean, default=True)
     def __repr__(self):
-        return f"<CouponCode(code={self.code}, discount={self.discount}, type={self.type})>"
+        return f"<CouponCode(code={self.code}, discount={self.discount}, type={self.type})>"    

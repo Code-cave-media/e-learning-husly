@@ -17,6 +17,7 @@ class Withdraw(TimestampMixin,Base):
     status = Column(String)
     explanation = Column(String)
     account_details = Column(String)
+    
 
 class BankDetails(Base):
     __tablename__ = "bank_details"

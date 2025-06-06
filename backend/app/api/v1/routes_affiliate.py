@@ -1,5 +1,4 @@
-
-from fastapi import APIRouter,Depends,HTTPException
+from fastapi import APIRouter,Depends,HTTPException,Query
 from sqlalchemy.orm import Session
 from core.security import create_access_token
 from core.deps import get_current_user,is_admin_user
@@ -62,7 +61,7 @@ def create_user_dashboard_withdraw(
     db_withdraw = create_withdraw(db, current_user, data)
 
     db.add(db_withdraw) 
-    update_affiliate_account_balance(db, affiliate_account, data.amount, False)
+    update_affiliate_account_balance(db, affiliate_account, data.amount, False,is_withdraw=True)
     
     db.commit()  
     db.refresh(db_withdraw)  
@@ -72,7 +71,6 @@ def create_user_dashboard_withdraw(
     update_or_create_account_details(db,affiliate_account,data)
 
     return db_withdraw
-
 
 @router.get('/withdraw-account-details')
 def get_bank_account_details(db:Session=Depends(get_db),user:User=Depends(get_current_user)):
@@ -84,3 +82,30 @@ def get_bank_account_details(db:Session=Depends(get_db),user:User=Depends(get_cu
         "bank_details":BankAccountResponse.from_orm(db_bank) if db_bank else None
     }
     return res
+
+@router.get('/withdrawals')
+def get_withdrawals(
+    db:Session=Depends(get_db),
+    current_user:User=Depends(is_admin_user),
+    page:int=Query(1,ge=1),
+    limit:int=Query(10,ge=1,le=100),
+    search:str=Query(''),
+    filter:str=Query('all',regex='^(all|success|failed|pending)$')
+):
+    return get_withdrawals_by_status(db,page,limit,search,filter)
+
+@router.put('/withdraw/{withdraw_id}/status',response_model=WithdrawResponse)
+def update_withdraw_status_api( 
+    withdraw_id:int,
+    data:WithdrawUpdateStatus,
+    db:Session=Depends(get_db),
+    current_user:User=Depends(is_admin_user)
+):
+    db_withdraw = get_withdraw_by_id(db,withdraw_id)
+    if not db_withdraw:
+        raise HTTPException(status_code=404,detail="Withdraw not found")
+    update_withdraw_status(db,db_withdraw,data.status,reason=data.explanation)
+    if data.status != 'success':
+        db_account = get_or_create_affiliate_account(db,db_withdraw.user_id)
+        update_affiliate_account_balance(db,db_account,db_withdraw.amount,True,is_withdraw=False)
+    return db_withdraw

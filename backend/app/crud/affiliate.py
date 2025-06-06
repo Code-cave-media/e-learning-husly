@@ -5,7 +5,9 @@ from models.user import User
 from datetime import datetime, timedelta
 from datetime import datetime, timedelta, timezone
 from sqlalchemy import func
-from schemas.affiliate import  WithdrawCreate
+from schemas.affiliate import  *
+from crud.utils import to_pagination_response
+from schemas.user import UserResponse
 
 def create_affiliate_link(db:Session,data:dict):
     affiliate_link = AffiliateLink(
@@ -180,13 +182,17 @@ def create_withdraw(db:Session,user:User,data:WithdrawCreate,commit=False):
 
 def add_purchase_commission_to_affiliate_account(db:Session,account:AffiliateAccount,amount:float,commit=False):
     account.balance += amount
+    account.total_earnings += amount
     if commit:
         db.commit()
         db.refresh(account)
     return account
 
-def update_affiliate_account_balance(db:Session,account:AffiliateAccount,amount:float,commit=False):
-    account.balance -= amount
+def update_affiliate_account_balance(db:Session,account:AffiliateAccount,amount:float,commit=False,is_withdraw=False):
+    if is_withdraw:
+        account.balance -= amount
+    else:
+        account.balance += amount
     if commit:
         db.commit()
         db.refresh(account)
@@ -223,3 +229,62 @@ def get_or_create_affiliate_account(db:Session,user_id:int):
         db.commit()
         db.refresh(db_affiliate_account)
     return db_affiliate_account
+
+def get_or_create_affiliate_link(db:Session,user_id:int,item_id:int,item_type:str):
+    db_affiliate_link = get_affiliate_link_by_all(db,user_id,item_id,item_type)
+    if not db_affiliate_link:
+        db_affiliate_link = AffiliateLink(user_id=user_id,item_id=item_id,item_type=item_type)
+        db.add(db_affiliate_link)
+        db.commit()
+        db.refresh(db_affiliate_link)
+    return db_affiliate_link
+
+def get_withdrawals_by_status(
+    db: Session,
+    page: int = 1,
+    limit: int = 10,
+    search: str = '',
+    status: str | None = None
+):
+    query = db.query(Withdraw).join(User)
+    if status and status != 'all':
+        print('enter')
+        query = query.filter(Withdraw.status == status)
+
+    if search:
+        query = query.filter(User.name.ilike(f"%{search}%"))
+
+    query = query.order_by(Withdraw.created_at.desc())
+    data = to_pagination_response(query, WithdrawResponse, page, limit)
+
+    items = data.get('items', [])
+
+    # Attach user info
+    user_ids = [item.get('user_id') for item in items if item.get('user_id')]
+    users = db.query(User).filter(User.id.in_(user_ids)).all()
+    user_map = {user.id: user for user in users}
+
+    for i, item in enumerate(items):
+        user = user_map.get(item.get('user_id'))
+        if user:
+            items[i]['user'] = UserResponse.from_orm(user)
+
+    data['items'] = items
+    return data
+
+
+def get_withdraw_by_id(db:Session,withdraw_id:int):
+    return db.query(Withdraw).filter(Withdraw.id == withdraw_id).first()
+
+def update_withdraw_status(db:Session,db_withdraw:Withdraw,status:str,reason:str):
+    db_withdraw.status = status
+    if reason:
+        db_withdraw.explanation = reason
+    db.commit()
+    db.refresh(db_withdraw)
+    return db_withdraw
+
+
+
+
+

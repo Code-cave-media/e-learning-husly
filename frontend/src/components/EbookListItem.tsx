@@ -388,6 +388,7 @@ export function EbookListItem({ ebook, setEbook }: EbookListItemProps) {
   return (
     <>
       <TableRow className="">
+        <TableCell className="">{ebook.id}</TableCell>
         <TableCell className="">
           <img
             src={ebook.thumbnail as string}

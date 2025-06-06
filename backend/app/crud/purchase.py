@@ -46,12 +46,13 @@ def verify_razorpay_signature(payload: bytes, received_signature: str, secret: s
     return hmac.compare_digest(generated_signature, received_signature)
 
 def create_purchase(db: Session, data: dict, commit=True):
-    purchase = Purchase(
-        purchased_user_id=data.user_id, 
-        item_id=data.item_id,
-        item_type=data.item_type,
-        affiliate_user_id=data.affiliate_user_id
-    )
+    create_data = {
+        'purchased_user_id':data.user_id if data.user_id else None,
+        'item_id':data.item_id,
+        'item_type':data.item_type,
+        'affiliate_user_id':data.affiliate_user_id if data.affiliate_user_id else None
+    }
+    purchase = Purchase(**create_data)
     db.add(purchase)
     if commit:
         db.commit()
@@ -113,11 +114,9 @@ def delete_purchase(db: Session, purchase_id: int):
 def get_item_by_id_and_type(db: Session, item_id: int, item_type: str):
     if item_type == "ebook":
         from models.ebook import EBook
-        print('ebook',item_id)
         return db.query(EBook).filter(EBook.id == item_id).first()
     elif item_type == "course":
         from models.course import Course
-        print('course',item_id)
         return db.query(Course).filter(Course.id == item_id).first()
     else:
         return None  # or raise an exception if needed
@@ -147,17 +146,33 @@ def get_failed_transactions(db:Session,page:int=1,limit:int=10,search:str=''):
 def get_transaction_by_id(db:Session,transaction_id:str):
     return db.query(Transaction).filter(Transaction.id == transaction_id).first()
 
-def get_all_purchases(db:Session,page:int=1,limit:int=10,search:str=''):
-    query = db.query(Purchase).order_by(Purchase.created_at.desc())
+def get_purchases(
+    db: Session,
+    page: int = 1,
+    limit: int = 10,
+    search: str = '',
+    item_type: str | None = None,
+    dummy: bool = False
+):
+    query = db.query(Purchase)
+
+    if dummy:
+        query = query.filter(Purchase.purchased_user_id == None)
+    if item_type:
+        query = query.filter(Purchase.item_type == item_type)
+
     if search:
         query = query.join(User, Purchase.purchased_user_id == User.id)
         query = query.filter(
             or_(
-                User.name.like(f"%{search}%"),
-                User.email.like(f"%{search}%")
+                User.name.ilike(f"%{search}%"),
+                User.email.ilike(f"%{search}%")
             )
         )
-    data =  to_pagination_response(query,PurchaseResponse,page,limit)
+
+    query = query.order_by(Purchase.created_at.desc())
+    data = to_pagination_response(query, PurchaseResponse, page, limit)
+
     items = data.get('items', [])
     for i, item in enumerate(items):
         db_item = get_item_by_id_and_type(db, item.get('item_id'), item.get('item_type'))
@@ -168,3 +183,34 @@ def get_all_purchases(db:Session,page:int=1,limit:int=10,search:str=''):
                 items[i]['item'] = CourseResponse.from_orm(db_item)
     data['items'] = items
     return data
+
+
+def get_all_purchases(db: Session, page: int = 1, limit: int = 10, search: str = ''):
+    return get_purchases(db, page, limit, search)
+
+def get_all_ebook_purchases(db: Session, page: int = 1, limit: int = 10, search: str = ''):
+    return get_purchases(db, page, limit, search, item_type='ebook')
+
+def get_all_course_purchases(db: Session, page: int = 1, limit: int = 10, search: str = ''):
+    return get_purchases(db, page, limit, search, item_type='course')
+
+def get_all_dummy_purchases(db: Session, page: int = 1, limit: int = 10, search: str = ''):
+    return get_purchases(db, page, limit, search, dummy=True)
+
+
+def get_purchase_by_all(
+    db: Session,
+    user_id: int | None,
+    affiliate_user_id: int | None,
+    item_id: int,
+    item_type: str
+):
+    filters = [Purchase.item_id == item_id, Purchase.item_type == item_type]
+    
+    if user_id is not None:
+        filters.append(Purchase.purchased_user_id == user_id)
+    if affiliate_user_id is not None:
+        filters.append(Purchase.affiliate_user_id == affiliate_user_id)
+
+    return db.query(Purchase).filter(*filters).first()
+

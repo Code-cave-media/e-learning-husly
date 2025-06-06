@@ -4,12 +4,21 @@ from crud import coupon_code as crud_coupon
 from schemas.coupon_code import *
 from db.session import get_db
 from schemas.common import Pagination,PaginationResponse
-
+from models.user import User
+from core.deps import is_admin_user
+from fastapi import Query
 router = APIRouter()
 
 @router.get('/all',response_model=PaginationResponse)
-def get_coupons_code(data:Pagination,db:Session=Depends(get_db)):
-  return crud_coupon.get_coupons(db,data.page)
+def get_coupons_code(db:Session=Depends(get_db),
+                    current_user:User=Depends(is_admin_user),
+                    page:int=Query(1,ge=1),
+                    limit:int=Query(10,ge=1,le=100),
+                    search:str=Query(''),
+                    filter:str=Query('all',regex='^(all|percent|fixed)$')
+                    ):
+  
+  return crud_coupon.get_all_coupons(db,page,limit,search,filter)
 
 @router.get('/{coupon_id}',response_model=CouponCodeResponse)
 def get_coupons_code(coupon_id:str,db:Session=Depends(get_db)):
@@ -42,13 +51,14 @@ def create_coupon(coupon_id:str,db:Session=Depends(get_db)):
 
 @router.post('/apply',response_model=CouponCodeResponse)
 def apply_coupon_code(data:CouponCodeApply,db:Session=Depends(get_db)):
-    print(data)
     db_coupon = crud_coupon.get_coupon_by_code(db,data.code)
     if not db_coupon:
         raise HTTPException(status_code=400,detail="Coupon code not found")
-    if db_coupon.no_of_use <= 0:
+    if db_coupon.no_of_access <= 0:
         raise HTTPException(status_code=400,detail="Coupon code has no uses left")
     if  db_coupon.type=='fixed' and db_coupon.min_purchase and data.amount < db_coupon.min_purchase:
         raise HTTPException(status_code=400,detail="Minimum purchase amount not met")
     
     return CouponCodeResponse.from_orm(db_coupon)
+
+
