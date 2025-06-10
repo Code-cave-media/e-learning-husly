@@ -34,3 +34,14 @@ def verify_user(current_user:User=Depends(get_current_user)):
 def verify_user(current_user:User=Depends(is_admin_user)):
   return current_user
 
+@router.get('/all')
+def get_all_user(db:Session=Depends(get_db),current_user:User=Depends(is_admin_user),
+    page:int=1,limit:int=10,search:str=''):
+  return crud_auth.get_all_users(db,page,limit,search)
+
+@router.put('/update/password/{user_id}',response_model=UserResponse)
+def update_password(user_id:str,data:UpdatePassword,db:Session=Depends(get_db),current_user:User=Depends(is_admin_user)):
+  db_user = crud_auth.get_user_by_id(db,user_id)
+  if not db_user:
+    raise HTTPException(status_code=404,detail="User not found")
+  return crud_auth.update_user_password(db,db_user,data.password)

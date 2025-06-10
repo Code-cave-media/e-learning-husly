@@ -132,3 +132,6 @@ def verify_user(user_id:str,db:Session=Depends(get_db),current_user:User=Depends
         if not db_user:
             raise HTTPException(status_code=404,detail="User not found")
     return UserResponse.from_orm(db_user).dict()
+
+
+

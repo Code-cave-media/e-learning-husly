@@ -5,6 +5,11 @@ from passlib.context import CryptContext
 import uuid
 import base64
 from models.affiliate import AffiliateAccount
+from sqlalchemy import or_
+from crud.utils import to_pagination_response
+from schemas.user import UserResponse
+from models.purchase import Purchase
+from sqlalchemy import cast, String
 pwd_context = CryptContext(schemes=['bcrypt'],deprecated='auto')
 
 
@@ -22,6 +27,13 @@ def create_user(db:Session,user:UserCreate,is_hashed_pw=False):
   db.commit()
   db.refresh(db_user)
   return db_user
+
+def update_user_password(db:Session,user:User,password:str):
+  hashed_pw = pwd_context.hash(password)
+  setattr(user,'password',hashed_pw)
+  db.commit()
+  db.refresh(user)
+  return user
 
 def get_temp_user_by_email(db:Session,email:str):
   return db.query(TempUser).filter(TempUser.email==email).first()
@@ -73,3 +85,28 @@ def create_affiliate_account(db:Session,user_id:int):
   db.commit()
   db.refresh(db_account)
   return db_account
+
+
+def get_all_users(db:Session,page:int=1,limit:int=10,search:str=''):
+  query = db.query(User)
+  if search:
+    
+    query = query.filter(
+        or_(
+            User.name.ilike(f'%{search}%'),
+            User.email.ilike(f'%{search}%'),
+            User.user_id.ilike(f'%{search}%'),
+            cast(User.id, String).ilike(f'%{search}%')  # cast id to string
+        )
+    )
+  data =  to_pagination_response(query,UserResponse,page,limit)
+  items = data.get('items')
+  for i,user in enumerate(items):
+    db_purchase = db.query(Purchase).filter(Purchase.purchased_user_id==None,Purchase.affiliate_user_id == user.get('id')).first()
+    if db_purchase:
+      items[i]['has_dummy_purchase'] = True
+    else:
+      items[i]['has_dummy_purchase'] = False
+  data['items'] = items
+  return data
+

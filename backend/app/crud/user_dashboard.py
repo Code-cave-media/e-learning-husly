@@ -507,3 +507,4 @@ def get_account_details(db:Session,user:User):
         "upi_details": UPIDetailsResponse.from_orm(upi).dict() if upi else None,
         "bank_details": BankAccountResponse.from_orm(bank).dict() if bank else None
     }
+

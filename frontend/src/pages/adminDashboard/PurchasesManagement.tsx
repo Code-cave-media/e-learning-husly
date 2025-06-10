@@ -414,7 +414,7 @@ export default function PurchasesManagement() {
                   ? "All Items"
                   : `Type: ${
                       itemTypeFilter === "ebook"
-                        ? "BluePrints"
+                        ? "Blueprints"
                         : itemTypeFilter === "course"
                         ? "Trainings"
                         : "Dummy"
@@ -426,7 +426,7 @@ export default function PurchasesManagement() {
                 All Items
               </DropdownMenuItem>
               <DropdownMenuItem onClick={() => setItemTypeFilter("ebook")}>
-                BluePrints
+                Blueprints
               </DropdownMenuItem>
               <DropdownMenuItem onClick={() => setItemTypeFilter("course")}>
                 Trainings

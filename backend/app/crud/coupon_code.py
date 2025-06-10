@@ -35,7 +35,7 @@ def delete_coupon_code(db:Session,coupon_id:int):
   return {"detail": "Coupon deleted successfully"}
 
 def get_all_coupons(db:Session,page: int = 0,limit:int=10,search:str='',filter:str='all'):
-  query = db.query(Coupon)
+  query = db.query(Coupon).order_by(Coupon.created_at.desc())
   if filter and filter != 'all':
     query = query.filter(Coupon.type == filter)
   if search:

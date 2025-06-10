@@ -29,3 +29,6 @@ class Token(BaseModel):
   token_type: str = "bearer"
   user_id : str
 
+class UpdatePassword(BaseModel):
+  password: str
+

@@ -128,7 +128,7 @@ const DashboardPage = () => {
         <Card>
           <CardHeader className="pb-2">
             <CardTitle className="text-sm text-gray-500 font-medium">
-              Total BluePrints
+              Total Blueprints
             </CardTitle>
           </CardHeader>
           <CardContent>
@@ -157,7 +157,7 @@ const DashboardPage = () => {
         <TabsList>
           <TabsTrigger value="all">All</TabsTrigger>
           <TabsTrigger value="courses">My Trainings</TabsTrigger>
-          <TabsTrigger value="ebooks">My BluePrints</TabsTrigger>
+          <TabsTrigger value="ebooks">My Blueprints</TabsTrigger>
         </TabsList>
         {fetching && <Loading />}
         <TabsContent value={currentFilter} className="mt-6">
@@ -195,7 +195,7 @@ const DashboardPage = () => {
                       ? "You haven't purchased any training or blueprint yet."
                       : currentFilter === "course"
                       ? "You haven't purchased any trainings yet."
-                      : "You haven't purchased any blueprints yet."
+                      : "You haven't purchased any Blueprints yet."
                   }
                   // actionLabel={
                   //   currentFilter === "all"

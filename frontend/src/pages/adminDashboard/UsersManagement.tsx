@@ -1,4 +1,4 @@
-import { useState } from "react";
+import { useEffect, useState } from "react";
 import { Card, CardContent, CardHeader, CardTitle } from "@/components/ui/card";
 import { Button } from "@/components/ui/button";
 import { Input } from "@/components/ui/input";
@@ -15,165 +15,225 @@ import {
   DialogContent,
   DialogHeader,
   DialogTitle,
-  DialogTrigger,
+  DialogFooter,
 } from "@/components/ui/dialog";
 import { Badge } from "@/components/ui/badge";
-import { Plus, Pencil, Trash2 } from "lucide-react";
+import { Plus, Pencil, Trash2, Search, Key } from "lucide-react";
+import { useAuth } from "@/contexts/AuthContext";
+import { useAPICall } from "@/hooks/useApiCall";
+import { API_ENDPOINT } from "@/config/backend";
+import { toast } from "react-hot-toast";
+import { Loading } from "@/components/ui/loading";
+import Pagination from "@/components/Pagination";
 
 interface User {
-  id: string;
+  id: number;
   name: string;
   email: string;
-  type: "regular" | "partner";
-  affiliateData?: {
-    cardCount: number;
-    graphData: number[];
-    pieChartData: { name: string; value: number }[];
-  };
-  phone?: string;
+  user_id: string;
+  is_admin: boolean;
+  phone: string;
+  has_dummy_purchase: boolean;
 }
 
-// Add a type for form data that extends Partial<User> with password
-interface UserFormData extends Partial<User> {
+interface UserFormData {
   password?: string;
 }
 
 const UsersManagement = () => {
-  const [users, setUsers] = useState<User[]>([
-    {
-      id: "1",
-      name: "John Doe",
-      email: "john@example.com",
-      type: "regular",
-    },
-    {
-      id: "2",
-      name: "partner User",
-      email: "partner@example.com",
-      type: "partner",
-      affiliateData: {
-        cardCount: 5,
-        graphData: [30, 40, 35, 50, 49, 60, 70],
-        pieChartData: [
-          { name: "Group A", value: 400 },
-          { name: "Group B", value: 300 },
-          { name: "Group C", value: 300 },
-        ],
-      },
-    },
-  ]);
-
+  const [users, setUsers] = useState<User[]>([]);
   const [isDialogOpen, setIsDialogOpen] = useState(false);
-  const [editingUser, setEditingUser] = useState<User | null>(null);
+  const [selectedUser, setSelectedUser] = useState<User | null>(null);
   const [formData, setFormData] = useState<UserFormData>({});
-  const [search, setSearch] = useState("");
+  const [searchQuery, setSearchQuery] = useState("");
+  const [searchInput, setSearchInput] = useState("");
+  const [currentPage, setCurrentPage] = useState(1);
+  const [hasNext, setHasNext] = useState(false);
+  const [hasPrev, setHasPrev] = useState(false);
+  const [totalItems, setTotalItems] = useState(0);
+  const pageSize = 20;
 
-  const handleSubmit = (e: React.FormEvent) => {
-    e.preventDefault();
-    if (editingUser) {
-      setUsers(
-        users.map((user) =>
-          user.id === editingUser.id ? { ...user, ...formData } : user
-        )
-      );
-    }
-    setIsDialogOpen(false);
-    setEditingUser(null);
-    setFormData({});
-  };
+  const { authToken } = useAuth();
+  const { fetchType, fetching, makeApiCall } = useAPICall();
 
-  const handleEdit = (user: User) => {
-    setEditingUser(user);
-    setFormData(user);
-    setIsDialogOpen(true);
-  };
+  useEffect(() => {
+    fetchUsers();
+  }, [currentPage, searchQuery]);
 
-  const handleDelete = (id: string) => {
-    setUsers(users.filter((user) => user.id !== id));
-  };
-
-  // Filter users by name, email, or phone
-  const filteredUsers = users.filter((user) => {
-    const query = search.toLowerCase();
-    return (
-      user.name.toLowerCase().includes(query) ||
-      user.email.toLowerCase().includes(query) ||
-      (user.phone?.toLowerCase() || "").includes(query)
+  const fetchUsers = async () => {
+    const response = await makeApiCall(
+      "GET",
+      API_ENDPOINT.GET_ALL_USERS(currentPage, pageSize, searchQuery),
+      {},
+      "application/json",
+      authToken,
+      "fetchUsers"
     );
-  });
+    if (response.status === 200) {
+      setUsers(response.data.items);
+      setHasNext(response.data.has_next);
+      setHasPrev(response.data.has_prev);
+      setTotalItems(response.data.total);
+    }
+  };
+
+  const handlePasswordChange = async () => {
+    if (!selectedUser || !formData.password) return;
+
+    const response = await makeApiCall(
+      "PUT",
+      API_ENDPOINT.UPDATE_USER_PASSWORD(selectedUser.id.toString()),
+      { password: formData.password },
+      "application/json",
+      authToken,
+      "updatePassword"
+    );
+
+    if (response.status === 200) {
+      toast.success("Password updated successfully");
+      setIsDialogOpen(false);
+      setSelectedUser(null);
+      setFormData({});
+    }
+  };
+
+  
 
   return (
     <Card>
       <CardHeader className="flex flex-row items-center justify-between">
         <CardTitle>Users Management</CardTitle>
+        <div className="flex items-center gap-4">
+          <div className="relative flex items-center">
+            <Search className="absolute left-2 h-4 w-4 text-muted-foreground" />
+            <Input
+              placeholder="Search by name, user_id, or phone"
+              value={searchInput}
+              onChange={(e) => setSearchInput(e.target.value)}
+              className="pl-8 w-[300px]"
+              onKeyDown={(e) => {
+                if (e.key === "Enter") {
+                  setSearchQuery(searchInput);
+                  setCurrentPage(1);
+                  fetchUsers();
+                }
+              }}
+            />
+            <Button
+              variant="ghost"
+              size="icon"
+              className="absolute right-2"
+              onClick={() => {
+                setSearchQuery(searchInput);
+                setCurrentPage(1);
+                fetchUsers();
+              }}
+            >
+              <Search className="h-4 w-4" />
+            </Button>
+          </div>
+        </div>
       </CardHeader>
       <CardContent>
-        <div className="mb-4">
-          <Input
-            placeholder="Search by name, email, or phone"
-            value={search}
-            onChange={(e) => setSearch(e.target.value)}
-            className="w-full max-w-xs"
-          />
-        </div>
         <Table>
           <TableHeader>
             <TableRow>
+              <TableHead>ID</TableHead>
               <TableHead>Name</TableHead>
+              <TableHead>User ID</TableHead>
               <TableHead>Email</TableHead>
-              <TableHead>Type</TableHead>
-              <TableHead>Card Count</TableHead>
+              <TableHead>Phone</TableHead>
+              <TableHead>Role</TableHead>
+              <TableHead>Dummy Purchase</TableHead>
               <TableHead>Actions</TableHead>
             </TableRow>
           </TableHeader>
           <TableBody>
-            {filteredUsers.map((user) => (
-              <TableRow key={user.id}>
-                <TableCell>{user.name}</TableCell>
-                <TableCell>{user.email}</TableCell>
-                <TableCell>
-                  <Badge
-                    className={
-                      user.type === "partner" ? "bg-purple-500" : "bg-blue-500"
-                    }
-                  >
-                    {user.type}
-                  </Badge>
-                </TableCell>
-                <TableCell>
-                  {user.type === "partner"
-                    ? user.affiliateData?.cardCount
-                    : "-"}
-                </TableCell>
-                <TableCell>
-                  <div className="flex space-x-2">
-                    <Button
-                      variant="outline"
-                      size="icon"
-                      onClick={() => handleEdit(user)}
-                    >
-                      <Pencil className="h-4 w-4" />
-                    </Button>
-                    <Button
-                      variant="outline"
-                      size="icon"
-                      onClick={() => handleDelete(user.id)}
-                    >
-                      <Trash2 className="h-4 w-4" />
-                    </Button>
-                  </div>
+            {fetching && fetchType === "fetchUsers" ? (
+              <TableRow>
+                <TableCell colSpan={8} className="text-center py-8">
+                  <Loading />
                 </TableCell>
               </TableRow>
-            ))}
+            ) : users.length === 0 ? (
+              <TableRow>
+                <TableCell
+                  colSpan={8}
+                  className="text-center py-8 text-muted-foreground"
+                >
+                  No users found
+                </TableCell>
+              </TableRow>
+            ) : (
+              users.map((user) => (
+                <TableRow key={user.id}>
+                  <TableCell>{user.id}</TableCell>
+                  <TableCell>{user.name}</TableCell>
+                  <TableCell>{user.user_id}</TableCell>
+                  <TableCell>{user.email}</TableCell>
+                  <TableCell>{user.phone}</TableCell>
+                  <TableCell>
+                    <Badge
+                      className={
+                        user.is_admin ? "bg-purple-500" : "bg-blue-500"
+                      }
+                    >
+                      {user.is_admin ? "Admin" : "User"}
+                    </Badge>
+                  </TableCell>
+                  <TableCell>
+                    <Badge
+                      className={
+                        user.has_dummy_purchase ? "bg-green-500" : "bg-red-500"
+                      }
+                    >
+                      {user.has_dummy_purchase ? "Yes" : "No"}
+                    </Badge>
+                  </TableCell>
+                  <TableCell>
+                    <div className="flex space-x-2">
+                      <Button
+                        variant="outline"
+                        size="icon"
+                        onClick={() => {
+                          setSelectedUser(user);
+                          setIsDialogOpen(true);
+                        }}
+                      >
+                        <Key className="h-4 w-4" />
+                      </Button>
+                    </div>
+                  </TableCell>
+                </TableRow>
+              ))
+            )}
           </TableBody>
         </Table>
+        {!fetching && users.length > 0 && (
+          <Pagination
+            currentPage={currentPage}
+            hasNext={hasNext}
+            hasPrev={hasPrev}
+            total={totalItems}
+            pageSize={pageSize}
+            onPageChange={setCurrentPage}
+            itemsSize={users.length}
+          />
+        )}
       </CardContent>
+
       <Dialog open={isDialogOpen} onOpenChange={setIsDialogOpen}>
         <DialogContent>
           <DialogHeader>
             <DialogTitle>Change User Password</DialogTitle>
           </DialogHeader>
-          <form onSubmit={handleSubmit} className="space-y-4">
+          <form
+            onSubmit={(e) => {
+              e.preventDefault();
+              handlePasswordChange();
+            }}
+            className="space-y-4"
+          >
             <Input
               placeholder="New Password"
               type="password"
@@ -183,7 +243,7 @@ const UsersManagement = () => {
               }
               required
             />
-            <div className="flex justify-end gap-2">
+            <DialogFooter>
               <Button
                 type="button"
                 variant="outline"
@@ -191,8 +251,13 @@ const UsersManagement = () => {
               >
                 Cancel
               </Button>
-              <Button type="submit">Save</Button>
-            </div>
+              <Button
+                type="submit"
+                loading={fetching && fetchType === "updatePassword"}
+              >
+                Update Password
+              </Button>
+            </DialogFooter>
           </form>
         </DialogContent>
       </Dialog>

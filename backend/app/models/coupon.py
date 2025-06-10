@@ -10,5 +10,6 @@ class Coupon(TimestampMixin, Base):
     code: str = Column(String, unique=True)
     no_of_access: int = Column(Integer)
     used: int = Column(Integer, default=0)
+    visible: bool = Column(Boolean, default=True)
     def __repr__(self):
         return f"<CouponCode(code={self.code}, discount={self.discount}, type={self.type})>"    

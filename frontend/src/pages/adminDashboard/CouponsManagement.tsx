@@ -58,7 +58,7 @@ export default function CouponsManagement() {
   const [hasNext, setHasNext] = useState(false);
   const [hasPrev, setHasPrev] = useState(false);
   const [totalItems, setTotalItems] = useState(0);
-  const pageSize = 10;
+  const pageSize = 20;
   const [searchQuery, setSearchQuery] = useState("");
   const [searchInput, setSearchInput] = useState("");
   const [typeFilter, setTypeFilter] = useState("all");
@@ -144,6 +144,14 @@ export default function CouponsManagement() {
 
   const handleUpdate = async () => {
     if (!selectedCoupon) return;
+    if (form.type === "percentage" && form.discount > 100) {
+      toast.error("Discount cannot be greater than 100%");
+      return;
+    }
+    if (form.type == "flat" && form.discount > form.min_purchase) {
+      toast.error("Discount cannot be greater than minimum purchase");
+      return;
+    }
     const response = await makeApiCall(
       "PUT",
       API_ENDPOINT.UPDATE_COUPON(selectedCoupon.id),
@@ -153,13 +161,25 @@ export default function CouponsManagement() {
       "updateCoupon"
     );
     if (response.status === 200) {
-      toast.success("Coupon updated successfully");
       setIsDialogOpen(false);
-      fetchCoupons();
+      setCoupons(
+        coupons.map((coupon) =>
+          coupon.id === selectedCoupon.id ? response.data : coupon
+        )
+      );
+      toast.success("Coupon updated successfully");
     }
   };
 
   const handleCreate = async () => {
+    if (form.type === "percentage" && form.discount > 100) {
+      toast.error("Discount cannot be greater than 100%");
+      return;
+    }
+    if (form.type == "flat" && form.discount > form.min_purchase) {
+      toast.error("Discount cannot be greater than minimum purchase");
+      return;
+    }
     const response = await makeApiCall(
       "POST",
       API_ENDPOINT.CREATE_COUPON,
@@ -168,10 +188,10 @@ export default function CouponsManagement() {
       authToken,
       "createCoupon"
     );
-    if (response.status === 201) {
+    if (response.status === 200) {
       toast.success("Coupon created successfully");
       setIsDialogOpen(false);
-      fetchCoupons();
+      setCoupons([...coupons, response.data]);
     }
   };
 
@@ -195,6 +215,13 @@ export default function CouponsManagement() {
               value={searchInput}
               onChange={(e) => setSearchInput(e.target.value)}
               className="pl-8 w-[300px]"
+              onKeyDown={(e) => {
+                if (e.key === "Enter") {
+                  setSearchQuery(searchInput);
+                  setCurrentPage(1);
+                  fetchCoupons();
+                }
+              }}
             />
             <Button
               variant="ghost"
@@ -257,7 +284,7 @@ export default function CouponsManagement() {
             </TableRow>
           </TableHeader>
           <TableBody>
-            {fetching ? (
+            {fetching && fetchType === "fetchCoupons" ? (
               <TableRow>
                 <TableCell colSpan={6} className="text-center py-8">
                   <Loading />
@@ -391,8 +418,14 @@ export default function CouponsManagement() {
             <Button variant="outline" onClick={() => setIsDialogOpen(false)}>
               Cancel
             </Button>
-            <Button onClick={handleDialogSubmit}>
-              {isEdit ? "Update" : "Add"}
+            <Button
+              loading={
+                fetching &&
+                (fetchType === "createCoupon" || fetchType === "updateCoupon")
+              }
+              onClick={handleDialogSubmit}
+            >
+              {isEdit ? "Update" : "Add"} Coupon
             </Button>
           </DialogFooter>
         </DialogContent>

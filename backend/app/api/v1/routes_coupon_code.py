@@ -15,7 +15,7 @@ def get_coupons_code(db:Session=Depends(get_db),
                     page:int=Query(1,ge=1),
                     limit:int=Query(10,ge=1,le=100),
                     search:str=Query(''),
-                    filter:str=Query('all',regex='^(all|percent|fixed)$')
+                    filter:str=Query('all',regex='^(all|flat|percentage)$')
                     ):
   
   return crud_coupon.get_all_coupons(db,page,limit,search,filter)
@@ -38,7 +38,7 @@ def create_coupon(coupon_id:str,data:CouponCodeUpdate,db:Session=Depends(get_db)
   db_coupon = crud_coupon.get_coupon_by_id(db,coupon_id)
   if not db_coupon:
     raise HTTPException(status_code=400,detail="Coupon not found")
-  if crud_coupon.get_coupon_by_code(db,data.code):
+  if db_coupon.code != data.code and crud_coupon.get_coupon_by_code(db,data.code):
     raise HTTPException(status_code=400,detail="Code already exist")
   return crud_coupon.update_coupon_code(db,db_coupon,data)
 

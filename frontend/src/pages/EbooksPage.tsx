@@ -101,7 +101,7 @@ const EbooksPage = () => {
   return (
     <div className="container px-4 mx-auto py-8">
       <div className="mb-8">
-        <h1 className="text-3xl font-bold mb-2">BluePrints</h1>
+        <h1 className="text-3xl font-bold mb-2">Blueprints</h1>
         <p className="text-gray-600">
           Expand your knowledge with our professional eBooks.
         </p>

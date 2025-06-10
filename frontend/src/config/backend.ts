@@ -3,9 +3,9 @@ import { get } from "http";
 export const API_URL = "http://localhost:8000/api/v1";
 export const API_ENDPOINT = {
   PURCHASE_NEW_USER: `${API_URL}/purchase/e-book-course`,
-  VERIFY_USER: `${API_URL}/auth/me `,
-  LOGIN: `${API_URL}/auth/login`,
-  REGISTER: `${API_URL}/auth/register`,
+  VERIFY_USER: `${API_URL}/user/me `,
+  LOGIN: `${API_URL}/user/login`,
+  REGISTER: `${API_URL}/user/register`,
   CREATE_COURSE: `${API_URL}/course/create`,
   CREATE_COURSE_CHAPTER: `${API_URL}/course/chapter/create`,
   UPDATE_COURSE_CHAPTER: (chapter_id: number) =>
@@ -96,7 +96,14 @@ export const API_ENDPOINT = {
     search?: string
   ) =>
     `${API_URL}/coupon/all?page=${page}&limit=${limit}&filter=${filter}&search=${search}`,
-  CREATE_COUPON: `${API_URL}/coupons`,
-  UPDATE_COUPON: (id: number) => `${API_URL}/coupons/${id}`,
-  DELETE_COUPON: (id: number) => `${API_URL}/coupons/${id}`,
+  CREATE_COUPON: `${API_URL}/coupon/create`,
+  UPDATE_COUPON: (id: number) => `${API_URL}/coupon/update/${id}`,
+  DELETE_COUPON: (id: number) => `${API_URL}/coupon/delete/${id}`,
+  GET_ALL_USERS: (page: number, limit: number, search?: string) =>
+    `${API_URL}/user/all?page=${page}&limit=${limit}${
+      search ? `&search=${search}` : ""
+    }`,
+  UPDATE_USER_PASSWORD: (user_id: string) =>
+    `${API_URL}/user/update/password/${user_id}`,
+  GET_ADMIN_DASHBOARD: `${API_URL}/admin/dashboard`,
 };
