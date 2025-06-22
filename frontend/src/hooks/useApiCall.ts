@@ -78,7 +78,7 @@ export const useAPICall = () => {
       console.log(responseData.error);
     }
     if (responseData.status === 401) {
-      toast.error("Unauthorized, Please login again");
+      // toast.error("Unauthorized, Please login again");
       console.log(responseData.error);
     }
     if (responseData.status === 403) {

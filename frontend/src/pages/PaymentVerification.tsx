@@ -1,42 +1,58 @@
 import React, { useEffect, useState } from "react";
-import { useLocation, useNavigate } from "react-router-dom";
+import { useLocation, useNavigate, useSearchParams } from "react-router-dom";
 import { Button } from "@/components/ui/button";
 import { API_ENDPOINT } from "@/config/backend";
 import { useAPICall } from "@/hooks/useApiCall";
 
 const PaymentVerification = () => {
-  const [timeLeft, setTimeLeft] = useState(30); // 5 minutes in seconds
+  const [timeLeft, setTimeLeft] = useState(300); // 5 minutes in seconds
   const navigate = useNavigate();
-  const { state } = useLocation();
-  const { transactionId } = state || {};
+  const [searchParams] = useSearchParams();
+  const transactionId = searchParams.get("transactionId");
+  const isFailed = searchParams.get("isFailed") === "true";
+
   const { fetching, makeApiCall } = useAPICall();
   const [paymentStatus, setPaymentStatus] = useState<
-    "captured" | "failed" | null
+    "captured" | "SUCCESS" | "failed" | "FAILED" | null
   >(null);
 
   useEffect(() => {
     const timer = setInterval(() => {
       setTimeLeft((prevTime) => {
         if (prevTime <= 1) {
+          // Only set failed status when timer reaches zero
           setPaymentStatus("failed");
           clearInterval(timer);
           return 0;
         }
-        if (prevTime % 5 === 0) {
+        if (prevTime % 10 === 0) {
           verifyPayment();
         }
         return prevTime - 1;
       });
     }, 1000);
 
+    // Don't clear timer immediately for isFailed, let it run to zero
+    // if (isFailed && timer) {
+    //   clearInterval(timer);
+    // }
+
     return () => clearInterval(timer);
-  }, []);
+  }, [isFailed]);
 
   useEffect(() => {
-    if (paymentStatus === "captured" || paymentStatus === "failed") {
+    if (
+      paymentStatus === "captured" ||
+      paymentStatus === "SUCCESS" ||
+      paymentStatus === "failed" ||
+      paymentStatus === "FAILED"
+    ) {
       const redirectTimer = setTimeout(() => {
-        if (paymentStatus === "captured") {
+        if (paymentStatus === "captured" || paymentStatus === "SUCCESS") {
           navigate("/login");
+        }
+        if (paymentStatus === "failed" || paymentStatus === "FAILED") {
+          clearInterval(redirectTimer);
         }
       }, 2000);
       return () => clearTimeout(redirectTimer);
@@ -100,7 +116,7 @@ const PaymentVerification = () => {
   }
 
   const renderCircleContent = () => {
-    if (paymentStatus === "captured") {
+    if (paymentStatus === "captured" || paymentStatus === "SUCCESS") {
       return (
         <>
           <circle
@@ -123,7 +139,7 @@ const PaymentVerification = () => {
           />
         </>
       );
-    } else if (paymentStatus === "failed") {
+    } else if (paymentStatus === "failed" || paymentStatus === "FAILED") {
       return (
         <>
           <circle
@@ -179,7 +195,7 @@ const PaymentVerification = () => {
   };
 
   const renderStatusText = () => {
-    if (paymentStatus === "captured") {
+    if (paymentStatus === "captured" || paymentStatus === "SUCCESS") {
       return (
         <>
           <h1 className="text-2xl font-bold mb-4 text-green-500">
@@ -191,7 +207,7 @@ const PaymentVerification = () => {
           </p>
         </>
       );
-    } else if (paymentStatus === "failed") {
+    } else if (paymentStatus === "failed" || paymentStatus === "FAILED") {
       return (
         <>
           <h1 className="text-2xl font-bold mb-4 text-red-500">

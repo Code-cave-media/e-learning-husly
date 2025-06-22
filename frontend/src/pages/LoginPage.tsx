@@ -19,8 +19,8 @@ import toast from "react-hot-toast";
 
 const LoginPage = () => {
   const navigate = useNavigate();
-  const { isAuthenticated,login } = useAuth();
-  const {fetching,makeApiCall} = useAPICall()
+  const { login } = useAuth();
+  const {makeApiCall} = useAPICall()
   const [isLoading, setIsLoading] = useState(false);
   const [formData, setFormData] = useState({
     email: "",

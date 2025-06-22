@@ -19,7 +19,7 @@ async def create_course(
     raise HTTPException(status_code=404,detail="Course not found")
   db_course_progress = crud_course.get_or_create_course_progress(db,current_user.id,db_course.id)
 
-  res = CourseResponse.from_orm(db_course).dict()
+  res = CourseWatchResponse.from_orm(db_course).dict()
   for i,chapter in enumerate(db_course.chapters):
     db_course_completion_chapter = crud_course.get_course_completion_chapter_by_course_progress_id(db,db_course_progress.id,chapter.id)
     if db_course_completion_chapter:

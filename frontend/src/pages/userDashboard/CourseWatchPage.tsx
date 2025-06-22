@@ -40,6 +40,8 @@ interface CourseData {
   visible: boolean;
   thumbnail: string;
   chapters: Chapter[];
+  intro_video: string;
+  completed: boolean;
   course_progress: {
     id: number;
     course_id: number;
@@ -68,26 +70,65 @@ const CourseWatchPage = () => {
         "getCourseWatchPage"
       );
       if (response.status === 200) {
-        // Ensure first chapter is marked as completed
         const data = response.data;
+        console.log(data);
 
-        setCourseData(data);
-        const initialChapter =
-          data.chapters.find(
-            (chapter: Chapter) => chapter.id === Number(chapterId)
-          ) || data.chapters[0];
-        setCurrentChapter(initialChapter);
+        // Create intro chapter from intro_video if it exists
+        let introChapter: Chapter | null = null;
+        if (data.intro_video) {
+          introChapter = {
+            id: 0, // Use 0 as special ID for intro chapter
+            course_id: data.id,
+            video: data.intro_video,
+            title: "Introduction",
+            description: "Course introduction and overview",
+            duration: "5", // Default duration
+            pdf: "",
+            completed: true, // Always completed
+          };
+        }
+
+        // Combine intro chapter with existing chapters
+        const allChapters = introChapter
+          ? [introChapter, ...data.chapters]
+          : data.chapters;
+
+        const courseDataWithIntro = {
+          ...data,
+          chapters: allChapters,
+        };
+
+        setCourseData(courseDataWithIntro);
+
+        // Set current chapter - prefer intro chapter if no specific chapter requested
+        if (introChapter && (!chapterId || chapterId === "0")) {
+          setCurrentChapter(introChapter);
+        } else if (allChapters.length > 0) {
+          const initialChapter =
+            allChapters.find(
+              (chapter: Chapter) => chapter.id === Number(chapterId)
+            ) || allChapters[0];
+          setCurrentChapter(initialChapter);
+        } else {
+          setCurrentChapter(null);
+        }
       }
     };
     fetchData();
   }, [courseId]);
 
   const handleChapterChange = (chapterId: number) => {
-    const chapter = courseData?.chapters.find((c) => c.id === chapterId);
+    if (!courseData?.chapters || courseData.chapters.length === 0) return;
+
+    const chapter = courseData.chapters.find((c) => c.id === chapterId);
     if (chapter) {
       setCurrentChapter(chapter);
-      // If it's the first chapter, ensure it's marked as completed
-      if (chapterId === courseData?.chapters[0].id && courseData) {
+      // Don't mark intro chapter (id: 0) as completed since it's always completed
+      if (
+        chapterId !== 0 &&
+        chapterId === courseData.chapters[0].id &&
+        courseData
+      ) {
         if (!courseData.course_progress.chapters.includes(chapterId)) {
           setCourseData((prev) => {
             if (!prev) return prev;
@@ -105,7 +146,12 @@ const CourseWatchPage = () => {
   };
 
   const handleNextChapter = () => {
-    if (!courseData || !currentChapter) return;
+    if (
+      !courseData?.chapters ||
+      courseData.chapters.length === 0 ||
+      !currentChapter
+    )
+      return;
 
     const currentIndex = courseData.chapters.findIndex(
       (c) => c.id === currentChapter.id
@@ -117,7 +163,12 @@ const CourseWatchPage = () => {
   };
 
   const handlePreviousChapter = () => {
-    if (!courseData || !currentChapter) return;
+    if (
+      !courseData?.chapters ||
+      courseData.chapters.length === 0 ||
+      !currentChapter
+    )
+      return;
 
     const currentIndex = courseData.chapters.findIndex(
       (c) => c.id === currentChapter.id
@@ -134,7 +185,10 @@ const CourseWatchPage = () => {
     const duration = videoRef.duration;
     const currentTime = videoRef.currentTime;
     // Check if we're in the last 5 seconds
-    if (duration - currentTime <= 2 && !currentChapter.completed) {
+    if (duration - currentTime <= 2 && !currentChapter.completed && !fetching) {
+      // Don't mark intro chapter as completed via API since it's always completed
+      if (currentChapter.id === 0) return;
+
       const response = await makeApiCall(
         "POST",
         API_ENDPOINT.COURSE_CHAPTER_COMPLETE(currentChapter.id.toString()),
@@ -179,6 +233,7 @@ const CourseWatchPage = () => {
               course_progress: { ...prev.course_progress, completed: true },
             };
           });
+          setCurrentChapter((prev) => ({ ...prev, completed: true }));
         }
       }
     }
@@ -186,9 +241,12 @@ const CourseWatchPage = () => {
 
   const progress = courseData
     ? Math.min(
-        (courseData.course_progress.chapters.length /
-          courseData.chapters.length) *
-          100,
+        courseData.chapters.length > 0
+          ? ((courseData.course_progress.chapters.length +
+              (courseData.chapters[0]?.id === 0 ? 1 : 0)) /
+              courseData.chapters.length) *
+              100
+          : 0,
         100
       )
     : 0;
@@ -202,16 +260,24 @@ const CourseWatchPage = () => {
 
   if (isFetched && !courseData) {
     return (
-      <div className="container px-4 py-8">
+      <div className="primary-container px-2 py-4 sm:px-4 sm:py-8">
         <Card>
-          <CardContent className="p-6 text-center">
-            <div className="flex flex-col items-center gap-4">
-              <AlertCircle className="h-12 w-12 text-destructive" />
-              <h2 className="text-2xl font-bold">Course Not Found</h2>
-              <p className="text-muted-foreground">
+          <CardContent className="p-4 sm:p-6 text-center">
+            <div className="flex flex-col items-center gap-3 sm:gap-4">
+              <AlertCircle className="h-8 w-8 sm:h-12 sm:w-12 text-destructive" />
+              <h2 className="text-xl sm:text-2xl font-bold">
+                Course Not Found
+              </h2>
+              <p className="text-sm sm:text-base text-muted-foreground">
                 This course is either not visible or doesn't exist.
               </p>
-              <Button onClick={() => window.history.back()}>Go Back</Button>
+              <Button
+                size="sm"
+                className="sm:text-base"
+                onClick={() => window.history.back()}
+              >
+                Go Back
+              </Button>
             </div>
           </CardContent>
         </Card>
@@ -223,28 +289,65 @@ const CourseWatchPage = () => {
     return null;
   }
 
+  // Check if there are no chapters
+  if (courseData.chapters.length === 0) {
+    return (
+      <div className="primary-container px-2 py-4 sm:px-4 sm:py-8">
+        <Card>
+          <CardContent className="p-4 sm:p-6 text-center">
+            <div className="flex flex-col items-center gap-3 sm:gap-4">
+              <AlertCircle className="h-8 w-8 sm:h-12 sm:w-12 text-muted-foreground" />
+              <h2 className="text-xl sm:text-2xl font-bold">
+                No Chapters Available
+              </h2>
+              <p className="text-sm sm:text-base text-muted-foreground">
+                This course doesn't have any chapters yet. Please check back
+                later.
+              </p>
+              <Button
+                size="sm"
+                className="sm:text-base"
+                onClick={() => window.history.back()}
+              >
+                Go Back
+              </Button>
+            </div>
+          </CardContent>
+        </Card>
+      </div>
+    );
+  }
+
   return (
-    <div className="container px-4 py-8">
+    <div className="primary-container px-0 py-4 sm:px-4 sm:py-8">
       {showCompletion && (
         <div className="fixed inset-0 bg-black/50 flex items-center justify-center z-50">
-          <Card className="w-full max-w-md p-6 text-center">
-            <div className="flex justify-center mb-4">
-              <Trophy className="h-16 w-16 text-yellow-500" />
+          <Card className="w-full max-w-md p-4 sm:p-6 text-center mx-4">
+            <div className="flex justify-center mb-3 sm:mb-4">
+              <Trophy className="h-12 w-12 sm:h-16 sm:w-16 text-yellow-500" />
             </div>
-            <h2 className="text-2xl font-bold mb-2">Course Completed!</h2>
-            <p className="text-muted-foreground mb-4">
+            <h2 className="text-xl sm:text-2xl font-bold mb-2">
+              Course Completed!
+            </h2>
+            <p className="text-sm sm:text-base text-muted-foreground mb-3 sm:mb-4">
               Congratulations on completing {courseData.title}!
             </p>
-            <Button onClick={() => setShowCompletion(false)}>Continue</Button>
+            <Button
+              size="sm"
+              className="sm:text-base"
+              onClick={() => setShowCompletion(false)}
+            >
+              Continue
+            </Button>
           </Card>
         </div>
       )}
 
-      <div className="grid grid-cols-1 lg:grid-cols-4 gap-6">
+      <div className="grid grid-cols-1 lg:grid-cols-4 gap-4 sm:gap-6">
         {/* Video Player Section */}
-        <div className="lg:col-span-3 space-y-6">
+        <div className="lg:col-span-3 space-y-4 sm:space-y-6">
           <Card>
-            <CardContent className="p-6">
+            <CardContent className="p-3 sm:p-6">
               <div className="aspect-video bg-black rounded-lg overflow-hidden">
                 <video
                   ref={setVideoRef}
@@ -255,22 +358,25 @@ const CourseWatchPage = () => {
                   onTimeUpdate={handleVideoTimeUpdate}
                 />
               </div>
-              <div className="mt-4">
-                <h2 className="text-2xl font-bold">{currentChapter.title}</h2>
-                <p className="text-md text-muted-foreground mt-2">
+              <div className="mt-3 sm:mt-4">
+                <h2 className="text-lg sm:text-2xl font-bold">
+                  {currentChapter.title}
+                </h2>
+                <p className="text-sm sm:text-base text-muted-foreground mt-2">
                   {currentChapter.description}
                 </p>
                 {currentChapter.pdf && (
-                  <div className="mt-4">
+                  <div className="mt-3 sm:mt-4">
                     <Button
                       variant="outline"
+                      size="sm"
+                      className="gap-2 text-xs sm:text-sm"
                       onClick={() => window.open(currentChapter.pdf, "_blank")}
-                      className="gap-2"
                     >
                       <svg
                         xmlns="http://www.w3.org/2000/svg"
-                        width="16"
-                        height="16"
+                        width="14"
+                        height="14"
                         viewBox="0 0 24 24"
                         fill="none"
                         stroke="currentColor"
@@ -290,24 +396,28 @@ const CourseWatchPage = () => {
                   </div>
                 )}
               </div>
-              <div className="flex items-center justify-between mt-6">
+              <div className="flex items-center justify-between mt-4 sm:mt-6 gap-2">
                 <Button
                   variant="outline"
+                  size="sm"
+                  className="text-xs sm:text-sm"
                   onClick={handlePreviousChapter}
                   disabled={courseData.chapters[0].id === currentChapter.id}
                 >
-                  <ChevronLeft className="mr-2 h-4 w-4" />
-                  Previous Chapter
+                  <ChevronLeft className="mr-1 sm:mr-2 h-3 w-3 sm:h-4 sm:w-4" />
+                  Previous
                 </Button>
                 <Button
+                  size="sm"
+                  className="text-xs sm:text-sm"
                   onClick={handleNextChapter}
                   disabled={
                     courseData.chapters[courseData.chapters.length - 1].id ===
                     currentChapter.id
                   }
                 >
-                  Next Chapter
-                  <ChevronRight className="ml-2 h-4 w-4" />
+                  Next
+                  <ChevronRight className="ml-1 sm:ml-2 h-3 w-3 sm:h-4 sm:w-4" />
                 </Button>
               </div>
             </CardContent>
@@ -317,34 +427,40 @@ const CourseWatchPage = () => {
         {/* Chapters List Section */}
         <div className="lg:col-span-1">
           <Card>
-            <CardContent className="p-6">
-              <div className="mb-4">
-                <h3 className="text-lg font-semibold mb-2">Course Progress</h3>
+            <CardContent className="p-3 sm:p-6">
+              <div className="mb-3 sm:mb-4">
+                <h3 className="text-base sm:text-lg font-semibold mb-2">
+                  Course Progress
+                </h3>
                 <Progress value={progress} className="h-2" />
-                <p className="text-sm text-muted-foreground mt-2">
+                <p className="text-xs sm:text-sm text-muted-foreground mt-2">
                   {Math.round(progress)}% Complete
                 </p>
               </div>
-              <div className="space-y-4">
+              <div className="space-y-2 sm:space-y-4">
                 {courseData.chapters.map((chapter) => (
                   <button
                     key={chapter.id}
                     onClick={() => handleChapterChange(chapter.id)}
-                    className={`w-full text-left p-3 rounded-lg transition-colors ${
+                    className={`w-full text-left p-2 sm:p-3 rounded-lg transition-colors ${
                       currentChapter.id === chapter.id
                         ? "bg-primary/10 text-primary"
                         : "hover:bg-muted"
                     }`}
                   >
-                    <div className="flex items-start gap-3">
-                      {chapter.completed ? (
-                        <CheckCircle2 className="h-5 w-5 text-green-500 mt-1" />
+                    <div className="flex items-start gap-2 sm:gap-3">
+                      {chapter.id === 0 ? (
+                        <PlayCircle className="h-4 w-4 sm:h-5 sm:w-5 text-blue-500 mt-0.5 sm:mt-1" />
+                      ) : chapter.completed ? (
+                        <CheckCircle2 className="h-4 w-4 sm:h-5 sm:w-5 text-green-500 mt-0.5 sm:mt-1" />
                       ) : (
-                        <Circle className="h-5 w-5 text-muted-foreground mt-1" />
+                        <Circle className="h-4 w-4 sm:h-5 sm:w-5 text-muted-foreground mt-0.5 sm:mt-1" />
                       )}
                       <div>
-                        <p className="font-medium">{chapter.title}</p>
-                        <p className="text-sm text-muted-foreground mt-1">
+                        <p className="font-medium text-sm sm:text-base">
+                          {chapter.title}
+                        </p>
+                        <p className="text-xs sm:text-sm text-muted-foreground mt-0.5 sm:mt-1">
                           {chapter.duration} min
                         </p>
                       </div>

@@ -50,28 +50,28 @@ class PurchaseVerifyRequest(BaseModel):
 
 class TransactionResponse (BaseModel):
     transaction_id: str
-    order_id: str
     status: str
     provider: str
-    utr_id: str
+    utr_id: str | None = None
     method: str
     vpa: str | None = None
     email: EmailStr | None = None
     contact: str | None = None
     currency: str
-    amount: int
-    base_amount: int
+    amount: int | None = None
+    base_amount: int | None = None
     fee: int | None = None
     tax: int | None = None
     error_code: str | None = None
     error_description: str | None = None
     created_at : datetime
+    item_id: int | None = None
+    item_type: str | None = None
     class Config:
       orm_mode = True
   
 class ListTransactionResponse(BaseModel):
     transaction_id: str | None = 'dummy'
-    order_id: str | None = 'dummy'
     status: str | None = 'dummy'
     method: str | None = 'dummy'
     class Config:
@@ -82,6 +82,7 @@ class PurchaseCreateRequest(BaseModel):
   item_type: str
   user_id: int | str | None = None
   affiliate_user_id: int | str | None = None
+  amount: float | None = None
 
 class PurchaseResponse(BaseModel):
   id: int | None = None
@@ -91,5 +92,9 @@ class PurchaseResponse(BaseModel):
   user: UserResponse | None = None
   affiliate_user: UserResponse | None = None
   transaction: ListTransactionResponse | None = None
+  amount : float  | None = None
+  discount : float | None = None
+  coupon_code : str | None = None
+  coupon_type : str | None = None
   class Config:
     orm_mode = True

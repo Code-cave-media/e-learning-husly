@@ -19,7 +19,7 @@ const Landing = () => {
   const [dialogOpen, setDialogOpen] = useState(false);
   const navigate = useNavigate();
   const { isAuthenticated, isAdmin, authToken } = useAuth();
-  const { fetchType, fetching, makeApiCall,isFetched } = useAPICall();
+  const { fetchType, fetching, makeApiCall, isFetched } = useAPICall();
   const [data, setData] = useState<LandingPage | null>(null);
   const [isLoading, setIsLoading] = useState(true);
   const [isPlaying, setIsPlaying] = useState(false);
@@ -90,8 +90,8 @@ const Landing = () => {
     const response = await makeApiCall(
       "POST",
       API_ENDPOINT.ADD_CLICK_AFFILIATE_LINK,
-      { affiliate_user_id: ref,item_id:id,item_type:type },
-      "application/json",
+      { affiliate_user_id: ref, item_id: id, item_type: type },
+      "application/json"
     );
     if (response.status == 200) {
       localStorage.setItem(
@@ -192,7 +192,6 @@ const Landing = () => {
       <div className="mb-5 w-20 h-20 rounded-full bg-gray-700 flex justify-center items-center overflow-hidden">
         <img
           src={
-            data?.landing_page?.thumbnail ||
             "https://www.shutterstock.com/shutterstock/photos/2278726727/display_1500/stock-vector-minimalistic-circular-logo-sample-vector-2278726727.jpg"
           }
           alt="Logo"
@@ -231,7 +230,7 @@ const Landing = () => {
         )}
       </div>
 
-      <div className="text-lg mb-5 text-center">
+      <div className="text-lg mb-5 text-center w-[50%]">
         {data?.landing_page?.sub_heading || data.description}
       </div>
 
@@ -239,10 +238,7 @@ const Landing = () => {
         <video
           controls
           className="w-full h-full"
-          poster={
-            data?.thumbnail ||
-            "https://marketplace.canva.com/EAEqfS4X0Xw/1/0/1600w/canva-most-attractive-youtube-thumbnail-wK95f3XNRaM.jpg"
-          }
+          poster={data?.landing_page?.thumbnail}
           onPlay={() => setIsPlaying(true)}
           onPause={() => setIsPlaying(false)}
           onEnded={() => setIsPlaying(true)}

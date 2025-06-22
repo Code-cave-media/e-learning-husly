@@ -1,14 +1,15 @@
+/* eslint-disable @typescript-eslint/no-explicit-any */
 import { Button } from "@/components/ui/button";
 import { Loading } from "@/components/ui/loading";
 import { API_ENDPOINT } from "@/config/backend";
 import { useAuth } from "@/contexts/AuthContext";
 import { useAPICall } from "@/hooks/useApiCall";
 import { CheckoutResponse } from "@/types/apiTypes";
+import { load } from "@cashfreepayments/cashfree-js";
 import React, { useEffect, useState } from "react";
 import toast from "react-hot-toast";
 import { useNavigate, useParams, useSearchParams } from "react-router-dom";
 
-const mockAffiliate = { name: "John Doe" };
 const mockProduct = {
   thumbnail:
     "https://www.shutterstock.com/shutterstock/photos/2278726727/display_1500/stock-vector-minimalistic-circular-logo-sample-vector-2278726727.jpg",
@@ -102,8 +103,15 @@ const Checkout = () => {
       toast.error("Password and confirm password do not match");
       return;
     }
+
+    // Ensure user_id is available for authenticated users
+    if (isAuthenticated && !user?.user_id) {
+      toast.error("User session expired. Please login again.");
+      return;
+    }
+
     const requestData = {
-      user_id: user?.user_id,
+      user_id: isAuthenticated ? user?.user_id : null,
       item_id: data?.item_data.id,
       item_type: type,
       affiliate_user_id: ref,
@@ -124,11 +132,88 @@ const Checkout = () => {
       "checkout"
     );
     if (response.status === 200) {
-      handleRazorpay(response.data);
+      handleCashfree(response.data);
     } else {
-      toast.error(response.error);
+      toast.error(response.error || "Failed to initiate checkout");
     }
   };
+  const handleCashfree = async (data: any) => {
+    try {
+      console.log(
+        "Starting Cashfree initialization with sessionId:",
+        data.payment_session_id
+      );
+      console.log("Cashfree App ID:", import.meta.env.VITE_CASHFREE_APP_ID);
+
+      // First, load the Cashfree SDK
+      const cashfree = await load({
+        mode: "sandbox",
+        env: "sandbox",
+        appId: import.meta.env.VITE_CASHFREE_APP_ID,
+        orderToken: data.payment_session_id,
+        disableSentry: true,
+        style: {
+          backgroundColor: "#ffffff",
+          color: "#11385b",
+          fontFamily: "Lato",
+          fontSize: "14px",
+          errorColor: "#ff0000",
+          theme: "light",
+        },
+      });
+
+      console.log("Cashfree SDK loaded successfully:", cashfree);
+
+      // Create the checkout options
+      const options = {
+        paymentSessionId: data.payment_session_id,
+        returnUrl: (window.location.href =
+          window.location.origin +
+          "/payment-verification?transactionId=" +
+          data.transaction_id +
+          "&isFailed=false"),
+        failureUrl: (window.location.href =
+          window.location.origin +
+          "/payment-verification?transactionId=" +
+          data.transaction_id +
+          "&isFailed=true"),
+        onPaymentSuccess: function (response: any) {
+          console.log("Payment Success:", response);
+          window.location.href =
+            window.location.origin +
+            "/payment-verification?transactionId=" +
+            data.transaction_id +
+            "&isFailed=false";
+        },
+        onPaymentFailure: function (response: any) {
+          console.error("Payment Failure:", response);
+          window.location.href =
+            window.location.origin +
+            "/payment-verification?transactionId=" +
+            data.transaction_id +
+            "&isFailed=true";
+        },
+        onClose: function () {
+          console.log("Payment window closed");
+        },
+      };
+      // Initialize the checkout
+      try {
+        const checkout = await cashfree.checkout(options);
+      
+        // Open the checkout window
+        await checkout.open();
+        console.log("Cashfree checkout window opened successfully");
+      } catch (checkoutError) {
+        console.error("Checkout failed with error:", checkoutError);
+        
+      }
+    } catch (error) {
+      console.error("Payment initialization failed with error:", error);
+      toast.error("Failed to initialize payment. Please try again.");
+    }
+  };
+
   const handleRazorpay = async (orderResponse: {
     amount: number;
     id: string;
@@ -159,6 +244,33 @@ const Checkout = () => {
 
     const rzp = new window.Razorpay(options);
     rzp.open();
+  };
+
+  const initializeSDK = async () => {
+    try {
+      const cashfree = await load({
+        mode: "sandbox",
+        env: "sandbox",
+        appId: import.meta.env.VITE_CASHFREE_APP_ID,
+        orderToken: "",
+        disableSentry: true,
+        style: {
+          backgroundColor: "#ffffff",
+          color: "#11385b",
+          fontFamily: "Lato",
+          fontSize: "14px",
+          errorColor: "#ff0000",
+          theme: "light",
+        },
+      });
+      console.log(cashfree);
+      console.log("initialized");
+      return cashfree;
+    } catch (error) {
+      console.error("Failed to initialize Cashfree:", error);
+      toast.error("Payment system initialization failed");
+      throw error;
+    }
   };
   if (fetching && fetchType !== "couponApply" && fetchType !== "checkout") {
     return (

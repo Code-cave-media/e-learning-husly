@@ -45,6 +45,17 @@ class CourseResponse(BaseModel):
   class Config:
     orm_mode = True
 
+class CourseWatchResponse(BaseModel):
+  id: int
+  title : str
+  description : str
+  thumbnail:str
+  chapters: List[CourseChapterResponse] = []
+  intro_video: str | None = None
+
+  class Config:
+    orm_mode = True
+
 
 class LandingPageCreate(BaseModel):
   main_heading: str
@@ -122,3 +133,4 @@ class ItemListResponse(BaseModel):
   description: str
   class Config:
     orm_mode=True
+    

@@ -186,6 +186,51 @@
     }
   }
 
+  /* Primary container for course watch and ebook read pages */
+  .primary-container {
+    @apply px-4 mx-auto w-full;
+    max-width: 90%;
+  }
+
+  @screen sm {
+    .primary-container {
+      max-width: 98%;
+    }
+  }
+
+  @screen md {
+    .primary-container {
+      max-width: 98%;
+    }
+  }
+
+  @screen lg {
+    .primary-container {
+      max-width: 90%;
+    }
+  }
+
+  @screen xl {
+    .primary-container {
+      max-width: 90%;
+    }
+  }
+
+  @screen 2xl {
+    .primary-container {
+      max-width: 90%;
+    }
+  }
+
+  /* Hide scrollbar but keep scroll functionality */
+  .scrollbar-hide {
+    -ms-overflow-style: none; /* Internet Explorer 10+ */
+    scrollbar-width: none; /* Firefox */
+  }
+  .scrollbar-hide::-webkit-scrollbar {
+    display: none; /* Safari and Chrome */
+  }
+
   /* Responsive spacing */
   .section-padding {
     @apply py-8 md:py-12 lg:py-16;

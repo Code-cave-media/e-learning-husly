@@ -90,7 +90,7 @@ const EbookViewPage = () => {
 
   if (fetching && fetchType === "getEbookReadPage") {
     return (
-      <div className="container px-4 py-8">
+      <div className="primary-container px-2 py-4 sm:px-4 sm:py-8">
         <Loading />
       </div>
     );
@@ -98,16 +98,22 @@ const EbookViewPage = () => {
 
   if (isFetched && !ebookData) {
     return (
-      <div className="container px-4 py-8">
+      <div className="primary-container px-2 py-4 sm:px-4 sm:py-8">
         <Card>
-          <CardContent className="p-6 text-center">
-            <div className="flex flex-col items-center gap-4">
-              <AlertCircle className="h-12 w-12 text-destructive" />
-              <h2 className="text-2xl font-bold">Ebook Not Found</h2>
-              <p className="text-muted-foreground">
+          <CardContent className="p-4 sm:p-6 text-center">
+            <div className="flex flex-col items-center gap-3 sm:gap-4">
+              <AlertCircle className="h-8 w-8 sm:h-12 sm:w-12 text-destructive" />
+              <h2 className="text-xl sm:text-2xl font-bold">Ebook Not Found</h2>
+              <p className="text-sm sm:text-base text-muted-foreground">
                 This ebook is either not visible or doesn't exist.
               </p>
-              <Button onClick={() => window.history.back()}>Go Back</Button>
+              <Button
+                size="sm"
+                className="sm:text-base"
+                onClick={() => window.history.back()}
+              >
+                Go Back
+              </Button>
             </div>
           </CardContent>
         </Card>
@@ -120,33 +126,42 @@ const EbookViewPage = () => {
   }
 
   return (
-    <div className="container px-4 py-8">
-      <div className="grid grid-cols-1 lg:grid-cols-4 gap-6">
+    <div className="primary-container px-2 py-4 sm:px-4 sm:py-8">
+      <div className="grid grid-cols-1 lg:grid-cols-4 gap-4 sm:gap-6">
         {/* PDF Viewer Section */}
-        <div className="lg:col-span-3 space-y-6">
+        <div className="lg:col-span-3 space-y-4 sm:space-y-6">
           <Card>
-            <CardContent className="p-6">
-              <div className="flex items-center justify-between mb-4">
+            <CardContent className="p-3 sm:p-6">
+              <div className="flex flex-col sm:flex-row sm:items-center justify-between mb-3 sm:mb-4 gap-3">
                 <div>
-                  <h2 className="text-2xl font-bold">{ebookData.title}</h2>
-                  <p className="text-muted-foreground">
+                  <h2 className="text-lg sm:text-2xl font-bold">
+                    {ebookData.title}
+                  </h2>
+                  <p className="text-sm sm:text-base text-muted-foreground">
                     {ebookData.description}
                   </p>
                 </div>
-                <Button variant="outline" onClick={handleDownload}>
-                  <Download className="mr-2 h-4 w-4" />
+                <Button
+                  variant="outline"
+                  size="sm"
+                  className="text-xs sm:text-sm"
+                  onClick={handleDownload}
+                >
+                  <Download className="mr-1 sm:mr-2 h-3 w-3 sm:h-4 sm:w-4" />
                   Download PDF
                 </Button>
               </div>
 
               {error && (
-                <Alert variant="destructive" className="mb-4">
-                  <AlertCircle className="h-4 w-4" />
-                  <AlertDescription>{error}</AlertDescription>
+                <Alert variant="destructive" className="mb-3 sm:mb-4">
+                  <AlertCircle className="h-3 w-3 sm:h-4 sm:w-4" />
+                  <AlertDescription className="text-xs sm:text-sm">
+                    {error}
+                  </AlertDescription>
                 </Alert>
               )}
 
-              <div className="h-[800px] border rounded-lg">
+              <div className="h-[500px] sm:h-[800px] border rounded-lg">
                 <Worker workerUrl="https://unpkg.com/pdfjs-dist@3.4.120/build/pdf.worker.min.js">
                   <Viewer
                     fileUrl={ebookData.pdf}
@@ -164,20 +179,24 @@ const EbookViewPage = () => {
         {/* Table of Contents Section */}
         <div className="lg:col-span-1">
           <Card>
-            <CardContent className="p-6">
-              <h3 className="text-lg font-semibold mb-4">Table of Contents</h3>
-              <div className="space-y-2">
+            <CardContent className="p-3 sm:p-6">
+              <h3 className="text-base sm:text-lg font-semibold mb-3 sm:mb-4">
+                Table of Contents
+              </h3>
+              <div className="space-y-1 sm:space-y-2">
                 {ebookData.chapters.map((chapter) => (
                   <button
                     key={chapter.id}
                     onClick={() => handleTocClick(chapter.page_number)}
-                    className="w-full text-left p-3 rounded-lg hover:bg-muted transition-colors"
+                    className="w-full text-left p-2 sm:p-3 rounded-lg hover:bg-muted transition-colors"
                   >
-                    <div className="flex items-center gap-3">
-                      <BookOpen className="h-4 w-4 text-muted-foreground" />
+                    <div className="flex items-center gap-2 sm:gap-3">
+                      <BookOpen className="h-3 w-3 sm:h-4 sm:w-4 text-muted-foreground" />
                       <div>
-                        <p className="font-medium">{chapter.title}</p>
-                        <p className="text-sm text-muted-foreground">
+                        <p className="font-medium text-sm sm:text-base">
+                          {chapter.title}
+                        </p>
+                        <p className="text-xs sm:text-sm text-muted-foreground">
                           Page {chapter.page_number}
                         </p>
                       </div>

@@ -20,7 +20,7 @@ import { Textarea } from "@/components/ui/textarea";
 import { Switch } from "@/components/ui/switch";
 import { Label } from "@/components/ui/label";
 import { toast } from "react-hot-toast";
-import { Plus } from "lucide-react";
+import { Plus, FileText } from "lucide-react";
 import { EbookListItem } from "@/components/EbookListItem";
 import { Ebook } from "@/types/ebook";
 import { useAPICall } from "@/hooks/useApiCall";
@@ -144,11 +144,15 @@ export default function EbooksManagement() {
   };
 
   return (
-    <div className="container mx-auto py-6">
-      <div className="flex justify-between items-center mb-6">
-        <h1 className="text-2xl font-bold">Ebooks Management</h1>
-        <Button onClick={() => setIsCreateDialogOpen(true)}>
-          <Plus className="w-4 h-4 mr-2" />
+    <div className="container mx-auto py-4 sm:py-6 px-2 sm:px-4">
+      <div className="flex flex-col sm:flex-row sm:justify-between sm:items-center gap-4 mb-4 sm:mb-6">
+        <h1 className="text-xl sm:text-2xl font-bold">Ebooks Management</h1>
+        <Button
+          size="sm"
+          className="sm:text-base"
+          onClick={() => setIsCreateDialogOpen(true)}
+        >
+          <Plus className="w-3 h-3 sm:w-4 sm:h-4 mr-1 sm:mr-2" />
           Create New Ebook
         </Button>
       </div>
@@ -169,13 +173,14 @@ export default function EbooksManagement() {
           <TableBody>
             {fetching && fetchType === "listEbooks" && (
               <TableRow>
-                <TableCell colSpan={6} className="text-center">
+                <TableCell colSpan={7} className="text-center">
                   <Loading />
                 </TableCell>
               </TableRow>
             )}
             {!fetching &&
               fetchType !== "listEbooks" &&
+              ebooks.length > 0 &&
               ebooks.map((ebook) => (
                 <EbookListItem
                   key={ebook.id}
@@ -183,6 +188,19 @@ export default function EbooksManagement() {
                   setEbook={setEbooks}
                 />
               ))}
+            {!fetching && fetchType !== "listEbooks" && ebooks.length === 0 && (
+              <TableRow>
+                <TableCell colSpan={7} className="h-24 text-center">
+                  <div className="flex flex-col items-center justify-center gap-2">
+                    <FileText className="h-8 w-8 text-muted-foreground" />
+                    <p className="text-muted-foreground">No ebooks found</p>
+                    <p className="text-sm text-muted-foreground">
+                      Create your first ebook to get started.
+                    </p>
+                  </div>
+                </TableCell>
+              </TableRow>
+            )}
           </TableBody>
         </Table>
       </div>

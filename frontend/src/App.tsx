@@ -28,7 +28,7 @@ import { LoadingScreen } from "@/components/ui/LoadingScreen";
 import AffiliateProgramPage from "./pages/AffiliateProgramPage";
 import CourseWatchPage from "./pages/userDashboard/CourseWatchPage";
 import EbookViewPage from "./pages/userDashboard/EbookViewPage";
-import { Toaster } from "react-hot-toast";
+import toast, { Toaster } from "react-hot-toast";
 import { useEffect, useState } from "react";
 import AdminDashboard from "./pages/adminDashboard/Dashboard";
 import EbooksManagement from "./pages/adminDashboard/EbooksManagement";
@@ -91,15 +91,28 @@ const PublicRoute = ({ children }: { children: React.ReactNode }) => {
 const AppRoutes = () => {
   const { isCheckedUser } = useAuth();
   useEffect(() => {
-    const script = document.createElement("script");
-    script.src = "https://checkout.razorpay.com/v1/checkout.js";
-    script.async = true;
-    document.body.appendChild(script);
+    // const script = document.createElement("script");
+    // script.src = "https://checkout.razorpay.com/v1/checkout.js";
+    // script.async = true;
+    // document.body.appendChild(script);
+    // const script = document.createElement("script");
+    // script.src = "https://sdk.cashfree.com/js/v3/cashfree.js";
+    // script.async = true;
+    // script.onload = () => {
+    //   console.log("Cashfree v3 SDK loaded");
+    // };
+    // script.onerror = () => {
+    //   toast.error("Failed to load Cashfree payment system.");
+    // };
+    // document.body.appendChild(script);
+    // console.log(new window.Cashfree);
   }, []);
-
+  console.log(isCheckedUser);
   if (!isCheckedUser) {
+    console.log('enter')
     return <LoadingScreen />;
   }
+  console.log('reenter');
   return (
     <Routes>
       {/* Public Routes */}
@@ -234,6 +247,7 @@ const AppRoutes = () => {
         path="/course/watch/:courseId"
         element={
           <ProtectedRoute>
+            
             <CourseWatchPage />
           </ProtectedRoute>
         }
@@ -370,21 +384,20 @@ const UserVerification = ({ children }) => {
           const user = response.data;
           login(user);
         } else {
-          if (
-            !(
-              pathname in
-              [
-                "/",
-                "/login",
-                "/learning",
-                "/landing/:type/:id",
-                "/checkout/:type/:id",
-              ]
-            )
-          ) {
-            navigate("/login");
-          }
-          return;
+          // if (
+          //   !(
+          //     pathname in
+          //     [
+          //       "/",
+          //       "/login",
+          //       "/learning",
+          //       "/landing/:type/:id",
+          //       "/checkout/:type/:id",
+          //     ]
+          //   )
+          // ) {
+          //   navigate("/login");
+          // }
         }
       }
       setIsCheckedUser(true);

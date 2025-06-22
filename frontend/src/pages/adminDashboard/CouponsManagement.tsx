@@ -23,7 +23,7 @@ import {
   SelectValue,
 } from "@/components/ui/select";
 import { Input } from "@/components/ui/input";
-import { Plus, Pencil, Trash2, Search, Filter } from "lucide-react";
+import { Plus, Pencil, Trash2, Search, Filter, Tag } from "lucide-react";
 import { useAuth } from "@/contexts/AuthContext";
 import { useAPICall } from "@/hooks/useApiCall";
 import { API_ENDPOINT } from "@/config/backend";
@@ -204,17 +204,20 @@ export default function CouponsManagement() {
   };
 
   return (
-    <div className="space-y-4">
-      <div className="flex justify-between items-center mb-6">
-        <h1 className="text-2xl font-bold">Coupons Management</h1>
-        <div className="flex items-center gap-4">
-          <div className="relative flex items-center">
+    <div className="space-y-4 px-2 sm:px-4">
+      <div className="flex flex-col gap-4 mb-4 sm:mb-6">
+        <div className="flex flex-col sm:flex-row sm:justify-between sm:items-center gap-4">
+          <h1 className="text-xl sm:text-2xl font-bold">Coupons Management</h1>
+        </div>
+
+        <div className="flex flex-col sm:flex-row gap-3 sm:gap-4">
+          <div className="relative flex items-center flex-1">
             <Search className="absolute left-2 h-4 w-4 text-muted-foreground" />
             <Input
               placeholder="Search by coupon code..."
               value={searchInput}
               onChange={(e) => setSearchInput(e.target.value)}
-              className="pl-8 w-[300px]"
+              className="pl-8 w-full sm:w-[300px]"
               onKeyDown={(e) => {
                 if (e.key === "Enter") {
                   setSearchQuery(searchInput);
@@ -240,9 +243,10 @@ export default function CouponsManagement() {
             <DropdownMenuTrigger asChild>
               <Button
                 variant="outline"
-                className="flex items-center gap-2 capitalize"
+                size="sm"
+                className="flex items-center gap-2 capitalize whitespace-nowrap"
               >
-                <Filter className="w-4 h-4" />
+                <Filter className="w-3 h-3 sm:w-4 sm:h-4" />
                 {typeFilter === "all"
                   ? "All Types"
                   : `Type: ${
@@ -264,8 +268,12 @@ export default function CouponsManagement() {
               </DropdownMenuItem>
             </DropdownMenuContent>
           </DropdownMenu>
-          <Button onClick={() => openAddDialog()}>
-            <Plus className="w-4 h-4 mr-2" />
+          <Button
+            size="sm"
+            className="sm:text-base"
+            onClick={() => openAddDialog()}
+          >
+            <Plus className="w-3 h-3 sm:w-4 sm:h-4 mr-1 sm:mr-2" />
             Add New Coupon
           </Button>
         </div>
@@ -292,11 +300,16 @@ export default function CouponsManagement() {
               </TableRow>
             ) : coupons.length === 0 ? (
               <TableRow>
-                <TableCell
-                  colSpan={6}
-                  className="text-center py-8 text-muted-foreground"
-                >
-                  No coupons found
+                <TableCell colSpan={6} className="h-24 text-center">
+                  <div className="flex flex-col items-center justify-center gap-2">
+                    <Tag className="h-8 w-8 text-muted-foreground" />
+                    <p className="text-muted-foreground">No coupons found</p>
+                    <p className="text-sm text-muted-foreground">
+                      {searchQuery
+                        ? `No coupons matching "${searchQuery}"`
+                        : "Create your first coupon to get started."}
+                    </p>
+                  </div>
                 </TableCell>
               </TableRow>
             ) : (

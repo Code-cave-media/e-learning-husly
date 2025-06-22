@@ -1,12 +1,10 @@
 from sqlalchemy.orm import Session
-from models.affiliate import AffiliateLink,AffiliateAccount ,AffiliateLinkClick,AffiliateLinkPurchase,Withdraw,UPIDetails,BankDetails
+from models.affiliate import Withdraw
 from models.user import User
 from datetime import datetime, timedelta
 from datetime import datetime, timedelta, timezone
 from sqlalchemy import func
-from schemas.affiliate import  *
-from crud.utils import to_pagination_response
-from schemas.user import UserResponse
+from schemas.affiliate import *
 from models.course import Course
 from models.ebook import EBook
 from models.purchase import Purchase
@@ -34,6 +32,7 @@ def get_total_sales(db: Session) -> int:
         "count": count,
         "total_amount": total_amount
     }
+
 def get_total_withdrawals_by_status(db: Session, status: str) -> dict:
     if status not in ['success', 'pending', '']:
         raise ValueError("Invalid status. Use 'success', 'pending', or '' for all withdrawals.")
@@ -53,16 +52,13 @@ def get_total_withdrawals_by_status(db: Session, status: str) -> dict:
         "total_amount": total_amount
     }
 
-
-from sqlalchemy import extract
-
 def get_total_sales_by_month_last_year(db: Session) -> list:
     end_date = datetime.now(timezone.utc)
     start_date = end_date - timedelta(days=365)
 
     purchases = db.query(
-        extract('year', Purchase.created_at).label('year'),
-        extract('month', Purchase.created_at).label('month')
+        func.extract('year', Purchase.created_at).label('year'),
+        func.extract('month', Purchase.created_at).label('month')
     ).filter(
         Purchase.created_at >= start_date,
         Purchase.created_at <= end_date

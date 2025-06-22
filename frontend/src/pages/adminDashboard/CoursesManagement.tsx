@@ -21,7 +21,7 @@ import { Textarea } from "@/components/ui/textarea";
 import { Switch } from "@/components/ui/switch";
 import { Label } from "@/components/ui/label";
 import { toast } from "react-hot-toast";
-import { Plus } from "lucide-react";
+import { Plus, BookOpen } from "lucide-react";
 import { CourseListItem } from "@/components/CourseListItem";
 import { Course } from "@/types/course";
 import { useAPICall } from "@/hooks/useApiCall";
@@ -109,13 +109,16 @@ export default function CoursesManagement() {
     }
   };
 
-
   return (
-    <div className="container mx-auto py-6">
-      <div className="flex justify-between items-center mb-6">
-        <h1 className="text-2xl font-bold">Courses Management</h1>
-        <Button onClick={() => setIsCreateDialogOpen(true)}>
-          <Plus className="w-4 h-4 mr-2" />
+    <div className="container mx-auto py-4 sm:py-6 px-2 sm:px-4">
+      <div className="flex flex-col sm:flex-row sm:justify-between sm:items-center gap-4 mb-4 sm:mb-6">
+        <h1 className="text-xl sm:text-2xl font-bold">Courses Management</h1>
+        <Button
+          size="sm"
+          className="sm:text-base"
+          onClick={() => setIsCreateDialogOpen(true)}
+        >
+          <Plus className="w-3 h-3 sm:w-4 sm:h-4 mr-1 sm:mr-2" />
           Create New Course
         </Button>
       </div>
@@ -136,13 +139,14 @@ export default function CoursesManagement() {
           <TableBody>
             {fetching && fetchType == "listCourses" && (
               <TableRow>
-                <TableCell colSpan={6} className="text-center">
+                <TableCell colSpan={7} className="text-center">
                   <Loading />
                 </TableCell>
               </TableRow>
             )}
             {!fetching &&
               fetchType != "listCourses" &&
+              courses.length > 0 &&
               courses.map((course) => (
                 <CourseListItem
                   key={course.id}
@@ -150,6 +154,21 @@ export default function CoursesManagement() {
                   setCourses={setCourses}
                 />
               ))}
+            {!fetching &&
+              fetchType != "listCourses" &&
+              courses.length === 0 && (
+                <TableRow>
+                  <TableCell colSpan={7} className="h-24 text-center">
+                    <div className="flex flex-col items-center justify-center gap-2">
+                      <BookOpen className="h-8 w-8 text-muted-foreground" />
+                      <p className="text-muted-foreground">No courses found</p>
+                      <p className="text-sm text-muted-foreground">
+                        Create your first course to get started.
+                      </p>
+                    </div>
+                  </TableCell>
+                </TableRow>
+              )}
           </TableBody>
         </Table>
       </div>

@@ -97,171 +97,175 @@ const UsersManagement = () => {
     }
   };
 
-  
-
   return (
-    <Card>
-      <CardHeader className="flex flex-row items-center justify-between">
-        <CardTitle>Users Management</CardTitle>
-        <div className="flex items-center gap-4">
-          <div className="relative flex items-center">
-            <Search className="absolute left-2 h-4 w-4 text-muted-foreground" />
-            <Input
-              placeholder="Search by name, user_id, or phone"
-              value={searchInput}
-              onChange={(e) => setSearchInput(e.target.value)}
-              className="pl-8 w-[300px]"
-              onKeyDown={(e) => {
-                if (e.key === "Enter") {
+    <div className="container mx-auto py-4 sm:py-6 px-2 sm:px-4">
+      <Card>
+        <CardHeader className="flex flex-col sm:flex-row sm:items-center sm:justify-between gap-4">
+          <CardTitle className="text-xl sm:text-2xl">
+            Users Management
+          </CardTitle>
+          <div className="flex items-center gap-3 sm:gap-4">
+            <div className="relative flex items-center flex-1 sm:flex-none">
+              <Search className="absolute left-2 h-4 w-4 text-muted-foreground" />
+              <Input
+                placeholder="Search by name, user_id, or phone"
+                value={searchInput}
+                onChange={(e) => setSearchInput(e.target.value)}
+                className="pl-8 w-full sm:w-[300px]"
+                onKeyDown={(e) => {
+                  if (e.key === "Enter") {
+                    setSearchQuery(searchInput);
+                    setCurrentPage(1);
+                    fetchUsers();
+                  }
+                }}
+              />
+              <Button
+                variant="ghost"
+                size="icon"
+                className="absolute right-2"
+                onClick={() => {
                   setSearchQuery(searchInput);
                   setCurrentPage(1);
                   fetchUsers();
-                }
-              }}
-            />
-            <Button
-              variant="ghost"
-              size="icon"
-              className="absolute right-2"
-              onClick={() => {
-                setSearchQuery(searchInput);
-                setCurrentPage(1);
-                fetchUsers();
-              }}
-            >
-              <Search className="h-4 w-4" />
-            </Button>
+                }}
+              >
+                <Search className="h-4 w-4" />
+              </Button>
+            </div>
           </div>
-        </div>
-      </CardHeader>
-      <CardContent>
-        <Table>
-          <TableHeader>
-            <TableRow>
-              <TableHead>ID</TableHead>
-              <TableHead>Name</TableHead>
-              <TableHead>User ID</TableHead>
-              <TableHead>Email</TableHead>
-              <TableHead>Phone</TableHead>
-              <TableHead>Role</TableHead>
-              <TableHead>Dummy Purchase</TableHead>
-              <TableHead>Actions</TableHead>
-            </TableRow>
-          </TableHeader>
-          <TableBody>
-            {fetching && fetchType === "fetchUsers" ? (
+        </CardHeader>
+        <CardContent>
+          <Table>
+            <TableHeader>
               <TableRow>
-                <TableCell colSpan={8} className="text-center py-8">
-                  <Loading />
-                </TableCell>
+                <TableHead>ID</TableHead>
+                <TableHead>Name</TableHead>
+                <TableHead>User ID</TableHead>
+                <TableHead>Email</TableHead>
+                <TableHead>Phone</TableHead>
+                <TableHead>Role</TableHead>
+                <TableHead>Dummy Purchase</TableHead>
+                <TableHead>Actions</TableHead>
               </TableRow>
-            ) : users.length === 0 ? (
-              <TableRow>
-                <TableCell
-                  colSpan={8}
-                  className="text-center py-8 text-muted-foreground"
-                >
-                  No users found
-                </TableCell>
-              </TableRow>
-            ) : (
-              users.map((user) => (
-                <TableRow key={user.id}>
-                  <TableCell>{user.id}</TableCell>
-                  <TableCell>{user.name}</TableCell>
-                  <TableCell>{user.user_id}</TableCell>
-                  <TableCell>{user.email}</TableCell>
-                  <TableCell>{user.phone}</TableCell>
-                  <TableCell>
-                    <Badge
-                      className={
-                        user.is_admin ? "bg-purple-500" : "bg-blue-500"
-                      }
-                    >
-                      {user.is_admin ? "Admin" : "User"}
-                    </Badge>
-                  </TableCell>
-                  <TableCell>
-                    <Badge
-                      className={
-                        user.has_dummy_purchase ? "bg-green-500" : "bg-red-500"
-                      }
-                    >
-                      {user.has_dummy_purchase ? "Yes" : "No"}
-                    </Badge>
-                  </TableCell>
-                  <TableCell>
-                    <div className="flex space-x-2">
-                      <Button
-                        variant="outline"
-                        size="icon"
-                        onClick={() => {
-                          setSelectedUser(user);
-                          setIsDialogOpen(true);
-                        }}
-                      >
-                        <Key className="h-4 w-4" />
-                      </Button>
-                    </div>
+            </TableHeader>
+            <TableBody>
+              {fetching && fetchType === "fetchUsers" ? (
+                <TableRow>
+                  <TableCell colSpan={8} className="text-center py-8">
+                    <Loading />
                   </TableCell>
                 </TableRow>
-              ))
-            )}
-          </TableBody>
-        </Table>
-        {!fetching && users.length > 0 && (
-          <Pagination
-            currentPage={currentPage}
-            hasNext={hasNext}
-            hasPrev={hasPrev}
-            total={totalItems}
-            pageSize={pageSize}
-            onPageChange={setCurrentPage}
-            itemsSize={users.length}
-          />
-        )}
-      </CardContent>
-
-      <Dialog open={isDialogOpen} onOpenChange={setIsDialogOpen}>
-        <DialogContent>
-          <DialogHeader>
-            <DialogTitle>Change User Password</DialogTitle>
-          </DialogHeader>
-          <form
-            onSubmit={(e) => {
-              e.preventDefault();
-              handlePasswordChange();
-            }}
-            className="space-y-4"
-          >
-            <Input
-              placeholder="New Password"
-              type="password"
-              value={formData.password || ""}
-              onChange={(e) =>
-                setFormData({ ...formData, password: e.target.value })
-              }
-              required
+              ) : users.length === 0 ? (
+                <TableRow>
+                  <TableCell
+                    colSpan={8}
+                    className="text-center py-8 text-muted-foreground"
+                  >
+                    No users found
+                  </TableCell>
+                </TableRow>
+              ) : (
+                users.map((user) => (
+                  <TableRow key={user.id}>
+                    <TableCell>{user.id}</TableCell>
+                    <TableCell>{user.name}</TableCell>
+                    <TableCell>{user.user_id}</TableCell>
+                    <TableCell>{user.email}</TableCell>
+                    <TableCell>{user.phone}</TableCell>
+                    <TableCell>
+                      <Badge
+                        className={
+                          user.is_admin ? "bg-purple-500" : "bg-blue-500"
+                        }
+                      >
+                        {user.is_admin ? "Admin" : "User"}
+                      </Badge>
+                    </TableCell>
+                    <TableCell>
+                      <Badge
+                        className={
+                          user.has_dummy_purchase
+                            ? "bg-green-500"
+                            : "bg-red-500"
+                        }
+                      >
+                        {user.has_dummy_purchase ? "Yes" : "No"}
+                      </Badge>
+                    </TableCell>
+                    <TableCell>
+                      <div className="flex space-x-2">
+                        <Button
+                          variant="outline"
+                          size="icon"
+                          onClick={() => {
+                            setSelectedUser(user);
+                            setIsDialogOpen(true);
+                          }}
+                        >
+                          <Key className="h-4 w-4" />
+                        </Button>
+                      </div>
+                    </TableCell>
+                  </TableRow>
+                ))
+              )}
+            </TableBody>
+          </Table>
+          {!fetching && users.length > 0 && (
+            <Pagination
+              currentPage={currentPage}
+              hasNext={hasNext}
+              hasPrev={hasPrev}
+              total={totalItems}
+              pageSize={pageSize}
+              onPageChange={setCurrentPage}
+              itemsSize={users.length}
             />
-            <DialogFooter>
-              <Button
-                type="button"
-                variant="outline"
-                onClick={() => setIsDialogOpen(false)}
-              >
-                Cancel
-              </Button>
-              <Button
-                type="submit"
-                loading={fetching && fetchType === "updatePassword"}
-              >
-                Update Password
-              </Button>
-            </DialogFooter>
-          </form>
-        </DialogContent>
-      </Dialog>
-    </Card>
+          )}
+        </CardContent>
+
+        <Dialog open={isDialogOpen} onOpenChange={setIsDialogOpen}>
+          <DialogContent>
+            <DialogHeader>
+              <DialogTitle>Change User Password</DialogTitle>
+            </DialogHeader>
+            <form
+              onSubmit={(e) => {
+                e.preventDefault();
+                handlePasswordChange();
+              }}
+              className="space-y-4"
+            >
+              <Input
+                placeholder="New Password"
+                type="password"
+                value={formData.password || ""}
+                onChange={(e) =>
+                  setFormData({ ...formData, password: e.target.value })
+                }
+                required
+              />
+              <DialogFooter>
+                <Button
+                  type="button"
+                  variant="outline"
+                  onClick={() => setIsDialogOpen(false)}
+                >
+                  Cancel
+                </Button>
+                <Button
+                  type="submit"
+                  loading={fetching && fetchType === "updatePassword"}
+                >
+                  Update Password
+                </Button>
+              </DialogFooter>
+            </form>
+          </DialogContent>
+        </Dialog>
+      </Card>
+    </div>
   );
 };
 

@@ -34,7 +34,7 @@ interface CourseEbookData {
 
 const DashboardPage = () => {
   const [currentFilter, setCurrentFilter] = useState("all");
-  const { authToken } = useAuth();
+  const { authToken, user } = useAuth();
   const { fetchType, fetching, makeApiCall } = useAPICall();
   const [isFetched, setIsFetched] = useState(false);
   const [page, setPage] = useState(1);
@@ -94,7 +94,7 @@ const DashboardPage = () => {
     <div className="container px-4 mx-auto py-8">
       {/* Welcome Section */}
       <div className="mb-8">
-        <h1 className="text-3xl font-bold mb-2">Welcome back, User!</h1>
+        <h1 className="text-3xl font-bold mb-2">Welcome back, {user.name}</h1>
         <p className="text-gray-600">
           Track your progress and continue learning.
         </p>

@@ -131,7 +131,7 @@ const EbookCard = ({
         <h3 className="font-semibold text-lg mb-2 line-clamp-1">{title}</h3>
         <p className="text-gray-600 text-sm line-clamp-2 mb-2">{description}</p>
         {!isHomePage && (
-          <p className="font-bold text-brand-primary">${price.toFixed(2)}</p>
+          <p className="font-bold text-brand-primary">₹{price.toFixed(2)}</p>
         )}
       </CardContent>
       <CardFooter className="border-t pt-0 pb-4">

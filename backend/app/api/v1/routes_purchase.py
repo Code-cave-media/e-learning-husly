@@ -17,78 +17,125 @@ from schemas.common import PaginationResponse
 from core.deps import is_admin_user
 from crud.user_dashboard import get_item_by_id_and_type
 import random
+from core.config import settings
+import httpx, os
+import uuid
+from pprint import pprint
+import traceback
 router = APIRouter()
 
 @router.post('/checkout')
 def purchase_course(data: PaymentRequest,db:Session=Depends(get_db)):
-  # get the course or ebook by id
-  db_item = None
-  if data.affiliate_user_id:
-    affiliate_user = get_user_by_user_id(db,data.affiliate_user_id)
-    if not affiliate_user:
-      raise HTTPException(detail="Affiliate user not found",status_code=404)
-  if data.item_type =='course':
-    db_item = get_course_by_id(db,data.item_id)
-    if not db_item:
-      raise HTTPException(detail="Course not found",status_code=404)
-  else:
-    db_item = get_ebook_by_id(db,data.item_id)
-    if not db_item:
-      raise HTTPException(detail="EBook not found",status_code=404)
-  
-  # Verify coupon
-  discount = 0
-  db_coupon = None
-  if data.coupon:
-    db_coupon = get_coupon_by_code(db,data.coupon)
-    if not db_coupon:
-        raise HTTPException(status_code=400,detail="Coupon code not found")
-    if db_coupon.no_of_access <= 0:
-        raise HTTPException(status_code=400,detail="Coupon code has no uses left")
-    if  db_coupon.type=='fixed' and db_coupon.min_purchase and db_item.price < db_coupon.min_purchase:
-          raise HTTPException(status_code=400,detail="Minimum purchase amount not met")
-    if db_coupon.type == 'fixed':
-      discount = db_coupon.discount
-    else :
-      discount = db_item.price * (db_coupon.discount/ 100)
-  # verify is the user already exist if new user 
-  
-  if data.user_id:
-    user = get_user_by_user_id(db,data.user_id)
-    if not user:
-      raise HTTPException(detail="User not found",status_code=404)
-  else:
-    existing_user = get_user_by_email(db,data.email)
-    if existing_user:
-      raise HTTPException(detail="User with this email already exist",status_code=400)
-    user =  get_temp_user_by_email(db,data.email)
-    if user:
-      user = update_temp_user(db,user,{'email':data.email,"password":data.password,"phone":data.phone,"name":data.name})
+    # get the course or ebook by id
+    db_item = None
+    if data.affiliate_user_id:
+        affiliate_user = get_user_by_user_id(db,data.affiliate_user_id)
+        if not affiliate_user:
+            raise HTTPException(detail="Affiliate user not found",status_code=404)
+    if data.item_type =='course':
+        db_item = get_course_by_id(db,data.item_id)
+        if not db_item:
+            raise HTTPException(detail="Course not found",status_code=404)
     else:
-      user = create_temp_user(db,{'email':data.email,"password":data.password,"phone":data.phone,"name":data.name})
-  user_id = user.id
+        db_item = get_ebook_by_id(db,data.item_id)
+        if not db_item:
+            raise HTTPException(detail="EBook not found",status_code=404)
 
-  # create order
-  razorpay_order  = client.order.create({
-    "amount":db_item.price - discount,
-    "currency": "INR",
-    "receipt": str(user_id)
-  })
-  transaction_id = razorpay_order['id']
-  # create transaction
-  db_transaction_processing = create_transaction_processing(db,{
-    "transaction_id" : transaction_id,
-    "item_id":data.item_id,
-    "item_type":data.item_type,
-    "affiliate_user_id":affiliate_user.id if data.affiliate_user_id else None,
-    "user_id":user_id,
-    "is_new_user":True if data.user_id is None else False,
-    "amount":db_item.price,
-    "discount":discount,
-    "coupon_code":data.coupon,
-    "coupon_type":'fixed' if db_coupon and db_coupon.type == 'fixed' else 'percentage'
-  })
-  return razorpay_order
+    # Verify coupon
+    discount = 0
+    db_coupon = None
+    print(data.coupon)
+    if data.coupon:
+        db_coupon = get_coupon_by_code(db,data.coupon)
+        if not db_coupon:
+            raise HTTPException(status_code=400,detail="Coupon code not found")
+        if db_coupon.no_of_access <= 0:
+            raise HTTPException(status_code=400,detail="Coupon code has no uses left")
+        if  db_coupon.type=='fixed' and db_coupon.min_purchase and db_item.price < db_coupon.min_purchase:
+            raise HTTPException(status_code=400,detail="Minimum purchase amount not met")
+        if db_coupon.type == 'percentage':
+            discount = (db_item.price * db_coupon.discount) / 100
+        elif db_coupon.type == 'flat':
+            discount = db_coupon.discount
+    else :
+        discount = 0
+
+    if data.user_id:
+        user = get_user_by_user_id(db,data.user_id)
+        if not user:
+            raise HTTPException(detail="User not found",status_code=404)
+    else:
+        existing_user = get_user_by_email(db,data.email)
+        if existing_user:
+            raise HTTPException(detail="User with this email already exist",status_code=400)
+        user =  get_temp_user_by_email(db,data.email)
+        if user:
+            user = update_temp_user(db,user,{'email':data.email,"password":data.password,"phone":data.phone,"name":data.name})
+        else:
+            user = create_temp_user(db,{'email':data.email,"password":data.password,"phone":data.phone,"name":data.name})
+    user_id = user.id
+    order_id = f"order_{uuid.uuid4().hex[:24]}"
+
+    payload = {
+        "order_id": order_id,
+        "order_amount": db_item.price - discount,
+        "order_currency": "INR",
+        "customer_details": {
+            "customer_id": str(user_id),
+            "customer_email": data.email,
+            "customer_phone": data.phone,
+            "customer_name": data.name,
+        }
+    }
+    headers = {
+        "x-client-id": settings.CASHFREE_APP_ID,
+        "x-client-secret": settings.CASHFREE_SECRET_KEY,
+        "x-api-version": "2022-09-01",  # Required version header
+        "Content-Type": "application/json"
+    }
+    base_url = settings.CASHFREE_TEST_BASE_URL if not settings.PRODUCTION else settings.CASHFREE_PROD_BASE_URL
+    response = httpx.post(f"{base_url}/orders", headers=headers, json=payload)
+    if response.status_code != 200:
+        raise HTTPException(status_code=response.status_code, detail=response.text)
+    response_data = response.json()
+    payment_session_id = response_data["payment_session_id"]
+    order_id = response_data["order_id"]
+    print(discount)
+    create_transaction_processing(db, {
+        "transaction_id": order_id,
+        "item_id": data.item_id,
+        "item_type": data.item_type,
+        "affiliate_user_id":affiliate_user.id if data.affiliate_user_id else None,
+        "user_id": user_id,
+        "is_new_user": data.user_id is None,
+        "amount": db_item.price,
+        "discount": discount,
+        "coupon_code": data.coupon,
+        "coupon_type": 'fixed' if db_coupon and db_coupon.type == 'fixed' else 'percentage'
+    })
+    return {"payment_session_id": payment_session_id, "transaction_id": order_id}
+
+# create order
+#   razorpay_order  = client.order.create({
+#     "amount":db_item.price - discount,
+#     "currency": "INR",
+#     "receipt": str(user_id)
+#   })
+#   transaction_id = razorpay_order['id']
+#   # create transaction
+#   db_transaction_processing = create_transaction_processing(db,{
+#     "transaction_id" : transaction_id,
+#     "item_id":data.item_id,
+#     "item_type":data.item_type,
+#     "affiliate_user_id":affiliate_user.id if data.affiliate_user_id else None,
+#     "user_id":user_id,
+#     "is_new_user":True if data.user_id is None else False,
+#     "amount":db_item.price,
+#     "discount":discount,
+#     "coupon_code":data.coupon,
+#     "coupon_type":'fixed' if db_coupon and db_coupon.type == 'fixed' else 'percentage'
+#   })
+#   return razorpay_order
 
 @router.post("/webhook/payment")
 async def payment_webhook(request: Request, db: Session = Depends(get_db)):
@@ -141,7 +188,7 @@ async def payment_webhook(request: Request, db: Session = Depends(get_db)):
             if temp_user:
                 db.delete(temp_user)
         # Create transaction for all types of events
-        transaction = create_transaction(
+        transaction = create_razorpay_transaction(
             db=db,
             transaction_id=payment_entity['id'],
             db_purchase=purchase,
@@ -172,6 +219,110 @@ async def payment_webhook(request: Request, db: Session = Depends(get_db)):
         if purchase:
             db.delete(purchase)
         return {"payment_status": "error", "detail": str(e)}
+
+
+@router.post("/cashfree-webhook")
+async def cashfree_webhook(request: Request, db: Session = Depends(get_db)):
+    try:
+        data = await request.json()
+        event = data.get("type")  # 'type' instead of 'event' in Cashfree
+        order_data = data.get("data", {}).get("order", {})
+        payment_info = data.get("data", {}).get("payment", {})
+        customer_info =  data.get("data", {}).get("customer_details", {})
+        pprint(payment_info)
+        pprint(order_data)
+        pprint(data)
+        order_id = order_data.get("order_id")
+        payment_status = payment_info.get("payment_status")
+        db_transaction_processing = get_transaction_processing_by_id(db, order_id)
+        purchase = None
+        user = None
+        affiliate_account = None
+        new_user_affiliate_account = None
+        db_affiliate_link_purchase = None
+        db_transaction = None
+        temp_user = None
+        if not db_transaction_processing: return  {"payment_status": "error", "detail": "Transaction processing not found"}
+        db_item = get_item_by_id_and_type(db, db_transaction_processing.item_id, db_transaction_processing.item_type)
+        if payment_status == "SUCCESS":
+            # Handle new user
+            if db_transaction_processing.is_new_user:
+                temp_user = get_temp_user_by_id(db, db_transaction_processing.user_id)
+                user = create_user(
+                    db,
+                    UserCreate(
+                        email=temp_user.email,
+                        password=temp_user.password,
+                        name=temp_user.name,
+                        phone=temp_user.phone
+                    ),
+                    is_hashed_pw=True)
+                new_user_affiliate_account = create_affiliate_account(db, user.id)
+                db_transaction_processing.user_id = user.id
+
+            if db_transaction_processing.affiliate_user_id:
+                affiliate_account = get_affiliate_account_by_user_id(db, db_transaction_processing.affiliate_user_id)
+                if affiliate_account:
+                    affiliate_account = add_purchase_commission_to_affiliate_account(db,affiliate_account,db_item.commission,commit=False)
+
+                db_affiliate_link = get_affiliate_link_by_all(db,db_transaction_processing.affiliate_user_id,db_transaction_processing.item_id, db_transaction_processing.item_type)
+                db_affiliate_link_purchase = add_purchase_to_affiliate_link(db,db_affiliate_link,db_item.commission,commit=False)
+                
+            # Create purchase
+            purchase = create_purchase(db, db_transaction_processing, commit=False)
+            
+            db.delete(db_transaction_processing)
+            if temp_user:
+                print('deleting temp user',temp_user)
+                db.delete(temp_user)
+        
+        db_transaction = get_transaction_by_transaction_id(db, order_id)
+        if not db_transaction:
+            db_transaction = create_cashfree_transaction(
+                    db=db,
+                    transaction_id=order_id,
+                    txn_data=payment_info,
+                    customer_info=customer_info,
+                    provider="cashfree",
+                    item_id=db_transaction_processing.item_id,
+                    item_type=db_transaction_processing.item_type,
+                    commit=False
+                )
+            db.add(db_transaction)
+        else:
+            db_transaction = get_transaction_by_transaction_id(db, order_id)
+            if db_transaction:
+                update_cashfree_transaction(db,db_transaction, payment_info, 'cashfree',commit=False)
+        db.commit()
+        if purchase:
+            purchase.transaction_id = db_transaction.id if db_transaction else None
+            print('added transaction Id',db_transaction,db_transaction.id)
+            db.add(purchase)
+        db.commit()
+        if affiliate_account:   
+            db.refresh(affiliate_account)
+        if new_user_affiliate_account:
+            db.refresh(new_user_affiliate_account)
+        if db_affiliate_link_purchase:
+            db.refresh(db_affiliate_link_purchase)
+        if db_transaction:
+            db.refresh(db_transaction)
+        if purchase:
+            db.refresh(purchase)
+        return {
+            "payment_status": event,
+            "transaction_id": order_id
+        }
+
+    except Exception as e:
+        traceback.print_exc()
+        print(f"Error processing Cashfree webhook: {e}")
+        db.rollback()
+        if user:
+            db.delete(user)
+            db.commit() 
+        return {"payment_status": "error", "detail": str(e)}
+
 
 @router.get('/checkout/{type}/{item_id}')
 def get_transaction(type: str,
@@ -255,25 +406,19 @@ def get_transaction_history(db:Session=Depends(get_db),current_user:User=Depends
 @router.post("/create")
 def create_purchase_from_admin(data:PurchaseCreateRequest,db:Session=Depends(get_db),current_user:User=Depends(is_admin_user)):
     #verify user and items first
-    print('1')
     if data.user_id:
-        print('2')
         id = str(data.user_id) if isinstance(data.user_id,int) else data.user_id
         purchase_user = get_user_by_user_id(db,id)
         if not purchase_user:
             id = int(data.user_id) if isinstance(data.user_id,str) else data.user_id
-            print('3')
             purchase_user = get_user_by_id(db,id)
             if not purchase_user:
                 raise HTTPException(status_code=status.HTTP_404_NOT_FOUND, detail="User not found")
-    print('4')
     db_item = get_item_by_id_and_type(db,data.item_id, data.item_type)
     if not db_item:
         raise HTTPException(status_code=status.HTTP_404_NOT_FOUND, detail="Course not found")
-    print('6')
     affiliate_user = None
     if data.affiliate_user_id:
-        print('7')
         id = str(data.user_id) if isinstance(data.user_id,int) else data.user_id
         affiliate_user = get_user_by_user_id(db,id)
         if not affiliate_user:
@@ -281,30 +426,23 @@ def create_purchase_from_admin(data:PurchaseCreateRequest,db:Session=Depends(get
             affiliate_user = get_user_by_id(db,id)
             if not affiliate_user:
                 raise HTTPException(status_code=status.HTTP_404_NOT_FOUND, detail="User not found") 
-    print('8')
     db_purchase = exist_purchase = None
     if data.user_id :
         db_purchase = exist_purchase = get_purchase_by_all(db,purchase_user.id,None,data.item_id,data.item_type)
-    print('9',db_purchase)
     if db_purchase:
-        print('enter')
         if affiliate_user and not db_purchase.affiliate_user_id:
-            print('updated affiliate user')
             db_purchase.affiliate_user_id = affiliate_user.id
         if purchase_user and not db_purchase.purchased_user_id:
-            print('updated purchase user')
             db_purchase.purchased_user_id = purchase_user.id
     else:
-        print('not enter')
+        data.amount =  db_item.price
         db_purchase = create_purchase(db,data,commit=False) 
-    print('10')
     affiliate_account = db_link = db_clicks = db_link_purchase =  None
     total_links = []
     if affiliate_user:
         affiliate_account = get_or_create_affiliate_account(db,affiliate_user.id)
         affiliate_account = add_purchase_commission_to_affiliate_account(db,affiliate_account,db_item.commission,commit=False)
         db_link = get_or_create_affiliate_link(db,affiliate_user.id,data.item_id,data.item_type)
-        print('data : ',data)
         if not data.user_id:
             print('enter',random.randint(1,4))
             for i in range(random.randint(1,4)):
@@ -316,23 +454,16 @@ def create_purchase_from_admin(data:PurchaseCreateRequest,db:Session=Depends(get
             db_clicks = add_clicks_to_affiliate_link(db,db_link)
             total_links.append(db_clicks)
         db_link_purchase = add_purchase_to_affiliate_link(db,db_link,db_item.commission,commit=False)
-    print('12')
     if not exist_purchase:
-        print('13')
         db.add(db_purchase)
-    print('14')
     db.commit()
     db.refresh(db_purchase)
-    print('15')
     if affiliate_account:
-        print('16')
         db.refresh(affiliate_account)
     if total_links:
-        print('17')
         for link in total_links:
             db.refresh(link)
     if db_link_purchase:
-        print('18')
         db.refresh(db_link_purchase)
     response = PurchaseResponse.from_orm(db_purchase).dict()
     if data.item_type == 'course':

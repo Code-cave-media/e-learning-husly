@@ -4,11 +4,12 @@ import hmac
 import hashlib
 from datetime import datetime
 from crud.utils import to_pagination_response
-from schemas.purchase import TransactionResponse,PurchaseResponse
+from schemas.purchase import TransactionResponse,PurchaseResponse,ListTransactionResponse
 from sqlalchemy import or_
 from models.user import User
 from schemas.ebook import EBookResponse
 from schemas.course import CourseResponse
+import json
 def get_purchase(db: Session, purchase_id: int):
     return db.query(Purchase).filter(Purchase.id == purchase_id).first()
 
@@ -50,7 +51,11 @@ def create_purchase(db: Session, data: dict, commit=True):
         'purchased_user_id':data.user_id if data.user_id else None,
         'item_id':data.item_id,
         'item_type':data.item_type,
-        'affiliate_user_id':data.affiliate_user_id if data.affiliate_user_id else None
+        'affiliate_user_id':data.affiliate_user_id if data.affiliate_user_id else None,
+        "amount": data.amount if hasattr(data, 'amount') else None,
+        "discount": data.discount if hasattr(data, 'discount') else None,
+        "coupon_code": data.coupon_code if hasattr(data, 'coupon_code') else None,
+        "coupon_type":data.coupon_type if hasattr(data, 'coupon_type') else None,
     }
     purchase = Purchase(**create_data)
     db.add(purchase)
@@ -59,7 +64,7 @@ def create_purchase(db: Session, data: dict, commit=True):
         db.refresh(purchase)
     return purchase
 
-def create_transaction(db: Session, transaction_id: str, db_purchase: Purchase | None, txn_data: dict, commit=True):
+def create_razorpay_transaction(db: Session, transaction_id: str, db_purchase: Purchase | None, txn_data: dict, commit=True):
     transaction = Transaction(
         purchase_id=db_purchase.id if db_purchase else None,
         transaction_id=transaction_id,
@@ -85,6 +90,89 @@ def create_transaction(db: Session, transaction_id: str, db_purchase: Purchase |
         db.commit()
         db.refresh(transaction)
     return transaction
+
+def create_cashfree_transaction(
+    db: Session,
+    transaction_id: str,
+    txn_data: dict,
+    customer_info :dict,
+    provider: str = "cashfree",
+    item_id: int | None = None,
+    item_type: str | None = None,
+    commit: bool = True
+):
+    # Detect method from nested payment_method
+    raw_method_data = txn_data.get("payment_method", {})  # e.g., {'upi': {...}}
+    method = list(raw_method_data.keys())[0] if isinstance(raw_method_data, dict) and raw_method_data else None
+
+    # Extract VPA (only relevant if UPI is used)
+    vpa = None
+    if "upi" in raw_method_data:
+        vpa = raw_method_data["upi"].get("upi_id") or raw_method_data["upi"].get("vpa")
+
+    transaction = Transaction(
+        transaction_id=transaction_id,
+        status=txn_data.get("status") or txn_data.get("payment_status"),
+        provider=provider,
+        utr_id=txn_data.get("bank_reference",None),
+        method=method,
+        vpa=vpa,
+        email=customer_info.get("customer_email"),
+        contact=customer_info.get("customer_phone"),
+        currency=txn_data.get("payment_currency"),
+        amount=txn_data.get("payment_amount"),
+        base_amount=txn_data.get("base_amount"),
+        fee=txn_data.get("payment_charge"),  # Cashfree-specific field
+        tax=txn_data.get("tax"),
+        error_code=txn_data.get("error_code"),
+        error_description=txn_data.get("error_description"),
+        created_at=datetime.utcnow(),
+        item_id=item_id,
+        item_type=item_type
+    )
+
+    db.add(transaction)
+    if commit:
+        db.commit()
+        db.refresh(transaction)
+
+    return transaction
+
+def update_cashfree_transaction(
+    db: Session,
+    db_transaction: Transaction,
+    txn_data: dict,
+    provider: str = "cashfree",
+    commit: bool = True
+):
+    # Get method like 'upi', 'card', etc.
+    raw_method_data = txn_data.get("payment_method", {})
+    method = list(raw_method_data.keys())[0] if isinstance(raw_method_data, dict) and raw_method_data else None
+
+    # Extract VPA if payment method is UPI
+    vpa = None
+    if "upi" in raw_method_data:
+        vpa = raw_method_data["upi"].get("upi_id") or raw_method_data["upi"].get("vpa")
+
+    db_transaction.status = txn_data.get("status") or txn_data.get("payment_status")
+    db_transaction.provider = provider
+    db_transaction.utr_id =  txn_data.get("bank_reference",None)
+    db_transaction.method = method
+    db_transaction.vpa = vpa
+    db_transaction.currency = txn_data.get("payment_currency")
+    db_transaction.amount = txn_data.get("payment_amount")
+    db_transaction.base_amount = txn_data.get("base_amount")
+    db_transaction.fee = txn_data.get("payment_charge")
+    db_transaction.tax = txn_data.get("tax")
+    db_transaction.error_code = txn_data.get("error_code")
+    db_transaction.error_description = txn_data.get("error_description")
+
+    if commit:
+        db.commit()
+        db.refresh(db_transaction)
+
+    return db_transaction
+
 
 def update_purchase(db: Session, purchase_id: int, updates: dict):
     purchase = get_purchase(db, purchase_id)
@@ -181,6 +269,8 @@ def get_purchases(
                 items[i]['item'] = EBookResponse.from_orm(db_item)
             elif item.get('item_type') == "course":
                 items[i]['item'] = CourseResponse.from_orm(db_item)
+        if item.get('transaction'):
+            item['transaction']  =ListTransactionResponse.from_orm(item.get('transaction'))
     data['items'] = items
     return data
 

@@ -19,6 +19,7 @@ import {
   HeadsetIcon,
   ChevronLeft,
   ChevronRight,
+  Package,
 } from "lucide-react";
 import {
   Table,
@@ -219,16 +220,16 @@ const AffiliateDashboardPage = () => {
       amount: withdrawForm.amount,
     };
     if (withdrawMethod == "upi") {
-      data.upi_id = dashboardData.withdraw_account_details.upi_details.upiId;
+      data.upi_id = dashboardData.withdraw_account_details.upi_details?.upiId;
     } else {
       data.bank_name =
-        dashboardData.withdraw_account_details.bank_details.bank_name;
+        dashboardData.withdraw_account_details.bank_details?.bank_name;
       data.account_number =
-        dashboardData.withdraw_account_details.bank_details.account_number;
+        dashboardData.withdraw_account_details.bank_details?.account_number;
       data.ifsc_code =
-        dashboardData.withdraw_account_details.bank_details.ifsc_code;
+        dashboardData.withdraw_account_details.bank_details?.ifsc_code;
       data.account_name =
-        dashboardData.withdraw_account_details.bank_details.account_name;
+        dashboardData.withdraw_account_details.bank_details?.account_name;
     }
     const response = await makeApiCall(
       "POST",
@@ -243,9 +244,10 @@ const AffiliateDashboardPage = () => {
         ...prev,
         withdraw_summary: {
           ...prev.withdraw_summary,
-          balance: prev.withdraw_summary.balance - response.data.amount,
+          balance: (prev.withdraw_summary.balance || 0) - response.data.amount,
           pending_withdraw:
-            prev.withdraw_summary.pending_withdraw + response.data.amount,
+            (prev.withdraw_summary.pending_withdraw || 0) +
+            response.data.amount,
         },
         withdraw_history: {
           ...prev.withdraw_history,
@@ -343,7 +345,7 @@ const AffiliateDashboardPage = () => {
                         Total Earnings
                       </p>
                       <h3 className="text-2xl font-bold">
-                        $
+                        ₹
                         {dashboardData.overview.total_earnings.value.toFixed(2)}
                       </h3>
                     </div>
@@ -474,40 +476,54 @@ const AffiliateDashboardPage = () => {
               <h3 className="text-lg font-semibold mb-4">
                 12 Month Earnings Overview
               </h3>
-              <div className="h-[400px] md:h-[300px] -mx-4 md:mx-0">
-                <ResponsiveContainer width="100%" height="100%">
-                  <LineChart data={dashboardData.monthly_earnings}>
-                    <CartesianGrid
-                      strokeDasharray="3 3"
-                      className="stroke-muted"
-                    />
-                    <XAxis
-                      dataKey="month"
-                      tickFormatter={formatMonth}
-                      tick={{ fontSize: 12 }}
-                      interval="preserveStartEnd"
-                    />
-                    <YAxis
-                      tickFormatter={(value) => `$${value}`}
-                      tick={{ fontSize: 12 }}
-                    />
-                    <Tooltip
-                      labelFormatter={formatMonth}
-                      formatter={(value) => [`$${value}`, "Earnings"]}
-                      contentStyle={{ fontSize: 12 }}
-                    />
-                    <Line
-                      type="monotone"
-                      dataKey="earnings"
-                      stroke="#0088FE"
-                      strokeWidth={2}
-                      dot={{ r: 4 }}
-                      activeDot={{ r: 6 }}
-                      animationDuration={5000}
-                    />
-                  </LineChart>
-                </ResponsiveContainer>
-              </div>
+              {dashboardData.monthly_earnings.length > 0 ? (
+                <div className="h-[400px] md:h-[300px] -mx-4 md:mx-0">
+                  <ResponsiveContainer width="100%" height="100%">
+                    <LineChart data={dashboardData.monthly_earnings}>
+                      <CartesianGrid
+                        strokeDasharray="3 3"
+                        className="stroke-muted"
+                      />
+                      <XAxis
+                        dataKey="month"
+                        tickFormatter={formatMonth}
+                        tick={{ fontSize: 12 }}
+                        interval="preserveStartEnd"
+                      />
+                      <YAxis
+                        tickFormatter={(value) => `₹${value}`}
+                        tick={{ fontSize: 12 }}
+                      />
+                      <Tooltip
+                        labelFormatter={formatMonth}
+                        formatter={(value) => [`₹${value}`, "Earnings"]}
+                        contentStyle={{ fontSize: 12 }}
+                      />
+                      <Line
+                        type="monotone"
+                        dataKey="earnings"
+                        stroke="#0088FE"
+                        strokeWidth={2}
+                        dot={{ r: 4 }}
+                        activeDot={{ r: 6 }}
+                        animationDuration={5000}
+                      />
+                    </LineChart>
+                  </ResponsiveContainer>
+                </div>
+              ) : (
+                <div className="text-center py-12">
+                  <div className="flex flex-col items-center justify-center gap-2">
+                    <BarChart3 className="h-12 w-12 text-muted-foreground" />
+                    <p className="text-muted-foreground font-medium">
+                      No earnings data available
+                    </p>
+                    <p className="text-sm text-muted-foreground">
+                      Start promoting products to see your earnings chart.
+                    </p>
+                  </div>
+                </div>
+              )}
             </CardContent>
           </Card>
 
@@ -517,45 +533,63 @@ const AffiliateDashboardPage = () => {
               <h3 className="text-lg font-semibold mb-4">
                 Clicks & Conversions
               </h3>
-              <div className="h-[400px] md:h-[300px] -mx-4 md:mx-0">
-                <ResponsiveContainer width="100%" height="100%">
-                  <BarChart data={dashboardData.performance}>
-                    <CartesianGrid
-                      strokeDasharray="3 3"
-                      className="stroke-muted"
-                    />
-                    <XAxis
-                      dataKey="date"
-                      tickFormatter={(date) =>
-                        new Date(date).toLocaleDateString()
-                      }
-                      tick={{ fontSize: 12 }}
-                      interval="preserveStartEnd"
-                    />
-                    <YAxis tick={{ fontSize: 12 }} />
-                    <Tooltip
-                      labelFormatter={(date) =>
-                        new Date(date).toLocaleDateString()
-                      }
-                      contentStyle={{ fontSize: 12 }}
-                    />
-                    <Bar
-                      dataKey="clicks"
-                      fill="#8884d8"
-                      name="Clicks"
-                      animationDuration={5000}
-                      radius={[4, 4, 0, 0]}
-                    />
-                    <Bar
-                      dataKey="purchases"
-                      fill="#82ca9d"
-                      name="Conversions"
-                      animationDuration={5000}
-                      radius={[4, 4, 0, 0]}
-                    />
-                  </BarChart>
-                </ResponsiveContainer>
-              </div>
+              {dashboardData.performance.length > 0 &&
+              dashboardData.performance.some(
+                (day) => day.clicks > 0 || day.purchases > 0
+              ) ? (
+                <div className="h-[400px] md:h-[300px] -mx-4 md:mx-0">
+                  <ResponsiveContainer width="100%" height="100%">
+                    <BarChart data={dashboardData.performance}>
+                      <CartesianGrid
+                        strokeDasharray="3 3"
+                        className="stroke-muted"
+                      />
+                      <XAxis
+                        dataKey="date"
+                        tickFormatter={(date) =>
+                          new Date(date).toLocaleDateString()
+                        }
+                        tick={{ fontSize: 12 }}
+                        interval="preserveStartEnd"
+                      />
+                      <YAxis tick={{ fontSize: 12 }} />
+                      <Tooltip
+                        labelFormatter={(date) =>
+                          new Date(date).toLocaleDateString()
+                        }
+                        contentStyle={{ fontSize: 12 }}
+                      />
+                      <Bar
+                        dataKey="clicks"
+                        fill="#8884d8"
+                        name="Clicks"
+                        animationDuration={5000}
+                        radius={[4, 4, 0, 0]}
+                      />
+                      <Bar
+                        dataKey="purchases"
+                        fill="#82ca9d"
+                        name="Conversions"
+                        animationDuration={5000}
+                        radius={[4, 4, 0, 0]}
+                      />
+                    </BarChart>
+                  </ResponsiveContainer>
+                </div>
+              ) : (
+                <div className="text-center py-12">
+                  <div className="flex flex-col items-center justify-center gap-2">
+                    <BarChart3 className="h-12 w-12 text-muted-foreground" />
+                    <p className="text-muted-foreground font-medium">
+                      No performance data available
+                    </p>
+                    <p className="text-sm text-muted-foreground">
+                      Start sharing your affiliate links to see clicks and
+                      conversions.
+                    </p>
+                  </div>
+                </div>
+              )}
             </CardContent>
           </Card>
 
@@ -563,35 +597,54 @@ const AffiliateDashboardPage = () => {
           <Card>
             <CardContent className="p-6">
               <h3 className="text-lg font-semibold mb-4">Recent Activity</h3>
-              <div className="space-y-4">
-                {dashboardData.performance.slice(-5).map((day, index) => (
-                  <div
-                    key={index}
-                    className="flex items-center justify-between"
-                  >
-                    <div className="flex items-center gap-4">
-                      <div className="p-2 bg-primary/10 rounded-full">
-                        <Calendar className="h-4 w-4 text-primary" />
+              {dashboardData.performance.length > 0 &&
+              dashboardData.performance.some(
+                (day) => day.clicks > 0 || day.purchases > 0
+              ) ? (
+                <div className="space-y-4">
+                  {dashboardData.performance.slice(-5).map((day, index) => (
+                    <div
+                      key={index}
+                      className="flex items-center justify-between"
+                    >
+                      <div className="flex items-center gap-4">
+                        <div className="p-2 bg-primary/10 rounded-full">
+                          <Calendar className="h-4 w-4 text-primary" />
+                        </div>
+                        <div>
+                          <p className="font-medium">
+                            {new Date(day.date).toLocaleDateString()}
+                          </p>
+                          <p className="text-sm text-muted-foreground">
+                            {day.clicks} clicks • {Math.ceil(day.conversions)}%
+                            conversions
+                          </p>
+                        </div>
                       </div>
-                      <div>
+                      <div className="text-right">
                         <p className="font-medium">
-                          {new Date(day.date).toLocaleDateString()}
+                          ₹{day.earnings.toFixed(2)}
                         </p>
-                        <p className="text-sm text-muted-foreground">
-                          {day.clicks} clicks • {Math.ceil(day.conversions)}%
-                          conversions
+                        <p className="text-sm text-green-600">
+                          +{day.purchases} sales
                         </p>
                       </div>
                     </div>
-                    <div className="text-right">
-                      <p className="font-medium">${day.earnings.toFixed(2)}</p>
-                      <p className="text-sm text-green-600">
-                        +{day.purchases} sales
-                      </p>
-                    </div>
+                  ))}
+                </div>
+              ) : (
+                <div className="text-center py-8">
+                  <div className="flex flex-col items-center justify-center gap-2">
+                    <Calendar className="h-12 w-12 text-muted-foreground" />
+                    <p className="text-muted-foreground font-medium">
+                      No recent activity
+                    </p>
+                    <p className="text-sm text-muted-foreground">
+                      Your recent affiliate activity will appear here.
+                    </p>
                   </div>
-                ))}
-              </div>
+                </div>
+              )}
             </CardContent>
           </Card>
         </div>
@@ -663,7 +716,7 @@ const AffiliateDashboardPage = () => {
                               <TableCell>{product.clicks}</TableCell>
                               <TableCell>{product.conversions}%</TableCell>
                               <TableCell>
-                                ${product.earnings.toFixed(2)}
+                                ₹{product.earnings.toFixed(2)}
                               </TableCell>
                               <TableCell>
                                 <Button
@@ -696,8 +749,18 @@ const AffiliateDashboardPage = () => {
                     )}
                   </>
                 ) : (
-                  <div className="text-center py-8 text-muted-foreground">
-                    No products found matching "{searchQuery}"
+                  <div className="text-center py-8">
+                    <div className="flex flex-col items-center justify-center gap-2">
+                      <Package className="h-12 w-12 text-muted-foreground" />
+                      <p className="text-muted-foreground font-medium">
+                        No products found
+                      </p>
+                      <p className="text-sm text-muted-foreground">
+                        {searchQuery
+                          ? `No products matching "${searchQuery}"`
+                          : "No products available for promotion yet."}
+                      </p>
+                    </div>
                   </div>
                 )}
               </CardContent>
@@ -708,7 +771,12 @@ const AffiliateDashboardPage = () => {
             {/* Withdraw Summary Cards */}
             <div className="flex justify-end mb-6">
               <Button
-                disabled={fetching && fetchType == "fetchWithdrawDetails"}
+                disabled={
+                  (fetching && fetchType == "fetchWithdrawDetails") ||
+                  !dashboardData.withdraw_summary.balance ||
+                  dashboardData.withdraw_summary.balance <= 0 ||
+                  !dashboardData.withdraw_account_details
+                }
                 className="w-full md:w-auto"
                 onClick={() => handleOpenWithdrawDialog()}
               >
@@ -716,6 +784,24 @@ const AffiliateDashboardPage = () => {
                 Withdraw Earnings
               </Button>
             </div>
+            {(!dashboardData.withdraw_summary.balance ||
+              dashboardData.withdraw_summary.balance <= 0) && (
+              <div className="mb-6 p-4 bg-yellow-50 border border-yellow-200 rounded-lg">
+                <p className="text-sm text-yellow-800">
+                  <span className="font-medium">No balance available:</span> You
+                  need to earn commissions before you can withdraw.
+                </p>
+              </div>
+            )}
+            {!dashboardData.withdraw_account_details && (
+              <div className="mb-6 p-4 bg-blue-50 border border-blue-200 rounded-lg">
+                <p className="text-sm text-blue-800">
+                  <span className="font-medium">Account details required:</span>{" "}
+                  Please add your withdrawal account details before making a
+                  withdrawal.
+                </p>
+              </div>
+            )}
             <div className="grid grid-cols-1 md:grid-cols-3 gap-6">
               <Card>
                 <CardContent className="p-6">
@@ -725,7 +811,10 @@ const AffiliateDashboardPage = () => {
                         Total Balance
                       </p>
                       <h3 className="text-2xl font-bold">
-                        ${dashboardData.withdraw_summary.balance.toFixed(2)}
+                        ₹
+                        {(dashboardData.withdraw_summary.balance || 0).toFixed(
+                          2
+                        )}
                       </h3>
                     </div>
                     <div className="p-3 bg-primary/10 rounded-full">
@@ -742,10 +831,10 @@ const AffiliateDashboardPage = () => {
                         Total Withdrawn
                       </p>
                       <h3 className="text-2xl font-bold">
-                        $
-                        {dashboardData.withdraw_summary.total_withdrawn.toFixed(
-                          2
-                        )}
+                        ₹
+                        {(
+                          dashboardData.withdraw_summary.total_withdrawn || 0
+                        ).toFixed(2)}
                       </h3>
                     </div>
                     <div className="p-3 bg-primary/10 rounded-full">
@@ -762,10 +851,10 @@ const AffiliateDashboardPage = () => {
                         Pending Withdraw
                       </p>
                       <h3 className="text-2xl font-bold">
-                        $
-                        {dashboardData.withdraw_summary.pending_withdraw.toFixed(
-                          2
-                        )}
+                        ₹
+                        {(
+                          dashboardData.withdraw_summary.pending_withdraw || 0
+                        ).toFixed(2)}
                       </h3>
                     </div>
                     <div className="p-3 bg-primary/10 rounded-full">
@@ -780,64 +869,88 @@ const AffiliateDashboardPage = () => {
             <Card>
               <CardContent className="p-6">
                 <h3 className="text-lg font-semibold mb-4">Withdraw History</h3>
-                <Table>
-                  <TableHeader>
-                    <TableRow>
-                      <TableHead>ID</TableHead>
-                      <TableHead>Date</TableHead>
-                      <TableHead>Amount</TableHead>
-                      <TableHead>Status</TableHead>
-                      <TableHead>Actions</TableHead>
-                    </TableRow>
-                  </TableHeader>
-                  <TableBody>
-                    {fetching && fetchType == "fetchWithdrawals" && (
-                      <TableRow>
-                        <TableCell colSpan={5} className="text-center">
-                          <Loading />
-                        </TableCell>
-                      </TableRow>
-                    )}
-                    {!fetching &&
-                      dashboardData.withdraw_history.items.map((withdrawal) => (
-                        <TableRow key={withdrawal.id}>
-                          <TableCell>{withdrawal.id}</TableCell>
-                          <TableCell>
-                            {new Date(withdrawal.created_at).toLocaleString()}
-                          </TableCell>
-                          <TableCell>${withdrawal.amount.toFixed(2)}</TableCell>
-                          <TableCell>
-                            <Badge
-                              className={getStatusColor(withdrawal.status)}
-                            >
-                              {withdrawal.status}
-                            </Badge>
-                          </TableCell>
-                          <TableCell>
-                            <Button
-                              variant="ghost"
-                              size="sm"
-                              onClick={() => {
-                                setSelectedWithdrawal(withdrawal);
-                                setIsDetailsDialogOpen(true);
-                              }}
-                            >
-                              View Details
-                            </Button>
-                          </TableCell>
+                {dashboardData.withdraw_history.items.length > 0 ? (
+                  <>
+                    <Table>
+                      <TableHeader>
+                        <TableRow>
+                          <TableHead>ID</TableHead>
+                          <TableHead>Date</TableHead>
+                          <TableHead>Amount</TableHead>
+                          <TableHead>Status</TableHead>
+                          <TableHead>Actions</TableHead>
                         </TableRow>
-                      ))}
-                  </TableBody>
-                </Table>
-                {!fetching && (
-                  <Pagination
-                    currentPage={withdrawPage}
-                    hasNext={dashboardData.withdraw_history.has_next}
-                    hasPrev={dashboardData.withdraw_history.has_prev}
-                    total={dashboardData.withdraw_history.total}
-                    pageSize={10}
-                    onPageChange={handleWithdrawalsPageChange}
-                  />
+                      </TableHeader>
+                      <TableBody>
+                        {fetching && fetchType == "fetchWithdrawals" && (
+                          <TableRow>
+                            <TableCell colSpan={5} className="text-center">
+                              <Loading />
+                            </TableCell>
+                          </TableRow>
+                        )}
+                        {!fetching &&
+                          dashboardData.withdraw_history.items.map(
+                            (withdrawal) => (
+                              <TableRow key={withdrawal.id}>
+                                <TableCell>{withdrawal.id}</TableCell>
+                                <TableCell>
+                                  {new Date(
+                                    withdrawal.created_at
+                                  ).toLocaleString()}
+                                </TableCell>
+                                <TableCell>
+                                  ₹{withdrawal.amount.toFixed(2)}
+                                </TableCell>
+                                <TableCell>
+                                  <Badge
+                                    className={getStatusColor(
+                                      withdrawal.status
+                                    )}
+                                  >
+                                    {withdrawal.status}
+                                  </Badge>
+                                </TableCell>
+                                <TableCell>
+                                  <Button
+                                    variant="ghost"
+                                    size="sm"
+                                    onClick={() => {
+                                      setSelectedWithdrawal(withdrawal);
+                                      setIsDetailsDialogOpen(true);
+                                    }}
+                                  >
+                                    View Details
+                                  </Button>
+                                </TableCell>
+                              </TableRow>
+                            )
+                          )}
+                      </TableBody>
+                    </Table>
+                    {!fetching && (
+                      <Pagination
+                        currentPage={withdrawPage}
+                        hasNext={dashboardData.withdraw_history.has_next}
+                        hasPrev={dashboardData.withdraw_history.has_prev}
+                        total={dashboardData.withdraw_history.total}
+                        pageSize={10}
+                        onPageChange={handleWithdrawalsPageChange}
+                      />
+                    )}
+                  </>
+                ) : (
+                  <div className="text-center py-8">
+                    <div className="flex flex-col items-center justify-center gap-2">
+                      <Wallet className="h-12 w-12 text-muted-foreground" />
+                      <p className="text-muted-foreground font-medium">
+                        No withdrawal history
+                      </p>
+                      <p className="text-sm text-muted-foreground">
+                        You haven't made any withdrawal requests yet.
+                      </p>
+                    </div>
+                  </div>
                 )}
               </CardContent>
             </Card>
@@ -889,7 +1002,8 @@ const AffiliateDashboardPage = () => {
                 <Input
                   placeholder="UPI ID"
                   value={
-                    dashboardData?.withdraw_account_details?.upi_details?.upiId
+                    dashboardData?.withdraw_account_details?.upi_details
+                      ?.upiId || ""
                   }
                   onChange={(e) => {
                     setDashboardData((prev: any) => ({
@@ -897,7 +1011,7 @@ const AffiliateDashboardPage = () => {
                       withdraw_account_details: {
                         ...prev.withdraw_account_details,
                         upi_details: {
-                          ...prev.withdraw_account_details.upi_details,
+                          ...prev.withdraw_account_details?.upi_details,
                           upiId: e.target.value,
                         },
                       },
@@ -910,7 +1024,7 @@ const AffiliateDashboardPage = () => {
                     placeholder="Bank Name"
                     value={
                       dashboardData?.withdraw_account_details?.bank_details
-                        ?.bank_name
+                        ?.bank_name || ""
                     }
                     onChange={(e) => {
                       setDashboardData((prev: any) => ({
@@ -918,7 +1032,7 @@ const AffiliateDashboardPage = () => {
                         withdraw_account_details: {
                           ...prev.withdraw_account_details,
                           bank_details: {
-                            ...prev.withdraw_account_details.bank_details,
+                            ...prev.withdraw_account_details?.bank_details,
                             bank_name: e.target.value,
                           },
                         },
@@ -930,7 +1044,7 @@ const AffiliateDashboardPage = () => {
                     placeholder="Account Name"
                     value={
                       dashboardData?.withdraw_account_details?.bank_details
-                        ?.account_name
+                        ?.account_name || ""
                     }
                     onChange={(e) => {
                       setDashboardData((prev: any) => ({
@@ -938,7 +1052,7 @@ const AffiliateDashboardPage = () => {
                         withdraw_account_details: {
                           ...prev.withdraw_account_details,
                           bank_details: {
-                            ...prev.withdraw_account_details.bank_details,
+                            ...prev.withdraw_account_details?.bank_details,
                             account_name: e.target.value,
                           },
                         },
@@ -949,7 +1063,7 @@ const AffiliateDashboardPage = () => {
                     placeholder="Account Number"
                     value={
                       dashboardData?.withdraw_account_details?.bank_details
-                        ?.account_number
+                        ?.account_number || ""
                     }
                     onChange={(e) => {
                       setDashboardData((prev: any) => ({
@@ -957,7 +1071,7 @@ const AffiliateDashboardPage = () => {
                         withdraw_account_details: {
                           ...prev.withdraw_account_details,
                           bank_details: {
-                            ...prev.withdraw_account_details.bank_details,
+                            ...prev.withdraw_account_details?.bank_details,
                             account_number: e.target.value,
                           },
                         },
@@ -968,7 +1082,7 @@ const AffiliateDashboardPage = () => {
                     placeholder="IFSC Code"
                     value={
                       dashboardData?.withdraw_account_details?.bank_details
-                        ?.ifsc_code
+                        ?.ifsc_code || ""
                     }
                     onChange={(e) => {
                       setDashboardData((prev: any) => ({
@@ -976,7 +1090,7 @@ const AffiliateDashboardPage = () => {
                         withdraw_account_details: {
                           ...prev.withdraw_account_details,
                           bank_details: {
-                            ...prev.withdraw_account_details.bank_details,
+                            ...prev.withdraw_account_details?.bank_details,
                             ifsc_code: e.target.value,
                           },
                         },
@@ -1028,7 +1142,7 @@ const AffiliateDashboardPage = () => {
                   <div>
                     <p className="text-sm text-muted-foreground">Amount</p>
                     <p className="font-medium">
-                      ${selectedWithdrawal.amount.toFixed(2)}
+                      ₹{selectedWithdrawal.amount.toFixed(2)}
                     </p>
                   </div>
                   <div>

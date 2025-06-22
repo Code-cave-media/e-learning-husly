@@ -24,6 +24,7 @@ import {
   Filter,
   Search,
   Package,
+  AlertCircle,
 } from "lucide-react";
 import {
   DropdownMenu,
@@ -42,6 +43,8 @@ interface Transaction {
   purchase_id: number | null;
   transaction_id: string;
   order_id: string;
+  item_id: string;
+  item_type: string;
   status: string;
   provider: string;
   utr_id: string;
@@ -57,6 +60,47 @@ interface Transaction {
   error_code: string | null;
   error_description: string | null;
   created_at: string;
+  item?: {
+    id: number;
+    title: string;
+    description: string;
+    price: number;
+    pdf: string;
+    thumbnail: string;
+    intro_video: string;
+    visible: boolean;
+    created_at: string;
+    updated_at: string;
+    commission: number;
+    chapters: Array<{
+      id: number;
+      title: string;
+      content: string;
+    }>;
+    landing_page: {
+      id: number;
+      main_heading: string;
+      sub_heading: string;
+    };
+    is_featured: boolean;
+    is_new: boolean;
+  };
+  user?: {
+    id: number;
+    email: string;
+    user_id: string;
+    is_admin: boolean;
+    phone: string;
+    name: string;
+  };
+  affiliate_user?: {
+    id: number;
+    email: string;
+    user_id: string;
+    is_admin: boolean;
+    phone: string;
+    name: string;
+  };
 }
 
 interface TransactionResponse {
@@ -120,18 +164,23 @@ export default function TransactionsManagement() {
   };
 
   return (
-    <div className="container mx-auto py-6">
-      <div className="flex justify-between items-center mb-6">
-        <h1 className="text-2xl font-bold">Transactions Management</h1>
-        <div className="flex items-center gap-4">
-          <div className="relative flex items-center">
+    <div className="container mx-auto py-4 sm:py-6 px-2 sm:px-4">
+      <div className="flex flex-col gap-4 mb-4 sm:mb-6">
+        <div className="flex flex-col sm:flex-row sm:justify-between sm:items-center gap-4">
+          <h1 className="text-xl sm:text-2xl font-bold">
+            Transactions Management
+          </h1>
+        </div>
+
+        <div className="flex flex-col sm:flex-row gap-3 sm:gap-4">
+          <div className="relative flex items-center flex-1">
             <Search className="absolute left-2 h-4 w-4 text-muted-foreground" />
             <Input
               placeholder="Search by Transaction ID or Order ID..."
               value={searchInput}
               onChange={(e) => setSearchInput(e.target.value)}
               onKeyPress={handleKeyPress}
-              className="pl-8 w-[300px]"
+              className="pl-8 w-full sm:w-[300px]"
             />
             <Button
               variant="ghost"
@@ -144,8 +193,12 @@ export default function TransactionsManagement() {
           </div>
           <DropdownMenu>
             <DropdownMenuTrigger asChild>
-              <Button variant="outline" className="flex items-center gap-2">
-                <Filter className="w-4 h-4" />
+              <Button
+                variant="outline"
+                size="sm"
+                className="flex items-center gap-2 whitespace-nowrap"
+              >
+                <Filter className="w-3 h-3 sm:w-4 sm:h-4" />
                 {statusFilter === "all"
                   ? "All Transactions"
                   : `Status: ${statusFilter}`}
@@ -171,7 +224,6 @@ export default function TransactionsManagement() {
           <TableHeader>
             <TableRow>
               <TableHead>Transaction ID</TableHead>
-              <TableHead>Order ID</TableHead>
               <TableHead>Amount</TableHead>
               <TableHead>Status</TableHead>
               <TableHead>Method</TableHead>
@@ -191,19 +243,18 @@ export default function TransactionsManagement() {
               filteredTransactions.map((transaction) => (
                 <TableRow key={transaction.transaction_id}>
                   <TableCell>{transaction.transaction_id}</TableCell>
-                  <TableCell>{transaction.order_id}</TableCell>
                   <TableCell>
                     {formatCurrency(transaction.amount / 100)}
                   </TableCell>
                   <TableCell>
                     <Badge
                       variant={
-                        transaction.status === "captured"
+                        transaction.status === "SUCCESS"
                           ? "default"
                           : "destructive"
                       }
                       className={`capitalize ${
-                        transaction.status === "captured"
+                        transaction.status === "SUCCESS"
                           ? "bg-green-100 text-green-800 hover:bg-green-100"
                           : ""
                       }`}
@@ -254,7 +305,6 @@ export default function TransactionsManagement() {
           pageSize={pageSize}
           onPageChange={handlePageChange}
           itemsSize={transactions.items.length}
-
         />
       )}
 
@@ -290,21 +340,15 @@ export default function TransactionsManagement() {
                       </p>
                     </div>
                     <div className="space-y-2">
-                      <p className="text-sm text-muted-foreground">Order ID</p>
-                      <p className="font-medium">
-                        {selectedTransaction.order_id}
-                      </p>
-                    </div>
-                    <div className="space-y-2">
                       <p className="text-sm text-muted-foreground">Status</p>
                       <Badge
                         variant={
-                          selectedTransaction.status === "captured"
+                          selectedTransaction.status == "SUCCESS"
                             ? "default"
                             : "destructive"
                         }
                         className={`capitalize ${
-                          selectedTransaction.status === "captured"
+                          selectedTransaction.status == "SUCCESS"
                             ? "bg-green-100 text-green-800 hover:bg-green-100"
                             : ""
                         }`}
@@ -353,7 +397,7 @@ export default function TransactionsManagement() {
                     <div className="space-y-2">
                       <p className="text-sm text-muted-foreground">Amount</p>
                       <p className="font-medium text-lg">
-                        {formatCurrency(selectedTransaction.amount / 100)}
+                        {formatCurrency(selectedTransaction.amount)}
                       </p>
                     </div>
                     <div className="space-y-2">
@@ -361,20 +405,16 @@ export default function TransactionsManagement() {
                         Base Amount
                       </p>
                       <p className="font-medium">
-                        {formatCurrency(selectedTransaction.base_amount / 100)}
+                        {formatCurrency(selectedTransaction.amount)}
                       </p>
                     </div>
                     <div className="space-y-2">
                       <p className="text-sm text-muted-foreground">Fee</p>
-                      <p className="font-medium">
-                        {formatCurrency(selectedTransaction.fee / 100)}
-                      </p>
+                      <p className="font-medium">NAN</p>
                     </div>
                     <div className="space-y-2">
                       <p className="text-sm text-muted-foreground">Tax</p>
-                      <p className="font-medium">
-                        {formatCurrency(selectedTransaction.tax / 100)}
-                      </p>
+                      <p className="font-medium">NAN</p>
                     </div>
                     <div className="space-y-2">
                       <p className="text-sm text-muted-foreground">Currency</p>
@@ -391,6 +431,107 @@ export default function TransactionsManagement() {
                       </p>
                     </div>
                   </div>
+                </CardContent>
+              </Card>
+
+              {/* Item Details Card */}
+              <Card>
+                <CardHeader className="pb-2">
+                  <CardTitle className="text-lg flex items-center gap-2">
+                    <Package className="w-5 h-5" />
+                    Item Details
+                  </CardTitle>
+                </CardHeader>
+                <CardContent>
+                  <div className="grid grid-cols-2 gap-4">
+                    <div className="space-y-2">
+                      <p className="text-sm text-muted-foreground">Item ID</p>
+                      <p className="font-medium">
+                        {selectedTransaction.item_id}
+                      </p>
+                    </div>
+                    <div className="space-y-2">
+                      <p className="text-sm text-muted-foreground">Item Type</p>
+                      <p className="font-medium capitalize">
+                        {selectedTransaction.item_type}
+                      </p>
+                    </div>
+
+                    {selectedTransaction.item && (
+                      <>
+                        <div className="space-y-2">
+                          <p className="text-sm text-muted-foreground">Title</p>
+                          <p className="font-medium">
+                            {selectedTransaction.item.title}
+                          </p>
+                        </div>
+                        <div className="space-y-2">
+                          <p className="text-sm text-muted-foreground">Price</p>
+                          <p className="font-medium">
+                            {formatCurrency(selectedTransaction.item.price)}
+                          </p>
+                        </div>
+                        <div className="space-y-2">
+                          <p className="text-sm text-muted-foreground">
+                            Commission
+                          </p>
+                          <p className="font-medium">
+                            {formatCurrency(
+                              selectedTransaction.item.commission
+                            )}
+                          </p>
+                        </div>
+                        <div className="space-y-2">
+                          <p className="text-sm text-muted-foreground">
+                            Chapters
+                          </p>
+                          <p className="font-medium">
+                            {selectedTransaction.item.chapters?.length || 0}{" "}
+                            chapters
+                          </p>
+                        </div>
+                        <div className="space-y-2">
+                          <p className="text-sm text-muted-foreground">
+                            Status
+                          </p>
+                          <div className="flex gap-2">
+                            {selectedTransaction.item.is_featured && (
+                              <Badge variant="secondary" className="text-xs">
+                                Featured
+                              </Badge>
+                            )}
+                            {selectedTransaction.item.is_new && (
+                              <Badge variant="secondary" className="text-xs">
+                                New
+                              </Badge>
+                            )}
+                            <Badge
+                              variant={
+                                selectedTransaction.item.visible
+                                  ? "default"
+                                  : "destructive"
+                              }
+                              className="text-xs"
+                            >
+                              {selectedTransaction.item.visible
+                                ? "Visible"
+                                : "Hidden"}
+                            </Badge>
+                          </div>
+                        </div>
+                      </>
+                    )}
+                  </div>
+                  {selectedTransaction.item?.description && (
+                    <div className="mt-4 space-y-2">
+                      <p className="text-sm text-muted-foreground">
+                        Description
+                      </p>
+                      <p className="text-sm bg-muted p-3 rounded-md">
+                        {selectedTransaction.item.description}
+                      </p>
+                    </div>
+                  )}
                 </CardContent>
               </Card>
 
@@ -434,6 +575,8 @@ export default function TransactionsManagement() {
                       </p>
                       <p className="font-medium">{selectedTransaction.email}</p>
                     </div>
+                  </div>
+                  <div className="grid grid-cols-2 gap-4 mt-4">
                     <div className="space-y-2">
                       <p className="text-sm text-muted-foreground flex items-center gap-2">
                         Contact
@@ -445,6 +588,150 @@ export default function TransactionsManagement() {
                   </div>
                 </CardContent>
               </Card>
+
+              {/* User Information Card */}
+              {(selectedTransaction.user ||
+                selectedTransaction.affiliate_user) && (
+                <Card>
+                  <CardHeader className="pb-2">
+                    <CardTitle className="text-lg flex items-center gap-2">
+                      <Mail className="w-5 h-5" />
+                      User Information
+                    </CardTitle>
+                  </CardHeader>
+                  <CardContent>
+                    <div className="space-y-4">
+                      {selectedTransaction.user ? (
+                        <div className="border-b pb-4">
+                          <h4 className="font-medium text-sm text-muted-foreground mb-3">
+                            Buyer
+                          </h4>
+                          <div className="grid grid-cols-2 gap-4">
+                            <div className="space-y-2">
+                              <p className="text-sm text-muted-foreground">
+                                Name
+                              </p>
+                              <p className="font-medium">
+                                {selectedTransaction.user.name}
+                              </p>
+                            </div>
+                            <div className="space-y-2">
+                              <p className="text-sm text-muted-foreground">
+                                Email
+                              </p>
+                              <p className="font-medium">
+                                {selectedTransaction.user.email}
+                              </p>
+                            </div>
+                            <div className="space-y-2">
+                              <p className="text-sm text-muted-foreground">
+                                User ID
+                              </p>
+                              <p className="font-medium font-mono text-sm">
+                                {selectedTransaction.user.user_id}
+                              </p>
+                            </div>
+                            <div className="space-y-2">
+                              <p className="text-sm text-muted-foreground">
+                                Phone
+                              </p>
+                              <p className="font-medium">
+                                {selectedTransaction.user.phone}
+                              </p>
+                            </div>
+                            <div className="space-y-2">
+                              <p className="text-sm text-muted-foreground">
+                                Role
+                              </p>
+                              <Badge
+                                variant={
+                                  selectedTransaction.user.is_admin
+                                    ? "destructive"
+                                    : "secondary"
+                                }
+                              >
+                                {selectedTransaction.user.is_admin
+                                  ? "Admin"
+                                  : "User"}
+                              </Badge>
+                            </div>
+                          </div>
+                        </div>
+                      ) : (
+                        <div className="border-b pb-4">
+                          <h4 className="font-medium text-sm text-muted-foreground mb-3">
+                            Buyer
+                          </h4>
+                          <div className="flex items-center gap-2 p-3 bg-muted rounded-md">
+                            <AlertCircle className="w-4 h-4 text-muted-foreground" />
+                            <p className="text-muted-foreground">
+                              Guest Purchase
+                            </p>
+                          </div>
+                        </div>
+                      )}
+
+                      {selectedTransaction.affiliate_user && (
+                        <div>
+                          <h4 className="font-medium text-sm text-muted-foreground mb-3">
+                            Affiliate User
+                          </h4>
+                          <div className="grid grid-cols-2 gap-4">
+                            <div className="space-y-2">
+                              <p className="text-sm text-muted-foreground">
+                                Name
+                              </p>
+                              <p className="font-medium">
+                                {selectedTransaction.affiliate_user.name}
+                              </p>
+                            </div>
+                            <div className="space-y-2">
+                              <p className="text-sm text-muted-foreground">
+                                Email
+                              </p>
+                              <p className="font-medium">
+                                {selectedTransaction.affiliate_user.email}
+                              </p>
+                            </div>
+                            <div className="space-y-2">
+                              <p className="text-sm text-muted-foreground">
+                                User ID
+                              </p>
+                              <p className="font-medium font-mono text-sm">
+                                {selectedTransaction.affiliate_user.user_id}
+                              </p>
+                            </div>
+                            <div className="space-y-2">
+                              <p className="text-sm text-muted-foreground">
+                                Phone
+                              </p>
+                              <p className="font-medium">
+                                {selectedTransaction.affiliate_user.phone}
+                              </p>
+                            </div>
+                            <div className="space-y-2">
+                              <p className="text-sm text-muted-foreground">
+                                Role
+                              </p>
+                              <Badge
+                                variant={
+                                  selectedTransaction.affiliate_user.is_admin
+                                    ? "destructive"
+                                    : "secondary"
+                                }
+                              >
+                                {selectedTransaction.affiliate_user.is_admin
+                                  ? "Admin"
+                                  : "User"}
+                              </Badge>
+                            </div>
+                          </div>
+                        </div>
+                      )}
+                    </div>
+                  </CardContent>
+                </Card>
+              )}
 
               {/* Error Information Card */}
               {(selectedTransaction.error_code ||

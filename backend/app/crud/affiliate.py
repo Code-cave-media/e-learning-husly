@@ -135,7 +135,7 @@ def get_total_active_links(db:Session,user:User):
     return total_active_link
 
 def get_total_earnings(db: Session, user: User):
-    total_earnings = get_affiliate_account_by_id(db,user.id).total_earnings
+    total_earnings = get_or_create_affiliate_account(db,user.id).total_earnings
     now = datetime.now(timezone.utc)
     start_of_current_month = now.replace(day=1)
     start_of_last_month = (start_of_current_month - timedelta(days=1)).replace(day=1)
@@ -169,9 +169,9 @@ def get_total_earnings(db: Session, user: User):
 def create_withdraw(db:Session,user:User,data:WithdrawCreate,commit=False):
     account_details = None
     if data.upi_id:
-        account_details = f"UPI ID : ${data.upi_id}"
+        account_details = f"UPI ID : {data.upi_id}"
     else:
-        account_details = f"Bank Name: ${data.bank_name}, Account name: ${data.account_name}, Account number: ${data.account_number}, IFSC: ${data.ifsc_code} "
+        account_details = f"Bank Name: {data.bank_name}, Account name: {data.account_name}, Account number: {data.account_number}, IFSC: {data.ifsc_code} "
     
     db_withdraw = Withdraw(user_id = user.id,amount = data.amount,status='pending',account_details=account_details)
     db.add(db_withdraw)
@@ -189,13 +189,21 @@ def add_purchase_commission_to_affiliate_account(db:Session,account:AffiliateAcc
     return account
 
 def update_affiliate_account_balance(db:Session,account:AffiliateAccount,amount:float,commit=False,is_withdraw=False):
+    print('update_affiliate_account_balance',account.id,amount,account.balance)
     if is_withdraw:
         account.balance -= amount
     else:
         account.balance += amount
     if commit:
+        print('enter',amount,account.balance)
         db.commit()
         db.refresh(account)
+    return account
+
+def re_add_withdraw_amount_affiliate_account_balance(db:Session,account:AffiliateAccount,amount:float):
+    account.balance += amount
+    db.commit()
+    db.refresh(account)
     return account
 
 def update_or_create_account_details(db:Session,affiliate_account:AffiliateAccount,data:dict):

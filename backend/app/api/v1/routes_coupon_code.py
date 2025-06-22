@@ -49,16 +49,24 @@ def create_coupon(coupon_id:str,db:Session=Depends(get_db)):
     raise HTTPException(status_code=400,detail="Coupon not found")
   return crud_coupon.delete_coupon_code(db,db_coupon.id)
 
-@router.post('/apply',response_model=CouponCodeResponse)
+@router.post('/apply')
 def apply_coupon_code(data:CouponCodeApply,db:Session=Depends(get_db)):
     db_coupon = crud_coupon.get_coupon_by_code(db,data.code)
     if not db_coupon:
         raise HTTPException(status_code=400,detail="Coupon code not found")
     if db_coupon.no_of_access <= 0:
         raise HTTPException(status_code=400,detail="Coupon code has no uses left")
-    if  db_coupon.type=='fixed' and db_coupon.min_purchase and data.amount < db_coupon.min_purchase:
+    if  db_coupon.type=='flat' and db_coupon.min_purchase and data.amount < db_coupon.min_purchase:
         raise HTTPException(status_code=400,detail="Minimum purchase amount not met")
-    
-    return CouponCodeResponse.from_orm(db_coupon)
+    discount = 0
+    if db_coupon.type == 'percentage':
+        discount = (data.amount * db_coupon.discount) / 100
+    elif db_coupon.type == 'flat':
+        discount = db_coupon.discount
+
+    return {
+        "discount": discount,
+        "coupon": db_coupon.code,
+    }
 
 

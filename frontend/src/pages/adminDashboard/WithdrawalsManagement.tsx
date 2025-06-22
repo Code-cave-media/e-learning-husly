@@ -197,18 +197,23 @@ const WithdrawalsManagement = () => {
   };
 
   return (
-    <div className="container mx-auto py-6">
-      <div className="flex justify-between items-center mb-6">
-        <h1 className="text-2xl font-bold">Withdrawals Management</h1>
-        <div className="flex items-center gap-4">
-          <div className="relative flex items-center">
+    <div className="container mx-auto py-4 sm:py-6 px-2 sm:px-4">
+      <div className="flex flex-col gap-4 mb-4 sm:mb-6">
+        <div className="flex flex-col sm:flex-row sm:justify-between sm:items-center gap-4">
+          <h1 className="text-xl sm:text-2xl font-bold">
+            Withdrawals Management
+          </h1>
+        </div>
+
+        <div className="flex flex-col sm:flex-row gap-3 sm:gap-4">
+          <div className="relative flex items-center flex-1">
             <Search className="absolute left-2 h-4 w-4 text-muted-foreground" />
             <Input
               placeholder="Search by user name..."
               value={searchInput}
               onChange={(e) => setSearchInput(e.target.value)}
               onKeyPress={handleKeyPress}
-              className="pl-8 w-[300px]"
+              className="pl-8 w-full sm:w-[300px]"
             />
             <Button
               variant="ghost"
@@ -223,9 +228,10 @@ const WithdrawalsManagement = () => {
             <DropdownMenuTrigger asChild>
               <Button
                 variant="outline"
-                className="flex items-center gap-2 capitalize"
+                size="sm"
+                className="flex items-center gap-2 capitalize whitespace-nowrap"
               >
-                <Filter className="w-4 h-4" />
+                <Filter className="w-3 h-3 sm:w-4 sm:h-4" />
                 {statusFilter === "all"
                   ? "All Status"
                   : `Status: ${statusFilter}`}
@@ -271,13 +277,13 @@ const WithdrawalsManagement = () => {
             <TableBody>
               {fetching && fetchType === "fetchWithdrawals" ? (
                 <TableRow>
-                  <TableCell colSpan={5} className="h-24 text-center">
+                  <TableCell colSpan={6} className="h-24 text-center">
                     <Loading />
                   </TableCell>
                 </TableRow>
               ) : withdrawals.length === 0 ? (
                 <TableRow>
-                  <TableCell colSpan={5} className="h-24 text-center">
+                  <TableCell colSpan={6} className="h-24 text-center">
                     <div className="flex flex-col items-center justify-center gap-2">
                       <AlertCircle className="h-8 w-8 text-muted-foreground" />
                       <p className="text-muted-foreground">
@@ -320,15 +326,17 @@ const WithdrawalsManagement = () => {
                           View Details
                         </Button>
                         <Select
-                          onValueChange={(value) =>
-                          {
-
+                          disabled={
+                            withdrawal.status === "success" ||
+                            withdrawal.status === "failed" ||
+                            withdrawal.status === "rejected"
+                          }
+                          onValueChange={(value) => {
                             handleStatusChange(
                               withdrawal,
                               value as Withdrawal["status"]
-                            )
-                          }
-                          }
+                            );
+                          }}
                           defaultValue={withdrawal.status}
                         >
                           <SelectTrigger className="w-[120px]">

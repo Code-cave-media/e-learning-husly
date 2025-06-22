@@ -105,7 +105,7 @@ def update_withdraw_status_api(
     if not db_withdraw:
         raise HTTPException(status_code=404,detail="Withdraw not found")
     update_withdraw_status(db,db_withdraw,data.status,reason=data.explanation)
-    if data.status != 'success':
+    if data.status == 'failed' or data.status == 'rejected':
         db_account = get_or_create_affiliate_account(db,db_withdraw.user_id)
-        update_affiliate_account_balance(db,db_account,db_withdraw.amount,True,is_withdraw=False)
+        re_add_withdraw_amount_affiliate_account_balance(db,db_account,db_withdraw.amount)
     return db_withdraw

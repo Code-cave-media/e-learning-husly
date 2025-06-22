@@ -7,7 +7,6 @@ class Transaction(TimestampMixin,Base):
     __tablename__ = "transaction"
     id = Column(Integer, primary_key=True, index=True)
     transaction_id = Column(String)      
-    order_id = Column(String)                     # Razorpay order ID
     status = Column(String)                       # e.g., 'captured', 'failed'
     provider = Column(String)                     # e.g., 'razorpay'
     utr_id = Column(String)                       # UPI transaction ID / RRN
@@ -22,6 +21,8 @@ class Transaction(TimestampMixin,Base):
     tax = Column(Integer, nullable=True)
     error_code = Column(String, nullable=True)
     error_description = Column(String, nullable=True)
+    item_id = Column(Integer, nullable=True)         # ID of the purchased item
+    item_type = Column(String, nullable=True)        # Type of the purchased item
     purchase = relationship("Purchase", back_populates="transaction", uselist=False)
 
 
@@ -38,6 +39,10 @@ class Purchase(TimestampMixin,Base):
     user = relationship("User", foreign_keys=[purchased_user_id], back_populates="purchases")
     affiliate_user = relationship("User", foreign_keys=[affiliate_user_id], back_populates="affiliate_purchases")
     transaction = relationship("Transaction", foreign_keys=[transaction_id], back_populates="purchase")
+    amount = Column(Float,nullable=True)
+    discount = Column(Float,nullable=True)
+    coupon_code = Column(String,nullable=True)
+    coupon_type = Column(String,nullable=True)
 
 
 

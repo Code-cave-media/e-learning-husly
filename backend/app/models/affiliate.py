@@ -6,7 +6,7 @@ class AffiliateAccount(Base):
     __tablename__ = "affiliate_account"
     id = Column(Integer, primary_key=True, index=True)
     user_id = Column(Integer, ForeignKey("user.id"))
-    balance = Column(Integer)
+    balance = Column(Integer,default=0)
     total_earnings = Column(Integer,default=0)
 
 class Withdraw(TimestampMixin,Base):

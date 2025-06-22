@@ -104,6 +104,10 @@ interface Purchase {
   user_id: number | null;
   item_id: number;
   item_type: string;
+  amount: number;
+  discount: number;
+  coupon_code: string | null;
+  coupon_type: string | null;
   created_at: string;
   user: User;
   affiliate_user: User | null;
@@ -379,17 +383,22 @@ export default function PurchasesManagement() {
   };
 
   return (
-    <div className="container mx-auto py-6">
-      <div className="flex justify-between items-center mb-6">
-        <h1 className="text-2xl font-bold">Purchases Management</h1>
-        <div className="flex items-center gap-4">
-          <div className="relative flex items-center">
+    <div className="container mx-auto py-4 sm:py-6 px-2 sm:px-4">
+      <div className="flex flex-col gap-4 mb-4 sm:mb-6">
+        <div className="flex flex-col sm:flex-row sm:justify-between sm:items-center gap-4">
+          <h1 className="text-xl sm:text-2xl font-bold">
+            Purchases Management
+          </h1>
+        </div>
+
+        <div className="flex flex-col sm:flex-row gap-3 sm:gap-4">
+          <div className="relative flex items-center flex-1">
             <Search className="absolute left-2 h-4 w-4 text-muted-foreground" />
             <Input
               placeholder="Search by Purchase ID..."
               value={searchQuery}
               onChange={handleSearch}
-              className="pl-8 w-[300px]"
+              className="pl-8 w-full sm:w-[300px]"
             />
             <Button
               variant="ghost"
@@ -407,9 +416,10 @@ export default function PurchasesManagement() {
             <DropdownMenuTrigger asChild>
               <Button
                 variant="outline"
-                className="flex items-center gap-2 capitalize"
+                size="sm"
+                className="flex items-center gap-2 capitalize whitespace-nowrap"
               >
-                <Filter className="w-4 h-4" />
+                <Filter className="w-3 h-3 sm:w-4 sm:h-4" />
                 {itemTypeFilter === "all"
                   ? "All Items"
                   : `Type: ${
@@ -436,7 +446,11 @@ export default function PurchasesManagement() {
               </DropdownMenuItem>
             </DropdownMenuContent>
           </DropdownMenu>
-          <Button onClick={() => setIsCreateDialogOpen(true)}>
+          <Button
+            size="sm"
+            className="sm:text-base"
+            onClick={() => setIsCreateDialogOpen(true)}
+          >
             Create Purchase
           </Button>
         </div>
@@ -480,8 +494,19 @@ export default function PurchasesManagement() {
                     </Badge>
                   </TableCell>
                   <TableCell>{purchase.item.title}</TableCell>
-                  <TableCell>{formatCurrency(purchase.item.price)}</TableCell>
-                  <TableCell>{purchase?.user?.name}</TableCell>
+                  <TableCell>
+                    <div className="space-y-1">
+                      <p className="font-medium">
+                        {formatCurrency(purchase.amount)}
+                      </p>
+                      {purchase.discount > 0 && (
+                        <p className="text-xs text-green-600">
+                          -{formatCurrency(purchase.discount)} off
+                        </p>
+                      )}
+                    </div>
+                  </TableCell>
+                  <TableCell>{purchase?.user?.name || "Guest"}</TableCell>
                   <TableCell>{purchase.affiliate_user?.name || "-"}</TableCell>
                   <TableCell>
                     {new Date(purchase.created_at).toLocaleDateString()}
@@ -543,6 +568,12 @@ export default function PurchasesManagement() {
                 <CardContent>
                   <div className="grid grid-cols-2 gap-4">
                     <div className="space-y-2">
+                      <p className="text-sm text-muted-foreground">Item ID</p>
+                      <p className="font-medium font-mono">
+                        {selectedPurchase.item_id}
+                      </p>
+                    </div>
+                    <div className="space-y-2">
                       <p className="text-sm text-muted-foreground">Item Type</p>
                       <Badge variant="outline" className="capitalize">
                         {selectedPurchase.item_type}
@@ -555,6 +586,14 @@ export default function PurchasesManagement() {
                       </p>
                       <p className="font-medium">
                         {formatCurrency(selectedPurchase.item.price)}
+                      </p>
+                    </div>
+                    <div className="space-y-2">
+                      <p className="text-sm text-muted-foreground">
+                        Commission
+                      </p>
+                      <p className="font-medium">
+                        {formatCurrency(selectedPurchase.item.commission)}
                       </p>
                     </div>
                     <div className="space-y-2 col-span-2">
@@ -572,6 +611,72 @@ export default function PurchasesManagement() {
                       </p>
                     </div>
                   </div>
+                </CardContent>
+              </Card>
+
+              {/* Payment Details Card */}
+              <Card>
+                <CardHeader className="pb-2">
+                  <CardTitle className="text-lg flex items-center gap-2">
+                    <IndianRupee className="w-5 h-5" />
+                    Payment Details
+                  </CardTitle>
+                </CardHeader>
+                <CardContent>
+                  <div className="grid grid-cols-2 gap-4">
+                    <div className="space-y-2">
+                      <p className="text-sm text-muted-foreground">
+                        Original Price
+                      </p>
+                      <p className="font-medium">
+                        {formatCurrency(selectedPurchase.item.price)}
+                      </p>
+                    </div>
+                    <div className="space-y-2">
+                      <p className="text-sm text-muted-foreground">Discount</p>
+                      <p className="font-medium text-green-600">
+                        -{formatCurrency(selectedPurchase.discount)}
+                      </p>
+                    </div>
+                    <div className="space-y-2">
+                      <p className="text-sm text-muted-foreground">
+                        Final Amount
+                      </p>
+                      <p className="font-medium text-lg font-bold">
+                        {formatCurrency(selectedPurchase.amount)}
+                      </p>
+                    </div>
+                    {selectedPurchase.coupon_code && (
+                      <div className="space-y-2">
+                        <p className="text-sm text-muted-foreground">
+                          Coupon Code
+                        </p>
+                        <Badge variant="secondary" className="font-mono">
+                          {selectedPurchase.coupon_code}
+                        </Badge>
+                      </div>
+                    )}
+                    {selectedPurchase.coupon_type && (
+                      <div className="space-y-2">
+                        <p className="text-sm text-muted-foreground">
+                          Coupon Type
+                        </p>
+                        <Badge variant="outline" className="capitalize">
+                          {selectedPurchase.coupon_type}
+                        </Badge>
+                      </div>
+                    )}
+                  </div>
+                  {selectedPurchase.coupon_code && (
+                    <div className="mt-4 p-3 bg-blue-50 border border-blue-200 rounded-md">
+                      <p className="text-sm text-blue-800">
+                        <span className="font-medium">Coupon Applied:</span>{" "}
+                        {selectedPurchase.coupon_code}
+                        {selectedPurchase.coupon_type &&
+                          ` (${selectedPurchase.coupon_type})`}
+                      </p>
+                    </div>
+                  )}
                 </CardContent>
               </Card>
 

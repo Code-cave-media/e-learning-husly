@@ -138,7 +138,7 @@ def get_total_progressing_courses(db:Session,user: User):
                 Course.id == purchase.item_id,
                 Course.visible == True
             ).first()
-            if (len(course_progress.chapters) != len(course.chapters)):
+            if not course_progress or (len(course_progress.chapters) != len(course.chapters)):
                 res += 1
     return res
 
@@ -484,7 +484,7 @@ def get_withdraw_summary(db: Session, user: User):
         Withdraw.user_id == user.id,
         or_(
             Withdraw.status == 'pending',
-            Withdraw.status == 'failed'
+            Withdraw.status == 'processing'
         )
     ).scalar()
 
