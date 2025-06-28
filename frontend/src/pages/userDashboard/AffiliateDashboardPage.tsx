@@ -602,7 +602,7 @@ const AffiliateDashboardPage = () => {
                 (day) => day.clicks > 0 || day.purchases > 0
               ) ? (
                 <div className="space-y-4">
-                  {dashboardData.performance.slice(-5).map((day, index) => (
+                  {dashboardData.performance.slice(-5).reverse().map((day, index) => (
                     <div
                       key={index}
                       className="flex items-center justify-between"

@@ -136,115 +136,83 @@ const Checkout = () => {
     } else {
       toast.error(response.error || "Failed to initiate checkout");
     }
-  };
-  const handleCashfree = async (data: any) => {
-    try {
-      console.log(
-        "Starting Cashfree initialization with sessionId:",
-        data.payment_session_id
-      );
-      console.log("Cashfree App ID:", import.meta.env.VITE_CASHFREE_APP_ID);
-
-      // First, load the Cashfree SDK
-      const cashfree = await load({
-        mode: "sandbox",
-        env: "sandbox",
-        appId: import.meta.env.VITE_CASHFREE_APP_ID,
-        orderToken: data.payment_session_id,
-        disableSentry: true,
-        style: {
-          backgroundColor: "#ffffff",
-          color: "#11385b",
-          fontFamily: "Lato",
-          fontSize: "14px",
-          errorColor: "#ff0000",
-          theme: "light",
-        },
-      });
-
-      console.log("Cashfree SDK loaded successfully:", cashfree);
-
-      // Create the checkout options
-      const options = {
-        paymentSessionId: data.payment_session_id,
-        returnUrl: (window.location.href =
-          window.location.origin +
-          "/payment-verification?transactionId=" +
-          data.transaction_id +
-          "&isFailed=false"),
-        failureUrl: (window.location.href =
-          window.location.origin +
-          "/payment-verification?transactionId=" +
-          data.transaction_id +
-          "&isFailed=true"),
-        onPaymentSuccess: function (response: any) {
-          console.log("Payment Success:", response);
-          window.location.href =
-            window.location.origin +
-            "/payment-verification?transactionId=" +
-            data.transaction_id +
-            "&isFailed=false";
-        },
-        onPaymentFailure: function (response: any) {
-          console.error("Payment Failure:", response);
-          window.location.href =
-            window.location.origin +
-            "/payment-verification?transactionId=" +
-            data.transaction_id +
-            "&isFailed=true";
-        },
-        onClose: function () {
-          console.log("Payment window closed");
-        },
-      };
-      // Initialize the checkout
+    };
+    const handleCashfree = async (data: any) => {
       try {
-        const checkout = await cashfree.checkout(options);
-      
-        // Open the checkout window
-        await checkout.open();
-        console.log("Cashfree checkout window opened successfully");
-      } catch (checkoutError) {
-        console.error("Checkout failed with error:", checkoutError);
+        const appId =
+          import.meta.env.VITE_PRODUCTION == "true"
+            ? import.meta.env.VITE_CASHFREE_APP_ID_PROD
+            : import.meta.env.VITE_CASHFREE_APP_ID_TEST;
+        const mode =
+          import.meta.env.VITE_PRODUCTION == "true" ? "production" : "sandbox";
+        // First, load the Cashfree SDK
         
-      }
-    } catch (error) {
-      console.error("Payment initialization failed with error:", error);
-      toast.error("Failed to initialize payment. Please try again.");
-    }
-  };
-
-  const handleRazorpay = async (orderResponse: {
-    amount: number;
-    id: string;
-  }) => {
-    const options = {
-      key: import.meta.env.VITE_RAZORPAY_TEST_KEY,
-      amount: orderResponse.amount,
-      currency: "INR",
-      name: "Your Site Name",
-      description: "Course / E-Book Purchase",
-      order_id: orderResponse.id,
-      handler: function (response) {
-        navigate("/payment-verification", {
-          state: {
-            transactionId: response.razorpay_payment_id,
+        const cashfree = await load({
+          mode: mode,
+          env: mode,
+          appId: appId,
+          orderToken: data.payment_session_id,
+          disableSentry: true,
+          style: {
+            backgroundColor: "#ffffff",
+            color: "#11385b",
+            fontFamily: "Lato",
+            fontSize: "14px",
+            errorColor: "#ff0000",
+            theme: "light",
           },
         });
-      },
-      prefill: {
-        name: user ? user.name : form.name,
-        email: user ? user.email : form.email,
-        contact: user ? user.phone : form.phone,
-      },
-      theme: {
-        color: "#3399cc",
-      },
-    };
 
-    const rzp = new window.Razorpay(options);
-    rzp.open();
-  };
+        console.log("Cashfree SDK loaded successfully:", cashfree);
+
+        // Create the checkout options
+        const options = {
+          paymentSessionId: data.payment_session_id,
+          returnUrl: (window.location.href =
+            window.location.origin +
+            "/payment-verification?transactionId=" +
+            data.transaction_id +
+            "&isFailed=false"),
+          failureUrl: (window.location.href =
+            window.location.origin +
+            "/payment-verification?transactionId=" +
+            data.transaction_id +
+            "&isFailed=true"),
+          onPaymentSuccess: function (response: any) {
+            console.log("Payment Success:", response);
+            window.location.href =
+              window.location.origin +
+              "/payment-verification?transactionId=" +
+              data.transaction_id +
+              "&isFailed=false";
+          },
+          onPaymentFailure: function (response: any) {
+            console.error("Payment Failure:", response);
+            window.location.href =
+              window.location.origin +
+              "/payment-verification?transactionId=" +
+              data.transaction_id +
+              "&isFailed=true";
+          },
+          onClose: function () {
+            console.log("Payment window closed");
+          },
+        };
+        // Initialize the checkout
+        try {
+          const checkout = await cashfree.checkout(options);
+
+          // Open the checkout window
+          await checkout.open();
+          console.log("Cashfree checkout window opened successfully");
+        } catch (checkoutError) {
+          console.error("Checkout failed with error:", checkoutError);
+        }
+      } catch (error) {
+        console.error("Payment initialization failed with error:", error);
+        toast.error("Failed to initialize payment. Please try again.");
+      }
+    };
 
   const initializeSDK = async () => {
     try {
@@ -317,15 +285,15 @@ const Checkout = () => {
   if (data) {
     return (
       <div className="min-h-screen bg-gradient-to-b from-black to-[#1a2a4a] flex flex-col items-center p-4 relative pb-16">
-        {/* Razorpay secure payment fixed badge */}
+        {/* Cashfree secure payment fixed badge */}
         <div className="fixed bottom-4 right-4 flex items-center gap-2 bg-[#181f2a] px-4 py-2 rounded-lg shadow-lg z-50 border border-[#00b0ff]">
           <img
-            src="https://encrypted-tbn0.gstatic.com/images?q=tbn:ANd9GcSe32vAJ7iuV_GjZlu-EyKf7GQ-You53h-wNg&s"
-            alt="Razorpay Secure"
+            src="https://encrypted-tbn0.gstatic.com/images?q=tbn:ANd9GcRYinKT6V7WkUU5DvqbEfTsd4HDIB4LG7qCDQ&s"
+            alt="Cashfree Secure"
             className="w-8 h-8 object-contain"
           />
           <span className="text-sm text-white font-semibold">
-            Secure payment with <span className="text-[#00b0ff]">Razorpay</span>
+            Secure payment with <span className="text-[#00b0ff]">Cashfree</span>
           </span>
         </div>
 
@@ -395,33 +363,40 @@ const Checkout = () => {
 
           {/* Cart/Product Details */}
           <div className="mb-4 border-t border-gray-700 pt-4">
-            <div className="flex items-center gap-4">
+            <div className="flex flex-col sm:flex-row items-center gap-4 w-full">
               <img
                 src={data?.item_data.thumbnail}
                 alt={data?.item_data.title}
-                className="w-28 h-20 rounded object-cover"
+                className="w-24 h-16 sm:w-28 sm:h-20 rounded object-cover flex-shrink-0"
               />
-              <div className="flex-1">
-                <div className="font-bold text-lg">{mockProduct.title}</div>
-                <div className="text-gray-400 text-sm">Qty: {1}</div>
+              <div className="flex-1 w-full text-center sm:text-left">
+                <div className="font-bold text-base sm:text-lg">
+                  {mockProduct.title}
+                </div>
+                <div className="text-gray-400 text-xs sm:text-sm">Qty: {1}</div>
               </div>
-              <div className="font-bold text-lg">${data?.item_data.price}</div>
+              <div className="font-bold text-base sm:text-lg text-center sm:text-right w-full sm:w-auto">
+                ₹{data?.item_data.price}
+              </div>
             </div>
           </div>
 
           {/* Coupon Code Section */}
-          <form onSubmit={handleApplyCoupon} className="flex gap-2 mb-6">
+          <form
+            onSubmit={handleApplyCoupon}
+            className="flex flex-col sm:flex-row gap-2 mb-6 w-full"
+          >
             <input
               type="text"
               placeholder="Coupon code"
               value={coupon}
               onChange={(e) => setCoupon(e.target.value)}
-              className="flex-1 bg-gray-800 border border-gray-600 p-2 rounded text-white outline-none"
+              className="flex-1 bg-gray-800 border border-gray-600 p-2 rounded text-white outline-none w-full"
             />
             <Button
               loading={fetching && fetchType === "couponApply"}
               type="submit"
-              className="bg-[#00b0ff] text-white px-4 py-2 rounded hover:opacity-90 hover:bg-[#00b0ff]"
+              className="bg-[#00b0ff] text-white px-4 py-2 rounded hover:opacity-90 hover:bg-[#00b0ff] w-full sm:w-auto"
             >
               Apply
             </Button>
@@ -437,15 +412,15 @@ const Checkout = () => {
           <div className="mb-6 border-t border-gray-700 pt-4">
             <div className="flex justify-between mb-2">
               <span>Subtotal</span>
-              <span>${data?.item_data.price}</span>
+              <span>₹{data?.item_data.price}</span>
             </div>
             <div className="flex justify-between mb-2">
               <span>Discount</span>
-              <span>-${data?.item_data.discount}</span>
+              <span>-₹{data?.item_data.discount}</span>
             </div>
             <div className="flex justify-between font-bold text-xl">
               <span>Total</span>
-              <span>${data?.item_data.price - data?.item_data.discount}</span>
+              <span>₹{data?.item_data.price - data?.item_data.discount}</span>
             </div>
           </div>
 

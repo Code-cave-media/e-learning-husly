@@ -21,7 +21,7 @@ async def upload_video(file: UploadFile):
     folder = "course/chapter"
     return await upload_file(file,folder)
 async def upload_pdf(file: UploadFile):
-    folder = "course/chapter/pdf"
+    folder = "course/chapter-pdf"
     return await upload_file(file,folder)
 
 
@@ -74,7 +74,7 @@ async def update_landing_thumbnail_file(thumbnail,db_landing_page:CourseLandingP
 
 async def update_into_video_file(intro_video,db_course:Course):
     await delete_file(db_course.intro_video)
-    file_url = await upload_thumbnail(intro_video)
+    file_url = await upload_intro_video(intro_video)
     return file_url
 
 
@@ -85,8 +85,9 @@ async def update_video_file(video,db_course_chapter:CourseChapter):
     return file_url
 
 async def update_pdf_file(pdf,db_course_chapter:CourseChapter):
-    if not pdf: return
-    await delete_file(db_course_chapter.pdf)
+    if not pdf : return
+    if db_course_chapter.pdf:
+        await delete_file(db_course_chapter.pdf)
     file_url = await upload_pdf(pdf)
     return file_url
 

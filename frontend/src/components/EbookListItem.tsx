@@ -325,7 +325,9 @@ export function EbookListItem({ ebook, setEbook }: EbookListItemProps) {
       message: `Are you sure you want to delete this chapter? This action cannot be undone.`,
       header: "Delete Chapter",
       icon: "pi pi-exclamation-triangle",
-      acceptClassName: "p-button-danger",
+      acceptClassName: "p-button-danger bg-red-500 text-white ml-4 px-3 py-1",
+      rejectClassName: "p-button-secondary bg-gray-200 text-gray-800 px-3 py-1",
+
       accept: () => {
         deleteEbookContent(contentId);
       },
@@ -364,7 +366,8 @@ export function EbookListItem({ ebook, setEbook }: EbookListItemProps) {
       message: `Are you sure you want to delete the ebook "${ebook.title}"? This action cannot be undone.`,
       header: "Delete Ebook",
       icon: "pi pi-exclamation-triangle",
-      acceptClassName: "p-button-danger",
+      acceptClassName: "p-button-danger bg-red-500 text-white ml-4 px-3 py-1",
+      rejectClassName: "p-button-secondary bg-gray-200 text-gray-800 px-3 py-1",
       accept: async () => {
         const response = await makeApiCall(
           "DELETE",
@@ -434,7 +437,7 @@ export function EbookListItem({ ebook, setEbook }: EbookListItemProps) {
       </TableRow>
       {isExpanded && (
         <TableRow>
-          <TableCell colSpan={6} className="p-0">
+          <TableCell colSpan={7} className="p-0">
             <div className="p-4 bg-gray-50 border-t">
               <div className="space-y-6 max-w-7xl mx-auto">
                 {/* Ebook Details */}

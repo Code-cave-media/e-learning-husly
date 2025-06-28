@@ -10,10 +10,10 @@ async def upload_thumbnail(thumbnail:UploadFile):
     folder ='ebook/thumbnail'
     return await upload_file(thumbnail,folder)
 async def upload_intro_video(thumbnail:UploadFile):
-    folder ='ebook/intro-video'
+    folder ='ebook/intro'
     return await upload_file(thumbnail,folder)
 async def upload_landing_thumbnail(thumbnail:UploadFile):
-    folder ='ebook/intro-video'
+    folder = "ebook/landing-thumbnail"
     return await upload_file(thumbnail,folder)
 
 async def upload_pdf_file(file:UploadFile):
@@ -27,7 +27,7 @@ async def update_thumbnail_file(thumbnail,db_ebook:EBook):
     return file_url
 async def update_landing_thumbnail_file(thumbnail,db_landing_page:EBookLandingPage):
     await delete_file(db_landing_page.thumbnail)
-    file_url = await upload_thumbnail(thumbnail)
+    file_url = await upload_landing_thumbnail(thumbnail)
     return file_url
 
 async def update_intro_video_file(intro_video,db_ebook:EBook):

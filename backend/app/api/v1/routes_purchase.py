@@ -44,7 +44,6 @@ def purchase_course(data: PaymentRequest,db:Session=Depends(get_db)):
     # Verify coupon
     discount = 0
     db_coupon = None
-    print(data.coupon)
     if data.coupon:
         db_coupon = get_coupon_by_code(db,data.coupon)
         if not db_coupon:
@@ -88,19 +87,21 @@ def purchase_course(data: PaymentRequest,db:Session=Depends(get_db)):
         }
     }
     headers = {
-        "x-client-id": settings.CASHFREE_APP_ID,
-        "x-client-secret": settings.CASHFREE_SECRET_KEY,
-        "x-api-version": "2022-09-01",  # Required version header
+        "x-client-id": settings.CASHFREE_APP_ID_TEST if not settings.PRODUCTION else settings.CASHFREE_APP_ID_PROD,
+        "x-client-secret": settings.CASHFREE_SECRET_KEY_TEST if not settings.PRODUCTION else settings.CASHFREE_SECRET_KEY_PROD,
+        "x-api-version": "2022-09-01",
         "Content-Type": "application/json"
     }
     base_url = settings.CASHFREE_TEST_BASE_URL if not settings.PRODUCTION else settings.CASHFREE_PROD_BASE_URL
+    print(headers,base_url)
     response = httpx.post(f"{base_url}/orders", headers=headers, json=payload)
     if response.status_code != 200:
         raise HTTPException(status_code=response.status_code, detail=response.text)
+
     response_data = response.json()
+    pprint(response_data)
     payment_session_id = response_data["payment_session_id"]
     order_id = response_data["order_id"]
-    print(discount)
     create_transaction_processing(db, {
         "transaction_id": order_id,
         "item_id": data.item_id,
@@ -113,6 +114,7 @@ def purchase_course(data: PaymentRequest,db:Session=Depends(get_db)):
         "coupon_code": data.coupon,
         "coupon_type": 'fixed' if db_coupon and db_coupon.type == 'fixed' else 'percentage'
     })
+    print({"payment_session_id": payment_session_id, "transaction_id": order_id})
     return {"payment_session_id": payment_session_id, "transaction_id": order_id}
 
 # create order
@@ -206,6 +208,7 @@ async def payment_webhook(request: Request, db: Session = Depends(get_db)):
             db.refresh(new_user_affiliate_account)
         if db_affiliate_link_purchase:
             db.refresh(db_affiliate_link_purchase)
+        
         return {
             "payment_status": event,
             "transaction_id": transaction.id
@@ -229,9 +232,6 @@ async def cashfree_webhook(request: Request, db: Session = Depends(get_db)):
         order_data = data.get("data", {}).get("order", {})
         payment_info = data.get("data", {}).get("payment", {})
         customer_info =  data.get("data", {}).get("customer_details", {})
-        pprint(payment_info)
-        pprint(order_data)
-        pprint(data)
         order_id = order_data.get("order_id")
         payment_status = payment_info.get("payment_status")
         db_transaction_processing = get_transaction_processing_by_id(db, order_id)

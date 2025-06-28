@@ -5,11 +5,36 @@ from core.config import settings
 from fastapi import UploadFile 
 from lib.boto3 import upload_to_space, delete_from_space
 import math
+import shutil
+from schemas.utils import absolute_media_url
+from urllib.parse import urlparse
+
+os.makedirs(settings.MEDIA_PATH, exist_ok=True)
+
 async def upload_file(file: UploadFile, folder: str) -> str:
     filename = f"{uuid.uuid4().hex}_{file.filename}"
-    return upload_to_space(folder,filename, await file.read())
+    file_location = os.path.join(settings.MEDIA_PATH, folder, filename)
+    folder_path = os.path.join(settings.MEDIA_PATH, folder)
+    os.makedirs(folder_path, exist_ok=True)
+    with open(file_location, "wb") as buffer:
+        shutil.copyfileobj(file.file, buffer)
+    file_path = os.path.join(folder, filename)
+    return absolute_media_url(file_path)
+    return upload_to_space(folder, filename, await file.read())
 
 async def delete_file(file_url: str):
+    print(file_url,'-------------')
+    parsed_url = urlparse(file_url)
+    file_path = parsed_url.path
+    print(file_path,'==================')
+    filename = file_path.replace("/media/", "", 1)
+    full_path = os.path.join(settings.MEDIA_DIR, filename)
+    # Delete the file if it exists
+    if os.path.exists(full_path):
+        os.remove(full_path)
+        return True
+    else:
+        return False
     if file_url:
         return delete_from_space(file_url)
     return True

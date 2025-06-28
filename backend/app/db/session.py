@@ -12,10 +12,10 @@ engine = create_engine(settings.DATABASE_URL,pool_size=10,
 SessionLocal = sessionmaker(autocommit=False, autoflush=False, bind=engine)
 
 def get_db():
-  db = SessionLocal()
-  try:
-    yield  db
-  finally:
+    db = SessionLocal()
+    try:
+        yield  db
+    finally:
         db.close()
 
 
@@ -37,4 +37,4 @@ def create_admin_user(db:Session):
         db.refresh(user)
     print("Admin users created or updated successfully.")
 
-create_admin_user(next(get_db()))
+# create_admin_user(next(get_db()))
