@@ -38,7 +38,7 @@ const courseData = {
     "A comprehensive guide to mastering digital marketing strategies, tools, and techniques for business growth.",
   price: 49.99,
   originalPrice: 99.99,
-  imageUrl:
+  thumbnail:
     "https://www.hostinger.in/tutorials/wp-content/uploads/sites/2/2022/07/the-structure-of-a-url.png",
   instructor: "Jane Smith",
   videoUrl:
@@ -170,7 +170,7 @@ export default function UserCourseDetailPage() {
               <div className="relative aspect-video overflow-hidden rounded-lg shadow-xl">
                 <video
                   className="w-full h-full object-cover"
-                  poster={courseData.imageUrl}
+                  poster={courseData.thumbnail}
                   controls={isVideoPlaying}
                   onClick={() => setIsVideoPlaying(true)}
                   src={courseData.videoUrl}

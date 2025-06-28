@@ -3,6 +3,17 @@ from db.base import Base
 from sqlalchemy.orm import relationship
 from .utils import TimestampMixin
 
+class CourseLandingPage(TimestampMixin,Base):
+    __tablename__ = "course_landing_page"
+    id = Column(Integer, primary_key=True, index=True)
+    main_heading = Column(String, nullable=False)
+    sub_heading = Column(String, nullable=False)
+    top_heading = Column(String, nullable=False)
+    highlight_words = Column(String, nullable=False)
+    thumbnail = Column(String, nullable=False)
+    course_id = Column(Integer, ForeignKey("course.id"), unique=True)
+
+
 class Course(TimestampMixin,Base):
     __tablename__ = "course"
     id = Column(Integer, primary_key=True, index=True)
@@ -11,8 +22,29 @@ class Course(TimestampMixin,Base):
     price = Column(Float)
     commission = Column(Float)
     visible = Column(Boolean,default=True)
+    intro_video = Column(String)
     thumbnail = Column(String)
     chapters = relationship("CourseChapter", backref="course", cascade="all, delete-orphan")
+    landing_page = relationship("CourseLandingPage", backref="course", uselist=False)
+    is_new = Column(Boolean, default=True)  
+    is_featured = Column(Boolean, default=False)
+
+class CourseProgress(TimestampMixin, Base):
+    __tablename__ = "course_progress"
+
+    id = Column(Integer, primary_key=True, index=True)
+    user_id = Column(Integer, ForeignKey("user.id"), nullable=False)
+    course_id = Column(Integer, ForeignKey("course.id"), nullable=False)
+    completed = Column(Boolean, default=False)
+    chapters = relationship('CourseCompletionChapter',foreign_keys="CourseCompletionChapter.course_progress_id",backref="course_progress")
+
+class CourseCompletionChapter(TimestampMixin, Base):
+    __tablename__ = "course_completion_chapter"
+
+    id = Column(Integer, primary_key=True, index=True)
+    chapter_id = Column(Integer, ForeignKey("course_chapter.id"), nullable=False)
+    course_progress_id = Column(Integer, ForeignKey("course_progress.id"), nullable=False)
+
 
 class CourseChapter(TimestampMixin,Base):
     __tablename__ = "course_chapter"
@@ -22,14 +54,6 @@ class CourseChapter(TimestampMixin,Base):
     title = Column(String)
     description = Column(String)
     duration = Column(String)
-    visible = Column(Boolean,default=True)
+    pdf = Column(String, nullable=True)
 
-class CouponCode(TimestampMixin,Base):
-    __tablename__ = "coupon_code"
-    id = Column(Integer, primary_key=True, index=True)
-    type = Column(String,default='fixed')
-    discount = Column(Float)
-    min_purchase = Column(Float,nullable=True)
-    code = Column(String, unique=True)
-    no_of_use = Column(Integer)
 

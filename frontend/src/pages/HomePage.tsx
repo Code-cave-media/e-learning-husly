@@ -12,7 +12,7 @@ const featuredCourses = [
     description:
       "Learn HTML, CSS, JavaScript, React, Node.js and more with practical projects.",
     price: 49.99,
-    imageUrl:
+    thumbnail:
       "https://images.unsplash.com/photo-1461749280684-dccba630e2f6?auto=format&w=800",
     isFeatured: true,
   },
@@ -22,7 +22,7 @@ const featuredCourses = [
     description:
       "Master React hooks, context API, Redux and build professional applications.",
     price: 59.99,
-    imageUrl:
+    thumbnail:
       "https://images.unsplash.com/photo-1488590528505-98d2b5aba04b?auto=format&w=800",
     isNew: true,
   },
@@ -32,7 +32,7 @@ const featuredCourses = [
     description:
       "Learn Python for data analysis, visualization, machine learning and more.",
     price: 69.99,
-    imageUrl:
+    thumbnail:
       "https://images.unsplash.com/photo-1518770660439-4636190af475?auto=format&w=800",
   },
 ];
@@ -43,7 +43,7 @@ const featuredEbooks = [
     title: "React Patterns & Best Practices",
     description: "Practical guide to writing maintainable React applications.",
     price: 19.99,
-    coverUrl:
+    thumbnail:
       "https://images.unsplash.com/photo-1581091226825-a6a2a5aee158?auto=format&w=800",
     isFeatured: true,
   },
@@ -53,7 +53,7 @@ const featuredEbooks = [
     description:
       "Master modern JavaScript from fundamentals to advanced topics.",
     price: 24.99,
-    coverUrl:
+    thumbnail:
       "https://images.unsplash.com/photo-1517022812141-23620dba5c23?auto=format&w=800",
     isNew: true,
   },
@@ -64,7 +64,7 @@ const HomePage = () => {
     <>
       {/* Hero Section */}
       <section className="bg-gradient-to-r from-brand-primary to-brand-secondary text-black">
-        <div className="container px-4 px-4 mx-auto  py-16 md:py-24 flex flex-col md:flex-row items-center">
+        <div className="container px-4 mx-auto  py-16 md:py-24 flex flex-col md:flex-row items-center">
           <div className="flex-1 mb-8 md:mb-0 md:pr-10">
             <h1 className="text-4xl md:text-5xl font-bold mb-4">
               Expand Your Knowledge with Expert Courses
@@ -78,9 +78,9 @@ const HomePage = () => {
               <Button
                 size="lg"
                 asChild
-                className="bg-white text-brand-primary hover:bg-gray-100"
+                className="bg-primary  text-white   hover:bg-blue-700"
               >
-                <Link to="/courses">Browse Courses</Link>
+                <Link to="/learning">Start your side hustle</Link>
               </Button>
               {/* <Button
                 size="lg"
@@ -124,41 +124,26 @@ const HomePage = () => {
 
       {/* Featured Courses */}
       <section className="section-padding ">
-        <div className="container px-4 px-4  mx-auto">
+        <div className="container  px-4  mx-auto">
           <div className="flex justify-between items-center mb-8">
-            <h2 className="text-2xl md:text-3xl font-bold">Featured Courses</h2>
+            <h2 className="text-2xl md:text-3xl font-bold">Featured</h2>
             <Button variant="outline" asChild>
-              <Link to="/courses">View All</Link>
+              <Link to="/learning">View All</Link>
             </Button>
           </div>
           <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-3 gap-6">
             {featuredCourses.map((course) => (
-              <CourseCard key={course.id} {...course} />
+              <CourseCard key={course.id} {...course} isHomePage={true} />
             ))}
-          </div>
-        </div>
-      </section>
-
-      {/* Featured eBooks */}
-      <section className="section-padding bg-gray-50">
-        <div className="container px-4 px-4  mx-auto">
-          <div className="flex justify-between items-center mb-8">
-            <h2 className="text-2xl md:text-3xl font-bold">Featured eBooks</h2>
-            <Button variant="outline" asChild>
-              <Link to="/ebooks">View All</Link>
-            </Button>
-          </div>
-          <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-3 gap-6">
             {featuredEbooks.map((ebook) => (
-              <EbookCard key={ebook.id} {...ebook} />
+              <EbookCard key={ebook.id} {...ebook} isHomePage={true} />
             ))}
           </div>
         </div>
       </section>
-
       {/* CTA Section */}
-      <section className="section-padding bg-brand-primary text-black">
-        <div className="container px-4 px-4 mx-auto text-center">
+      {/* <section className="section-padding bg-brand-primary text-black">
+        <div className="container px-4  mx-auto text-center">
           <h2 className="text-3xl md:text-4xl font-bold mb-4">
             Become an Affiliate Partner
           </h2>
@@ -175,7 +160,7 @@ const HomePage = () => {
             <Link to="/affiliate-program">Join Affiliate Program</Link>
           </Button>
         </div>
-      </section>
+      </section> */}
     </>
   );
 };

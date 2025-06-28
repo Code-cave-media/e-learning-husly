@@ -18,8 +18,8 @@ import { cn } from "@/lib/utils";
 
 const navigation = [
   { name: "Dashboard", href: "/user/dashboard", icon: Home },
-  { name: "Courses", href: "/user/dashboard/courses", icon: BookOpen },
-  { name: "Ebooks", href: "/user/dashboard/ebooks", icon: FileText },
+  { name: "Trainings", href: "/user/dashboard/courses", icon: BookOpen },
+  { name: "Blueprints", href: "/user/dashboard/ebooks", icon: FileText },
   { name: "Affiliate", href: "/user/dashboard/affiliate", icon: Users },
 ];
 
@@ -54,8 +54,8 @@ export default function DashboardLayout({
                 key={item.name}
                 variant={isActive ? "secondary" : "ghost"}
                 className={cn(
-                  "w-full justify-start gap-2",
-                  isActive && "bg-secondary"
+                  "w-full justify-start gap-2 ",
+                  isActive && "bg-blue-600 text-white hover:bg-blue-600"
                 )}
                 onClick={() => {
                   navigate(item.href);

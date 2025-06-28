@@ -21,8 +21,8 @@ import { cn } from "@/lib/utils";
 
 const navigation = [
   { name: "Overview", href: "/admin/dashboard", icon: BarChart3 },
-  { name: "Ebooks", href: "/admin/dashboard/ebooks", icon: FileText },
-  { name: "Courses", href: "/admin/dashboard/courses", icon: BookOpen },
+  { name: "Blueprints", href: "/admin/dashboard/ebooks", icon: FileText },
+  { name: "Trainings", href: "/admin/dashboard/courses", icon: BookOpen },
   {
     name: "Transactions",
     href: "/admin/dashboard/transactions",
@@ -66,7 +66,7 @@ export default function AdminLayout({
                 variant={isActive ? "secondary" : "ghost"}
                 className={cn(
                   "w-full justify-start gap-2",
-                  isActive && "bg-secondary"
+                  isActive && "bg-blue-600 text-white hover:bg-blue-600"
                 )}
                 onClick={() => {
                   navigate(item.href);

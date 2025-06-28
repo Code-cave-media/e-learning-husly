@@ -17,13 +17,15 @@ interface ApiResponse {
 
 export const useAPICall = () => {
   const [fetching, setIsFetching] = useState(false);
-
+  const [fetchType, setFetchType] = useState<string>("");
+  const [isFetched, setIsFetched] = useState(false);
   async function makeApiCall(
     method: string,
     endpoint: string,
     data?: any,
     dataType?: "application/json" | "application/form-data",
-    token?: string
+    token?: string,
+    fetchType?: string
   ): Promise<ApiResponse> {
     let header = {};
     if (token) {
@@ -38,12 +40,14 @@ export const useAPICall = () => {
     }
     let responseData: ApiResponse;
     setIsFetching(true);
+    setFetchType(fetchType);
     try {
       const response = await axios({
         method: method,
         data: data,
         headers: header,
         url: endpoint,
+        timeout: 10000,
       });
       responseData = {
         status: response.status,
@@ -51,34 +55,45 @@ export const useAPICall = () => {
         error: undefined,
       };
     } catch (error) {
+      console.log(error);
       if (axios.isAxiosError(error)) {
         console.error("Error message: ", error.message);
-        responseData =  {
+        responseData = {
           status: error.response.status,
           data: undefined,
           error: error.response.data.detail,
         };
-        
       } else {
         responseData = {
           status: 500,
           data: undefined,
           error: "An unexpected error occurred",
         };
-      }                                                   
+      }
     }
     setIsFetching(false);
-    if(responseData.status === 500){
+    setFetchType("");
+    if (responseData.status === 500) {
       toast.error("An unexpected error occurred, Please try again later");
+      console.log(responseData.error);
     }
-    if(responseData.status === 401){
-      toast.error("Unauthorized, Please login again");
+    if (responseData.status === 401) {
+      // toast.error("Unauthorized, Please login again");
+      console.log(responseData.error);
     }
-    if(responseData.status === 403){
-      toast.error("Forbidden, You don't have permission to access this resource");
+    if (responseData.status === 403) {
+      toast.error(
+        "Forbidden, You don't have permission to access this resource"
+      );
+      console.log(responseData.error);
     }
-    return responseData
+    setIsFetched(true);
+    return responseData;
   }
   return {
-    makeApiCall,fetching}
+    makeApiCall,
+    fetching,
+    fetchType,
+    isFetched,
+  };
 };

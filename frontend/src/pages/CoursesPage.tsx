@@ -12,7 +12,7 @@ const allCourses = [
     description:
       "Learn HTML, CSS, JavaScript, React, Node.js and more with practical projects.",
     price: 49.99,
-    imageUrl:
+    thumbnail:
       "https://images.unsplash.com/photo-1461749280684-dccba630e2f6?auto=format&w=800",
     isFeatured: true,
   },
@@ -22,7 +22,7 @@ const allCourses = [
     description:
       "Master React hooks, context API, Redux and build professional applications.",
     price: 59.99,
-    imageUrl:
+    thumbnail:
       "https://images.unsplash.com/photo-1488590528505-98d2b5aba04b?auto=format&w=800",
     isNew: true,
   },
@@ -32,7 +32,7 @@ const allCourses = [
     description:
       "Learn Python for data analysis, visualization, machine learning and more.",
     price: 69.99,
-    imageUrl:
+    thumbnail:
       "https://images.unsplash.com/photo-1518770660439-4636190af475?auto=format&w=800",
   },
   {
@@ -41,7 +41,7 @@ const allCourses = [
     description:
       "Master Figma, design principles, and create stunning user interfaces.",
     price: 39.99,
-    imageUrl:
+    thumbnail:
       "https://images.unsplash.com/photo-1581091226825-a6a2a5aee158?auto=format&w=800",
     isNew: true,
   },
@@ -51,7 +51,7 @@ const allCourses = [
     description:
       "Learn Docker, Kubernetes, CI/CD pipelines and cloud infrastructure.",
     price: 79.99,
-    imageUrl:
+    thumbnail:
       "https://images.unsplash.com/photo-1498050108023-c5249f4df085?auto=format&w=800",
   },
   {
@@ -60,7 +60,7 @@ const allCourses = [
     description:
       "Build cross-platform mobile apps with Flutter and Dart programming.",
     price: 54.99,
-    imageUrl:
+    thumbnail:
       "https://images.unsplash.com/photo-1519389950473-47ba0277781c?auto=format&w=800",
     isFeatured: true,
   },
@@ -113,7 +113,7 @@ const CoursesPage = () => {
   return (
     <div className="container px-4 mx-auto py-8">
       <div className="mb-8">
-        <h1 className="text-3xl font-bold mb-2">Courses</h1>
+        <h1 className="text-3xl font-bold mb-2">Trainings</h1>
         <p className="text-gray-600">
           Discover and learn with our professional courses.
         </p>

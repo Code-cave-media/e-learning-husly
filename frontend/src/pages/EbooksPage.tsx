@@ -11,7 +11,7 @@ const allEbooks = [
     title: "React Patterns & Best Practices",
     description: "Practical guide to writing maintainable React applications.",
     price: 19.99,
-    coverUrl:
+    thumbnail:
       "https://images.unsplash.com/photo-1517022812141-23620dba5c23?auto=format&w=800",
     isFeatured: true,
   },
@@ -21,7 +21,7 @@ const allEbooks = [
     description:
       "Master modern JavaScript from fundamentals to advanced topics.",
     price: 24.99,
-    coverUrl:
+    thumbnail:
       "https://images.unsplash.com/photo-1582562124811-c09040d0a901?auto=format&w=800",
     isNew: true,
   },
@@ -31,7 +31,7 @@ const allEbooks = [
     description:
       "Learn Python programming for data analysis and visualization.",
     price: 17.99,
-    coverUrl:
+    thumbnail:
       "https://images.unsplash.com/photo-1721322800607-8c38375eef04?auto=format&w=800",
   },
   {
@@ -40,7 +40,7 @@ const allEbooks = [
     description:
       "Understand cloud computing models, services, and best practices.",
     price: 29.99,
-    coverUrl:
+    thumbnail:
       "https://images.unsplash.com/photo-1526374965328-7f61d4dc18c5?auto=format&w=800",
     isNew: true,
   },
@@ -50,7 +50,7 @@ const allEbooks = [
     description:
       "Practical guide for securing web applications and preventing attacks.",
     price: 22.99,
-    coverUrl:
+    thumbnail:
       "https://images.unsplash.com/photo-1487058792275-0ad4aaf24ca7?auto=format&w=800",
     isFeatured: true,
   },
@@ -66,8 +66,6 @@ const newEbooks = allEbooks.filter((ebook) => ebook.isNew);
 
 // Featured ebooks
 const featuredEbooks = allEbooks.filter((ebook) => ebook.isFeatured);
-
-
 
 const EbooksPage = () => {
   const [activeTab, setActiveTab] = useState("all");
@@ -103,7 +101,7 @@ const EbooksPage = () => {
   return (
     <div className="container px-4 mx-auto py-8">
       <div className="mb-8">
-        <h1 className="text-3xl font-bold mb-2">eBooks</h1>
+        <h1 className="text-3xl font-bold mb-2">Blueprints</h1>
         <p className="text-gray-600">
           Expand your knowledge with our professional eBooks.
         </p>

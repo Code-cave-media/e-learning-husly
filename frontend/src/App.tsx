@@ -6,6 +6,8 @@ import {
   Routes,
   Route,
   Navigate,
+  useNavigate,
+  useLocation,
 } from "react-router-dom";
 import MainLayout from "./components/layout/MainLayout";
 import DashboardLayout from "./components/layout/DashboardLayout";
@@ -26,8 +28,8 @@ import { LoadingScreen } from "@/components/ui/LoadingScreen";
 import AffiliateProgramPage from "./pages/AffiliateProgramPage";
 import CourseWatchPage from "./pages/userDashboard/CourseWatchPage";
 import EbookViewPage from "./pages/userDashboard/EbookViewPage";
-import { Toaster } from "react-hot-toast";
-import { useEffect } from "react";
+import toast, { Toaster } from "react-hot-toast";
+import { useEffect, useState } from "react";
 import AdminDashboard from "./pages/adminDashboard/Dashboard";
 import EbooksManagement from "./pages/adminDashboard/EbooksManagement";
 import CoursesManagement from "./pages/adminDashboard/CoursesManagement";
@@ -40,6 +42,16 @@ import AdminEbookDetailPage from "./pages/adminDashboard/EbookDetailPage";
 import LandingPage from "./pages/Landing";
 import CouponsManagement from "./pages/adminDashboard/CouponsManagement";
 import Checkout from "./pages/Checkout";
+import { useAPICall } from "./hooks/useApiCall";
+import { API_ENDPOINT } from "./config/backend";
+import LearningPage from "./pages/LearningPage";
+import { ConfirmDialog } from "primereact/confirmdialog";
+import "primereact/resources/themes/lara-light-cyan/theme.css";
+import "primereact/resources/primereact.min.css"; // Required base CSS
+import "primeicons/primeicons.css"; // Required for icons
+import UserDashboardCoursesPage from "./pages/userDashboard/CoursesPage";
+import UserDashboardEbooksPage from "./pages/userDashboard/EbooksPage";
+import PaymentVerification from "./pages/PaymentVerification";
 
 const queryClient = new QueryClient();
 
@@ -57,32 +69,50 @@ const ProtectedRoute = ({ children }: { children: React.ReactNode }) => {
 // Admin Route component
 const AdminRoute = ({ children }: { children: React.ReactNode }) => {
   const { isAuthenticated, isAdmin } = useAuth();
-
-  if (!isAuthenticated || !isAdmin) {
+  if (!isAuthenticated) {
+    return <Navigate to="/" replace />;
+  }
+  if (!isAdmin) {
     return <Navigate to="/user/dashboard" replace />;
   }
-
   return <>{children}</>;
 };
 
 // Public Route component - redirects to dashboard if authenticated
 const PublicRoute = ({ children }: { children: React.ReactNode }) => {
   const { isAuthenticated } = useAuth();
-
+  const pathname = useLocation().pathname;
   if (isAuthenticated) {
     return <Navigate to="/user/dashboard" replace />;
   }
-
   return <>{children}</>;
 };
 
 const AppRoutes = () => {
+  const { isCheckedUser } = useAuth();
   useEffect(() => {
-    const script = document.createElement("script");
-    script.src = "https://checkout.razorpay.com/v1/checkout.js";
-    script.async = true;
-    document.body.appendChild(script);
+    // const script = document.createElement("script");
+    // script.src = "https://checkout.razorpay.com/v1/checkout.js";
+    // script.async = true;
+    // document.body.appendChild(script);
+    // const script = document.createElement("script");
+    // script.src = "https://sdk.cashfree.com/js/v3/cashfree.js";
+    // script.async = true;
+    // script.onload = () => {
+    //   console.log("Cashfree v3 SDK loaded");
+    // };
+    // script.onerror = () => {
+    //   toast.error("Failed to load Cashfree payment system.");
+    // };
+    // document.body.appendChild(script);
+    // console.log(new window.Cashfree);
   }, []);
+  console.log(isCheckedUser);
+  if (!isCheckedUser) {
+    console.log('enter')
+    return <LoadingScreen />;
+  }
+  console.log('reenter');
   return (
     <Routes>
       {/* Public Routes */}
@@ -96,7 +126,7 @@ const AppRoutes = () => {
           </PublicRoute>
         }
       />
-      <Route
+      {/* <Route
         path="/affiliate-program"
         element={
           <PublicRoute>
@@ -105,26 +135,26 @@ const AppRoutes = () => {
             </MainLayout>
           </PublicRoute>
         }
-      />
+      /> */}
       <Route
-        path="/courses"
+        path="/learning"
         element={
           <PublicRoute>
             <MainLayout>
-              <CoursesPage />
+              <LearningPage />
             </MainLayout>
           </PublicRoute>
         }
       />
-      <Route
+      {/* <Route
         path="/course/:id"
         element={
           <MainLayout>
             <CourseDetailPage />
           </MainLayout>
         }
-      />
-      <Route
+      /> */}
+      {/* <Route
         path="/ebooks"
         element={
           <PublicRoute>
@@ -141,7 +171,7 @@ const AppRoutes = () => {
             <EbookDetailPage />
           </MainLayout>
         }
-      />
+      /> */}
       <Route
         path="/login"
         element={
@@ -153,7 +183,8 @@ const AppRoutes = () => {
         }
       />
       <Route path="/landing/:type/:id" element={<LandingPage />} />
-      <Route path="/landing/:type/:id/checkout" element={<Checkout />} />
+      <Route path="/checkout/:type/:id" element={<Checkout />} />
+      <Route path="/payment-verification" element={<PaymentVerification />} />
 
       {/* Protected Dashboard Routes */}
       <Route
@@ -187,7 +218,7 @@ const AppRoutes = () => {
         element={
           <ProtectedRoute>
             <DashboardLayout>
-              <CoursesPage />
+              <UserDashboardCoursesPage />
             </DashboardLayout>
           </ProtectedRoute>
         }
@@ -197,7 +228,7 @@ const AppRoutes = () => {
         element={
           <ProtectedRoute>
             <DashboardLayout>
-              <EbooksPage />
+              <UserDashboardEbooksPage />
             </DashboardLayout>
           </ProtectedRoute>
         }
@@ -216,9 +247,8 @@ const AppRoutes = () => {
         path="/course/watch/:courseId"
         element={
           <ProtectedRoute>
-            <DashboardLayout>
-              <CourseWatchPage />
-            </DashboardLayout>
+            
+            <CourseWatchPage />
           </ProtectedRoute>
         }
       />
@@ -226,9 +256,7 @@ const AppRoutes = () => {
         path="/ebook/read/:ebookId"
         element={
           <ProtectedRoute>
-            <DashboardLayout>
-              <EbookViewPage />
-            </DashboardLayout>
+            <EbookViewPage />
           </ProtectedRoute>
         }
       />
@@ -336,14 +364,62 @@ const AppRoutes = () => {
   );
 };
 
+const UserVerification = ({ children }) => {
+  const navigate = useNavigate();
+  const { makeApiCall } = useAPICall();
+  const [fetching, setFetching] = useState(false);
+  const { authToken, login, setIsCheckedUser } = useAuth();
+  const pathname = useLocation().pathname;
+  useEffect(() => {
+    const checkUser = async () => {
+      if (authToken) {
+        const response = await makeApiCall(
+          "GET",
+          API_ENDPOINT.VERIFY_USER,
+          null,
+          "application/json",
+          authToken
+        );
+        if (response.status === 200) {
+          const user = response.data;
+          login(user);
+        } else {
+          // if (
+          //   !(
+          //     pathname in
+          //     [
+          //       "/",
+          //       "/login",
+          //       "/learning",
+          //       "/landing/:type/:id",
+          //       "/checkout/:type/:id",
+          //     ]
+          //   )
+          // ) {
+          //   navigate("/login");
+          // }
+        }
+      }
+      setIsCheckedUser(true);
+      setFetching(false);
+    };
+    checkUser();
+  }, []);
+  if (fetching) {
+    return <LoadingScreen />;
+  }
+  return <>{children}</>;
+};
 const App = () => (
   <QueryClientProvider client={queryClient}>
     <TooltipProvider>
       <Toaster position="top-center" />
       <AuthProvider>
         <Router>
-          <LoadingScreen />
-          <AppRoutes />
+          <UserVerification>
+            <ConfirmDialog draggable={false} />
+            <AppRoutes />
+          </UserVerification>
         </Router>
       </AuthProvider>
     </TooltipProvider>

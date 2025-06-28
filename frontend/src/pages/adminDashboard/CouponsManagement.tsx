@@ -1,4 +1,4 @@
-import { useState } from "react";
+import { useEffect, useState } from "react";
 import {
   Table,
   TableBody,
@@ -23,61 +23,93 @@ import {
   SelectValue,
 } from "@/components/ui/select";
 import { Input } from "@/components/ui/input";
-import { Switch } from "@/components/ui/switch";
-import { Plus, Pencil, Trash2 } from "lucide-react";
+import { Plus, Pencil, Trash2, Search, Filter, Tag } from "lucide-react";
+import { useAuth } from "@/contexts/AuthContext";
+import { useAPICall } from "@/hooks/useApiCall";
+import { API_ENDPOINT } from "@/config/backend";
+import { toast } from "react-hot-toast";
+import { Loading } from "@/components/ui/loading";
+import Pagination from "@/components/Pagination";
+import {
+  DropdownMenu,
+  DropdownMenuContent,
+  DropdownMenuItem,
+  DropdownMenuTrigger,
+} from "@/components/ui/dropdown-menu";
 
 interface Coupon {
   id: number;
-  code: string;
-  type: "percent" | "fixed";
+  type: "percentage" | "flat";
   discount: number;
-  max_access: number;
-  total_accessed: number;
-  visible: boolean;
+  min_purchase: number;
+  code: string;
+  no_of_access: number;
+  used: number;
 }
 
-const dummyCoupons: Coupon[] = [
-  {
-    id: 1,
-    code: "WELCOME10",
-    type: "percent",
-    discount: 10,
-    max_access: 100,
-    total_accessed: 25,
-    visible: true,
-  },
-  {
-    id: 2,
-    code: "FLAT500",
-    type: "fixed",
-    discount: 500,
-    max_access: 50,
-    total_accessed: 10,
-    visible: false,
-  },
-];
-
 export default function CouponsManagement() {
-  const [coupons, setCoupons] = useState<Coupon[]>(dummyCoupons);
+  const [coupons, setCoupons] = useState<Coupon[]>([]);
   const [isDialogOpen, setIsDialogOpen] = useState(false);
   const [isEdit, setIsEdit] = useState(false);
   const [selectedCoupon, setSelectedCoupon] = useState<Coupon | null>(null);
-  const [form, setForm] = useState<Omit<Coupon, "id" | "total_accessed">>({
+  const { authToken } = useAuth();
+  const { fetchType, fetching, makeApiCall } = useAPICall();
+  const [currentPage, setCurrentPage] = useState(1);
+  const [hasNext, setHasNext] = useState(false);
+  const [hasPrev, setHasPrev] = useState(false);
+  const [totalItems, setTotalItems] = useState(0);
+  const pageSize = 20;
+  const [searchQuery, setSearchQuery] = useState("");
+  const [searchInput, setSearchInput] = useState("");
+  const [typeFilter, setTypeFilter] = useState("all");
+  const [form, setForm] = useState<Omit<Coupon, "id" | "used">>({
     code: "",
-    type: "percent",
+    type: "percentage",
     discount: 0,
-    max_access: 1,
-    visible: true,
+    min_purchase: 0,
+    no_of_access: 1,
   });
+
+  useEffect(() => {
+    fetchCoupons();
+  }, [currentPage, typeFilter, searchQuery]);
+
+  const fetchCoupons = async () => {
+    const response = await makeApiCall(
+      "GET",
+      API_ENDPOINT.GET_ALL_COUPONS(
+        currentPage,
+        pageSize,
+        typeFilter,
+        searchQuery
+      ),
+      {},
+      "application/json",
+      authToken,
+      "fetchCoupons"
+    );
+    if (response.status === 200) {
+      setCoupons(response.data.items);
+      setHasNext(response.data.has_next);
+      setHasPrev(response.data.has_prev);
+      setTotalItems(response.data.total);
+    }
+  };
+
+  const handleSearch = (e: React.FormEvent) => {
+    e.preventDefault();
+    setSearchQuery(searchInput);
+    setCurrentPage(1);
+  };
 
   const openAddDialog = () => {
     setIsEdit(false);
     setForm({
       code: "",
-      type: "percent",
+      type: "percentage",
       discount: 0,
-      max_access: 1,
-      visible: true,
+      min_purchase: 0,
+      no_of_access: 1,
     });
     setIsDialogOpen(true);
   };
@@ -89,101 +121,243 @@ export default function CouponsManagement() {
       code: coupon.code,
       type: coupon.type,
       discount: coupon.discount,
-      max_access: coupon.max_access,
-      visible: coupon.visible,
+      min_purchase: coupon.min_purchase,
+      no_of_access: coupon.no_of_access,
     });
     setIsDialogOpen(true);
   };
 
-  const handleDelete = (id: number) => {
-    setCoupons(coupons.filter((c) => c.id !== id));
+  const handleDelete = async (id: number) => {
+    const response = await makeApiCall(
+      "DELETE",
+      API_ENDPOINT.DELETE_COUPON(id),
+      {},
+      "application/json",
+      authToken,
+      "deleteCoupon"
+    );
+    if (response.status === 200) {
+      toast.success("Coupon deleted successfully");
+      fetchCoupons();
+    }
   };
 
-  const handleDialogSubmit = () => {
-    if (isEdit && selectedCoupon) {
-      setCoupons(
-        coupons.map((c) => (c.id === selectedCoupon.id ? { ...c, ...form } : c))
-      );
-    } else {
-      setCoupons([
-        ...coupons,
-        {
-          id: coupons.length + 1,
-          ...form,
-          total_accessed: 0,
-        },
-      ]);
+  const handleUpdate = async () => {
+    if (!selectedCoupon) return;
+    if (form.type === "percentage" && form.discount > 100) {
+      toast.error("Discount cannot be greater than 100%");
+      return;
     }
-    setIsDialogOpen(false);
-    setSelectedCoupon(null);
+    if (form.type == "flat" && form.discount > form.min_purchase) {
+      toast.error("Discount cannot be greater than minimum purchase");
+      return;
+    }
+    const response = await makeApiCall(
+      "PUT",
+      API_ENDPOINT.UPDATE_COUPON(selectedCoupon.id),
+      form,
+      "application/json",
+      authToken,
+      "updateCoupon"
+    );
+    if (response.status === 200) {
+      setIsDialogOpen(false);
+      setCoupons(
+        coupons.map((coupon) =>
+          coupon.id === selectedCoupon.id ? response.data : coupon
+        )
+      );
+      toast.success("Coupon updated successfully");
+    }
+  };
+
+  const handleCreate = async () => {
+    if (form.type === "percentage" && form.discount > 100) {
+      toast.error("Discount cannot be greater than 100%");
+      return;
+    }
+    if (form.type == "flat" && form.discount > form.min_purchase) {
+      toast.error("Discount cannot be greater than minimum purchase");
+      return;
+    }
+    const response = await makeApiCall(
+      "POST",
+      API_ENDPOINT.CREATE_COUPON,
+      form,
+      "application/json",
+      authToken,
+      "createCoupon"
+    );
+    if (response.status === 200) {
+      toast.success("Coupon created successfully");
+      setIsDialogOpen(false);
+      setCoupons([...coupons, response.data]);
+    }
+  };
+
+  const handleDialogSubmit = async () => {
+    if (isEdit && selectedCoupon) {
+      handleUpdate();
+    } else {
+      handleCreate();
+    }
   };
 
   return (
-    <div className="container mx-auto py-6">
-      <div className="flex justify-between items-center mb-6">
-        <h1 className="text-2xl font-bold">Coupon Code Management</h1>
-        <Button onClick={openAddDialog} className="flex items-center gap-2">
-          <Plus className="w-4 h-4" /> Add Coupon
-        </Button>
+    <div className="space-y-4 px-2 sm:px-4">
+      <div className="flex flex-col gap-4 mb-4 sm:mb-6">
+        <div className="flex flex-col sm:flex-row sm:justify-between sm:items-center gap-4">
+          <h1 className="text-xl sm:text-2xl font-bold">Coupons Management</h1>
+        </div>
+
+        <div className="flex flex-col sm:flex-row gap-3 sm:gap-4">
+          <div className="relative flex items-center flex-1">
+            <Search className="absolute left-2 h-4 w-4 text-muted-foreground" />
+            <Input
+              placeholder="Search by coupon code..."
+              value={searchInput}
+              onChange={(e) => setSearchInput(e.target.value)}
+              className="pl-8 w-full sm:w-[300px]"
+              onKeyDown={(e) => {
+                if (e.key === "Enter") {
+                  setSearchQuery(searchInput);
+                  setCurrentPage(1);
+                  fetchCoupons();
+                }
+              }}
+            />
+            <Button
+              variant="ghost"
+              size="icon"
+              className="absolute right-2"
+              onClick={() => {
+                setSearchQuery(searchInput);
+                setCurrentPage(1);
+                fetchCoupons();
+              }}
+            >
+              <Search className="h-4 w-4" />
+            </Button>
+          </div>
+          <DropdownMenu>
+            <DropdownMenuTrigger asChild>
+              <Button
+                variant="outline"
+                size="sm"
+                className="flex items-center gap-2 capitalize whitespace-nowrap"
+              >
+                <Filter className="w-3 h-3 sm:w-4 sm:h-4" />
+                {typeFilter === "all"
+                  ? "All Types"
+                  : `Type: ${
+                      typeFilter === "percentage"
+                        ? "Percentage"
+                        : "Fixed Amount"
+                    }`}
+              </Button>
+            </DropdownMenuTrigger>
+            <DropdownMenuContent>
+              <DropdownMenuItem onClick={() => setTypeFilter("all")}>
+                All Types
+              </DropdownMenuItem>
+              <DropdownMenuItem onClick={() => setTypeFilter("percentage")}>
+                Percentage
+              </DropdownMenuItem>
+              <DropdownMenuItem onClick={() => setTypeFilter("flat")}>
+                Fixed Amount
+              </DropdownMenuItem>
+            </DropdownMenuContent>
+          </DropdownMenu>
+          <Button
+            size="sm"
+            className="sm:text-base"
+            onClick={() => openAddDialog()}
+          >
+            <Plus className="w-3 h-3 sm:w-4 sm:h-4 mr-1 sm:mr-2" />
+            Add New Coupon
+          </Button>
+        </div>
       </div>
-      <div className="bg-white rounded-lg shadow">
+
+      <div className="border rounded-lg">
         <Table>
           <TableHeader>
             <TableRow>
               <TableHead>Code</TableHead>
               <TableHead>Type</TableHead>
               <TableHead>Discount</TableHead>
-              <TableHead>Max Access</TableHead>
-              <TableHead>Total Accessed</TableHead>
-              <TableHead>Visible</TableHead>
+              <TableHead>Min Purchase</TableHead>
+              <TableHead>Used</TableHead>
               <TableHead>Actions</TableHead>
             </TableRow>
           </TableHeader>
           <TableBody>
-            {coupons.map((coupon) => (
-              <TableRow key={coupon.id}>
-                <TableCell>{coupon.code}</TableCell>
-                <TableCell className="capitalize">{coupon.type}</TableCell>
-                <TableCell>
-                  {coupon.type === "percent"
-                    ? `${coupon.discount}%`
-                    : `₹${coupon.discount}`}
+            {fetching && fetchType === "fetchCoupons" ? (
+              <TableRow>
+                <TableCell colSpan={6} className="text-center py-8">
+                  <Loading />
                 </TableCell>
-                <TableCell>{coupon.max_access}</TableCell>
-                <TableCell>{coupon.total_accessed}</TableCell>
-                <TableCell>
-                  <span
-                    className={`px-2 py-1 rounded-full text-xs ${
-                      coupon.visible
-                        ? "bg-green-100 text-green-800"
-                        : "bg-red-100 text-red-800"
-                    }`}
-                  >
-                    {coupon.visible ? "Visible" : "Hidden"}
-                  </span>
-                </TableCell>
-                <TableCell>
-                  <div className="flex space-x-2">
-                    <Button
-                      variant="outline"
-                      size="icon"
-                      onClick={() => openEditDialog(coupon)}
-                    >
-                      <Pencil className="h-4 w-4" />
-                    </Button>
-                    <Button
-                      variant="outline"
-                      size="icon"
-                      onClick={() => handleDelete(coupon.id)}
-                    >
-                      <Trash2 className="h-4 w-4" />
-                    </Button>
+              </TableRow>
+            ) : coupons.length === 0 ? (
+              <TableRow>
+                <TableCell colSpan={6} className="h-24 text-center">
+                  <div className="flex flex-col items-center justify-center gap-2">
+                    <Tag className="h-8 w-8 text-muted-foreground" />
+                    <p className="text-muted-foreground">No coupons found</p>
+                    <p className="text-sm text-muted-foreground">
+                      {searchQuery
+                        ? `No coupons matching "${searchQuery}"`
+                        : "Create your first coupon to get started."}
+                    </p>
                   </div>
                 </TableCell>
               </TableRow>
-            ))}
+            ) : (
+              coupons.map((coupon) => (
+                <TableRow key={coupon.id}>
+                  <TableCell>{coupon.code}</TableCell>
+                  <TableCell className="capitalize">{coupon.type}</TableCell>
+                  <TableCell>
+                    {coupon.type === "percentage"
+                      ? `${coupon.discount}%`
+                      : `₹${coupon.discount}`}
+                  </TableCell>
+                  <TableCell>₹{coupon.min_purchase}</TableCell>
+                  <TableCell>{coupon.used}</TableCell>
+                  <TableCell>
+                    <div className="flex gap-2">
+                      <Button
+                        variant="outline"
+                        size="sm"
+                        onClick={() => openEditDialog(coupon)}
+                      >
+                        <Pencil className="w-4 h-4" />
+                      </Button>
+                      <Button
+                        variant="outline"
+                        size="sm"
+                        onClick={() => handleDelete(coupon.id)}
+                      >
+                        <Trash2 className="w-4 h-4" />
+                      </Button>
+                    </div>
+                  </TableCell>
+                </TableRow>
+              ))
+            )}
           </TableBody>
         </Table>
+        {!fetching && coupons.length > 0 && (
+          <Pagination
+            currentPage={currentPage}
+            hasNext={hasNext}
+            hasPrev={hasPrev}
+            total={totalItems}
+            pageSize={pageSize}
+            onPageChange={setCurrentPage}
+            itemsSize={coupons.length}
+          />
+        )}
       </div>
 
       {/* Add/Edit Coupon Dialog */}
@@ -203,15 +377,15 @@ export default function CouponsManagement() {
               <Select
                 value={form.type}
                 onValueChange={(value) =>
-                  setForm({ ...form, type: value as "percent" | "fixed" })
+                  setForm({ ...form, type: value as "percentage" | "flat" })
                 }
               >
                 <SelectTrigger>
                   <SelectValue placeholder="Select type" />
                 </SelectTrigger>
                 <SelectContent>
-                  <SelectItem value="percent">Percent</SelectItem>
-                  <SelectItem value="fixed">Fixed</SelectItem>
+                  <SelectItem value="percentage">Percentage</SelectItem>
+                  <SelectItem value="flat">Flat</SelectItem>
                 </SelectContent>
               </Select>
             </div>
@@ -228,36 +402,43 @@ export default function CouponsManagement() {
             </div>
             <div>
               <label className="block text-sm font-medium mb-1">
-                Max access
+                Minimum Purchase
               </label>
               <Input
                 type="number"
-                placeholder="Max Access"
-                value={form.max_access}
+                placeholder="Minimum Purchase"
+                value={form.min_purchase}
                 onChange={(e) =>
-                  setForm({ ...form, max_access: Number(e.target.value) })
+                  setForm({ ...form, min_purchase: Number(e.target.value) })
                 }
               />
             </div>
-            <div className="flex items-center gap-2">
-              <Switch
-                checked={form.visible}
-                onCheckedChange={(checked) =>
-                  setForm({ ...form, visible: checked })
-                }
-                id="visible-switch"
-              />
-              <label htmlFor="visible-switch" className="text-sm">
-                Visible
+            <div>
+              <label className="block text-sm font-medium mb-1">
+                Maximum Access
               </label>
+              <Input
+                type="number"
+                placeholder="Maximum Access"
+                value={form.no_of_access}
+                onChange={(e) =>
+                  setForm({ ...form, no_of_access: Number(e.target.value) })
+                }
+              />
             </div>
           </div>
           <DialogFooter>
             <Button variant="outline" onClick={() => setIsDialogOpen(false)}>
               Cancel
             </Button>
-            <Button onClick={handleDialogSubmit}>
-              {isEdit ? "Update" : "Add"}
+            <Button
+              loading={
+                fetching &&
+                (fetchType === "createCoupon" || fetchType === "updateCoupon")
+              }
+              onClick={handleDialogSubmit}
+            >
+              {isEdit ? "Update" : "Add"} Coupon
             </Button>
           </DialogFooter>
         </DialogContent>

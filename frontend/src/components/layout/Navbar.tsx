@@ -11,12 +11,7 @@ const Navbar = () => {
     return location.pathname === path;
   };
 
-  const navLinks = [
-    { name: "Home", path: "/" },
-    { name: "Courses", path: "/courses" },
-    { name: "eBooks", path: "/ebooks" },
-    { name: "Affiliate", path: "/affiliate-program" },
-  ];
+  const navLinks = [];
 
   return (
     <header className="w-full bg-white border-b border-gray-100 sticky top-0 z-50 shadow-sm">
@@ -45,7 +40,11 @@ const Navbar = () => {
 
         {/* Auth Buttons */}
         <div className="hidden md:flex items-center space-x-4">
-          <Button variant="outline" asChild>
+          <Button
+            variant="default"
+            className="w-full bg-primary text-white hover:bg-blue-700"
+            asChild
+          >
             <Link to="/login">Login</Link>
           </Button>
         </div>
@@ -79,7 +78,11 @@ const Navbar = () => {
               </Link>
             ))}
             <div className="flex flex-col space-y-3 pt-3">
-              <Button variant="outline" asChild>
+              <Button
+                variant="default"
+                className="w-full bg-primary text-white hover:bg-blue-700"
+                asChild
+              >
                 <Link to="/login">Login</Link>
               </Button>
             </div>

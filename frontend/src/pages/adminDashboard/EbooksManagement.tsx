@@ -1,5 +1,4 @@
-import { useState } from "react";
-import { Button } from "@/components/ui/button";
+import { useEffect, useState } from "react";
 import {
   Table,
   TableBody,
@@ -8,142 +7,163 @@ import {
   TableHeader,
   TableRow,
 } from "@/components/ui/table";
+import { Button } from "@/components/ui/button";
 import {
   Dialog,
   DialogContent,
   DialogHeader,
   DialogTitle,
+  DialogFooter,
 } from "@/components/ui/dialog";
 import { Input } from "@/components/ui/input";
-import { Label } from "@/components/ui/label";
 import { Textarea } from "@/components/ui/textarea";
-import {
-  Select,
-  SelectContent,
-  SelectItem,
-  SelectTrigger,
-  SelectValue,
-} from "@/components/ui/select";
-import { useNavigate } from "react-router-dom";
-import { Plus, Pencil, Trash2, Eye } from "lucide-react";
-import { Badge } from "@/components/ui/badge";
-import { formatCurrency } from "@/lib/utils";
+import { Switch } from "@/components/ui/switch";
+import { Label } from "@/components/ui/label";
+import { toast } from "react-hot-toast";
+import { Plus, FileText } from "lucide-react";
+import { EbookListItem } from "@/components/EbookListItem";
+import { Ebook } from "@/types/ebook";
+import { useAPICall } from "@/hooks/useApiCall";
+import { API_ENDPOINT } from "@/config/backend";
+import { useAuth } from "@/contexts/AuthContext";
+import { Loading } from "@/components/ui/loading";
 
-interface Ebook {
-  id: number;
-  type: string;
-  title: string;
-  description: string;
-  number_of_pages: number;
-  price: number;
-  commission: number;
-  content: File | null;
-  contentUrl: string;
-  thumbnail: File | null;
-  thumbnailUrl: string;
-  visible: boolean;
-  originalPrice: number;
-  isPurchased: boolean;
-}
-
-const ebookTypes = [
-  "Programming",
-  "Design",
-  "Business",
-  "Marketing",
-  "Personal Development",
-];
-
-export default function EbookManagement() {
-  const navigate = useNavigate();
+export default function EbooksManagement() {
   const [isCreateDialogOpen, setIsCreateDialogOpen] = useState(false);
+  const [ebooks, setEbooks] = useState<Ebook[]>([]);
   const [newEbook, setNewEbook] = useState<Partial<Ebook>>({
-    type: "",
     title: "",
     description: "",
-    number_of_pages: 0,
     price: 0,
     commission: 0,
-    content: null,
-    contentUrl: "",
+    visible: false,
+    is_featured: false,
+    is_new: false,
     thumbnail: null,
-    thumbnailUrl: "",
-    visible: true,
-    originalPrice: 0,
+    intro_video: null,
+    pdf: null,
+    landing_page: {
+      top_heading: "",
+      main_heading: "",
+      sub_heading: "",
+      highlight_words: "",
+      thumbnail: null,
+    },
+    chapters: [],
   });
+  const { makeApiCall, fetching, fetchType } = useAPICall();
+  const { authToken } = useAuth();
 
-  // Dummy data for ebooks
-  const ebooks: Ebook[] = [
-    {
-      id: 1,
-      type: "Programming",
-      title: "Python Programming Guide",
-      description: "A comprehensive guide to Python programming language",
-      number_of_pages: 250,
-      price: 999,
-      commission: 10,
-      content: null,
-      contentUrl: "https://example.com/ebook.pdf",
-      thumbnail: null,
-      thumbnailUrl:
-        "https://images.unsplash.com/photo-1544716278-ca5e3f4abd8c?q=80&w=2070&auto=format&fit=crop",
-      visible: true,
-      originalPrice: 1999,
-      isPurchased: false,
-    },
-    {
-      id: 2,
-      type: "Design",
-      title: "UI/UX Design Principles",
-      description: "Master the fundamentals of UI/UX design",
-      number_of_pages: 180,
-      price: 799,
-      commission: 8,
-      content: null,
-      contentUrl: "https://example.com/design-guide.pdf",
-      thumbnail: null,
-      thumbnailUrl:
-        "https://images.unsplash.com/photo-1561070791-2526d30994b5?q=80&w=2064&auto=format&fit=crop",
-      visible: false,
-      originalPrice: 1499,
-      isPurchased: false,
-    },
-  ];
+  useEffect(() => {
+    getEbooks();
+  }, []);
 
-  const handleCreateEbook = () => {
-    // Here you would typically make an API call to create the ebook
-    setIsCreateDialogOpen(false);
+  const handleCreateEbook = async () => {
+    if (
+      !newEbook.title ||
+      !newEbook.description ||
+      !newEbook.price ||
+      !newEbook.commission ||
+      !newEbook.thumbnail ||
+      !newEbook.intro_video ||
+      !newEbook.pdf
+    ) {
+      toast.error("Please fill in all required fields");
+      return;
+    }
+    const formData = new FormData();
+    formData.append("title", newEbook.title);
+    formData.append("description", newEbook.description);
+    formData.append("price", newEbook.price.toString());
+    formData.append("commission", newEbook.commission.toString());
+    formData.append("thumbnail", newEbook.thumbnail);
+    formData.append("visible", newEbook.visible.toString());
+    formData.append("intro_video", newEbook.intro_video);
+    formData.append("pdf", newEbook.pdf);
+    formData.append("is_featured", newEbook.is_featured.toString());
+    formData.append("is_new", newEbook.is_new.toString());
+    const response = await makeApiCall(
+      "POST",
+      API_ENDPOINT.CREATE_EBOOK,
+      formData,
+      "application/form-data",
+      authToken,
+      "createEbook"
+    );
+    if (response.status === 200) {
+      setEbooks([response.data, ...ebooks]);
+      toast.success("Ebook created successfully");
+      setIsCreateDialogOpen(false);
+      setNewEbook({
+        title: "",
+        description: "",
+        price: 0,
+        commission: 0,
+        visible: false,
+        is_featured: false,
+        is_new: false,
+        thumbnail: null,
+        intro_video: null,
+        pdf: null,
+        landing_page: {
+          top_heading: "",
+          main_heading: "",
+          sub_heading: "",
+          highlight_words: "",
+          thumbnail: null,
+        },
+        chapters: [],
+      });
+    } else {
+      toast.error("Failed to create ebook");
+    }
   };
 
-  const handleEditEbook = (id: number) => {
-    navigate(`/admin/dashboard/ebook/${id}`);
+  const getEbooks = async () => {
+    const response = await makeApiCall(
+      "GET",
+      API_ENDPOINT.LIST_EBOOKS(1, 10),
+      null,
+      "application/json",
+      authToken,
+      "listEbooks"
+    );
+    if (response.status === 200) {
+      setEbooks(response.data.items);
+    } else {
+      toast.error("Failed to fetch ebooks");
+    }
   };
 
-  const handleDeleteEbook = (id: number) => {
-    // Here you would typically make an API call to delete the ebook
-  };
-
-  const handleViewEbook = (id: number) => {
-    navigate(`/landing/ebook/${id}`);
+  const handleUpdateEbook = (updatedEbook: Ebook) => {
+    setEbooks(
+      ebooks.map((ebook) =>
+        ebook.id === updatedEbook.id ? updatedEbook : ebook
+      )
+    );
   };
 
   return (
-    <div className="container mx-auto py-10">
-      <div className="flex justify-between items-center mb-8">
-        <h1 className="text-3xl font-bold">Ebook Management</h1>
-        <Button onClick={() => setIsCreateDialogOpen(true)}>
-          <Plus className="w-4 h-4 mr-2" />
+    <div className="container mx-auto py-4 sm:py-6 px-2 sm:px-4">
+      <div className="flex flex-col sm:flex-row sm:justify-between sm:items-center gap-4 mb-4 sm:mb-6">
+        <h1 className="text-xl sm:text-2xl font-bold">Ebooks Management</h1>
+        <Button
+          size="sm"
+          className="sm:text-base"
+          onClick={() => setIsCreateDialogOpen(true)}
+        >
+          <Plus className="w-3 h-3 sm:w-4 sm:h-4 mr-1 sm:mr-2" />
           Create New Ebook
         </Button>
       </div>
 
-      <div className="rounded-md border">
+      <div className="bg-white rounded-lg shadow">
         <Table>
           <TableHeader>
             <TableRow>
+              <TableHead>Id</TableHead>
+              <TableHead>Thumbnail</TableHead>
               <TableHead>Title</TableHead>
-              <TableHead>Type</TableHead>
-              <TableHead>Pages</TableHead>
               <TableHead>Price</TableHead>
               <TableHead>Commission</TableHead>
               <TableHead>Status</TableHead>
@@ -151,65 +171,40 @@ export default function EbookManagement() {
             </TableRow>
           </TableHeader>
           <TableBody>
-            {ebooks.map((ebook) => (
-              <TableRow key={ebook.id}>
-                <TableCell className="flex items-center gap-2">
-                  <img
-                    src={ebook.thumbnailUrl}
-                    alt={ebook.title}
-                    className="w-10 h-10 rounded object-cover"
-                  />
-                  {ebook.title}
+            {fetching && fetchType === "listEbooks" && (
+              <TableRow>
+                <TableCell colSpan={7} className="text-center">
+                  <Loading />
                 </TableCell>
-                <TableCell>
-                  <Badge variant="secondary">{ebook.type}</Badge>
-                </TableCell>
-                <TableCell>{ebook.number_of_pages}</TableCell>
-                <TableCell>{formatCurrency(ebook.price)}</TableCell>
-                <TableCell>{ebook.commission}%</TableCell>
-                <TableCell>
-                  <span
-                    className={`px-2 py-1 rounded-full text-xs ${
-                      ebook.visible
-                        ? "bg-green-100 text-green-800"
-                        : "bg-red-100 text-red-800"
-                    }`}
-                  >
-                    {ebook.visible ? "Visible" : "Hidden"}
-                  </span>
-                </TableCell>
-                <TableCell>
-                  <div className="flex gap-2">
-                    <Button
-                      variant="outline"
-                      size="icon"
-                      onClick={() => handleViewEbook(ebook.id)}
-                    >
-                      <Eye className="w-4 h-4" />
-                    </Button>
-                    <Button
-                      variant="outline"
-                      size="icon"
-                      onClick={() => handleEditEbook(ebook.id)}
-                    >
-                      <Pencil className="w-4 h-4" />
-                    </Button>
-                    <Button
-                      variant="outline"
-                      size="icon"
-                      onClick={() => handleDeleteEbook(ebook.id)}
-                    >
-                      <Trash2 className="w-4 h-4" />
-                    </Button>
+              </TableRow>
+            )}
+            {!fetching &&
+              fetchType !== "listEbooks" &&
+              ebooks.length > 0 &&
+              ebooks.map((ebook) => (
+                <EbookListItem
+                  key={ebook.id}
+                  ebook={ebook}
+                  setEbook={setEbooks}
+                />
+              ))}
+            {!fetching && fetchType !== "listEbooks" && ebooks.length === 0 && (
+              <TableRow>
+                <TableCell colSpan={7} className="h-24 text-center">
+                  <div className="flex flex-col items-center justify-center gap-2">
+                    <FileText className="h-8 w-8 text-muted-foreground" />
+                    <p className="text-muted-foreground">No ebooks found</p>
+                    <p className="text-sm text-muted-foreground">
+                      Create your first ebook to get started.
+                    </p>
                   </div>
                 </TableCell>
               </TableRow>
-            ))}
+            )}
           </TableBody>
         </Table>
       </div>
 
-      {/* Create Ebook Dialog */}
       <Dialog open={isCreateDialogOpen} onOpenChange={setIsCreateDialogOpen}>
         <DialogContent>
           <DialogHeader>
@@ -217,32 +212,13 @@ export default function EbookManagement() {
           </DialogHeader>
           <div className="space-y-4">
             <div>
-              <Label>Ebook Type</Label>
-              <Select
-                value={newEbook.type}
-                onValueChange={(value) =>
-                  setNewEbook({ ...newEbook, type: value })
-                }
-              >
-                <SelectTrigger>
-                  <SelectValue placeholder="Select type" />
-                </SelectTrigger>
-                <SelectContent>
-                  {ebookTypes.map((type) => (
-                    <SelectItem key={type} value={type}>
-                      {type}
-                    </SelectItem>
-                  ))}
-                </SelectContent>
-              </Select>
-            </div>
-            <div>
               <Label>Title</Label>
               <Input
                 value={newEbook.title}
                 onChange={(e) =>
                   setNewEbook({ ...newEbook, title: e.target.value })
                 }
+                placeholder="Enter ebook title"
               />
             </div>
             <div>
@@ -252,22 +228,10 @@ export default function EbookManagement() {
                 onChange={(e) =>
                   setNewEbook({ ...newEbook, description: e.target.value })
                 }
+                placeholder="Enter ebook description"
               />
             </div>
             <div className="grid grid-cols-2 gap-4">
-              <div>
-                <Label>Number of Pages</Label>
-                <Input
-                  type="number"
-                  value={newEbook.number_of_pages}
-                  onChange={(e) =>
-                    setNewEbook({
-                      ...newEbook,
-                      number_of_pages: parseInt(e.target.value),
-                    })
-                  }
-                />
-              </div>
               <div>
                 <Label>Price</Label>
                 <Input
@@ -279,12 +243,11 @@ export default function EbookManagement() {
                       price: parseInt(e.target.value),
                     })
                   }
+                  placeholder="Enter price"
                 />
               </div>
-            </div>
-            <div className="grid grid-cols-2 gap-4">
               <div>
-                <Label>Commission Rate (%)</Label>
+                <Label>Commission (%)</Label>
                 <Input
                   type="number"
                   value={newEbook.commission}
@@ -294,21 +257,84 @@ export default function EbookManagement() {
                       commission: parseInt(e.target.value),
                     })
                   }
+                  placeholder="Enter commission percentage"
                 />
               </div>
-              <div>
-                <Label>Original Price</Label>
-                <Input
-                  type="number"
-                  value={newEbook.originalPrice}
-                  onChange={(e) =>
+            </div>
+            <div>
+              <Label>Thumbnail</Label>
+              <Input
+                type="file"
+                accept="image/*"
+                onChange={(e) => {
+                  const file = e.target.files?.[0];
+                  if (file) {
                     setNewEbook({
                       ...newEbook,
-                      originalPrice: parseInt(e.target.value),
-                    })
+                      thumbnail: file,
+                    });
                   }
-                />
-              </div>
+                }}
+              />
+            </div>
+            <div>
+              <Label>Intro Video</Label>
+              <Input
+                type="file"
+                accept="video/*"
+                onChange={(e) => {
+                  const file = e.target.files?.[0];
+                  if (file) {
+                    setNewEbook({
+                      ...newEbook,
+                      intro_video: file,
+                    });
+                  }
+                }}
+              />
+            </div>
+            <div>
+              <Label>PDF File</Label>
+              <Input
+                type="file"
+                accept=".pdf"
+                onChange={(e) => {
+                  const file = e.target.files?.[0];
+                  if (file) {
+                    setNewEbook({
+                      ...newEbook,
+                      pdf: file,
+                    });
+                  }
+                }}
+              />
+            </div>
+            <div className="flex items-center space-x-2">
+              <Switch
+                checked={newEbook.visible}
+                onCheckedChange={(checked) =>
+                  setNewEbook({ ...newEbook, visible: checked })
+                }
+              />
+              <Label>Visible</Label>
+            </div>
+            <div className="flex items-center space-x-2">
+              <Switch
+                checked={newEbook.is_featured}
+                onCheckedChange={(checked) =>
+                  setNewEbook({ ...newEbook, is_featured: checked })
+                }
+              />
+              <Label>Featured Ebook</Label>
+            </div>
+            <div className="flex items-center space-x-2">
+              <Switch
+                checked={newEbook.is_new}
+                onCheckedChange={(checked) =>
+                  setNewEbook({ ...newEbook, is_new: checked })
+                }
+              />
+              <Label>New Ebook</Label>
             </div>
             <div className="flex justify-end gap-4">
               <Button
@@ -317,7 +343,12 @@ export default function EbookManagement() {
               >
                 Cancel
               </Button>
-              <Button onClick={handleCreateEbook}>Create Ebook</Button>
+              <Button
+                onClick={handleCreateEbook}
+                loading={fetchType === "createEbook" && fetching}
+              >
+                Create Ebook
+              </Button>
             </div>
           </div>
         </DialogContent>

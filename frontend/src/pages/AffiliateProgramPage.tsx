@@ -18,13 +18,6 @@ export default function AffiliateProgramPage() {
   const navigate = useNavigate();
   const { isAuthenticated } = useAuth();
 
-  const handleJoinProgram = () => {
-    if (isAuthenticated) {
-      navigate("/dashboard/affiliate");
-    } else {
-      navigate("/login");
-    }
-  };
 
   const benefits = [
     {

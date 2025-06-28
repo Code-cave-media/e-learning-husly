@@ -1,6 +1,19 @@
 import { Card, CardContent, CardHeader, CardTitle } from "@/components/ui/card";
-import { Tabs, TabsContent, TabsList, TabsTrigger } from "@/components/ui/tabs";
-import { Users, BookOpen, GraduationCap, Wallet } from "lucide-react";
+import { Loading } from "@/components/ui/loading";
+import { API_ENDPOINT } from "@/config/backend";
+import { useAuth } from "@/contexts/AuthContext";
+import { useAPICall } from "@/hooks/useApiCall";
+import { DashboardData } from "@/types/api";
+import {
+  Users,
+  GraduationCap,
+  BookOpen,
+  Wallet,
+  IndianRupee,
+  ArrowUpRight,
+  CreditCard,
+} from "lucide-react";
+import { useEffect, useState } from "react";
 import {
   LineChart,
   Line,
@@ -11,21 +24,48 @@ import {
   ResponsiveContainer,
 } from "recharts";
 
-const data = [
-  { name: "Jan", users: 400, courses: 240, ebooks: 180 },
-  { name: "Feb", users: 300, courses: 139, ebooks: 221 },
-  { name: "Mar", users: 200, courses: 980, ebooks: 290 },
-  { name: "Apr", users: 278, courses: 390, ebooks: 480 },
-  { name: "May", users: 189, courses: 480, ebooks: 380 },
-  { name: "Jun", users: 239, courses: 380, ebooks: 430 },
-];
-
 const AdminDashboard = () => {
+  const [dashboardData, setDashboardData] = useState<DashboardData | null>(
+    null
+  );
+  const { fetchType, fetching, makeApiCall } = useAPICall();
+  const { authToken } = useAuth();
+
+  useEffect(() => {
+    const fetchDashboardData = async () => {
+      const response = await makeApiCall(
+        "GET",
+        API_ENDPOINT.GET_ADMIN_DASHBOARD,
+        {},
+        "application/json",
+        authToken
+      );
+      if (response.status === 200) {
+        setDashboardData(response.data);
+      }
+    };
+    fetchDashboardData();
+  }, []);
+
+  const formatMonth = (monthStr: string) => {
+    const [year, month] = monthStr.split("-");
+    const date = new Date(parseInt(year), parseInt(month) - 1);
+    return date.toLocaleDateString("en-US", {
+      month: "short",
+      year: "2-digit",
+    });
+  };
+
+  if (fetching && fetchType === "fetchDashboardData") {
+    return <Loading />;
+  }
+
+  if (!dashboardData) {
+    return null;
+  }
+
   return (
     <div className="container mx-auto p-6">
-      <h1 className="text-3xl font-bold mb-6">Admin Dashboard</h1>
-
-      {/* Stats Cards */}
       <div className="grid gap-4 md:grid-cols-2 lg:grid-cols-4 mb-6">
         <Card>
           <CardHeader className="flex flex-row items-center justify-between space-y-0 pb-2">
@@ -33,10 +73,9 @@ const AdminDashboard = () => {
             <Users className="h-4 w-4 text-muted-foreground" />
           </CardHeader>
           <CardContent>
-            <div className="text-2xl font-bold">1,234</div>
-            <p className="text-xs text-muted-foreground">
-              +20.1% from last month
-            </p>
+            <div className="text-2xl font-bold">
+              {dashboardData.overview.total_users}
+            </div>
           </CardContent>
         </Card>
         <Card>
@@ -45,8 +84,9 @@ const AdminDashboard = () => {
             <GraduationCap className="h-4 w-4 text-muted-foreground" />
           </CardHeader>
           <CardContent>
-            <div className="text-2xl font-bold">45</div>
-            <p className="text-xs text-muted-foreground">+5 new this month</p>
+            <div className="text-2xl font-bold">
+              {dashboardData.overview.total_courses}
+            </div>
           </CardContent>
         </Card>
         <Card>
@@ -55,8 +95,45 @@ const AdminDashboard = () => {
             <BookOpen className="h-4 w-4 text-muted-foreground" />
           </CardHeader>
           <CardContent>
-            <div className="text-2xl font-bold">28</div>
-            <p className="text-xs text-muted-foreground">+2 new this month</p>
+            <div className="text-2xl font-bold">
+              {dashboardData.overview.total_ebooks}
+            </div>
+          </CardContent>
+        </Card>
+        <Card>
+          <CardHeader className="flex flex-row items-center justify-between space-y-0 pb-2">
+            <CardTitle className="text-sm font-medium">Total Revenue</CardTitle>
+            <IndianRupee className="h-4 w-4 text-muted-foreground" />
+          </CardHeader>
+          <CardContent>
+            <div className="text-2xl font-bold">
+              ₹
+              {dashboardData.overview.total_sales.total_amount.toLocaleString()}
+            </div>
+            <p className="text-xs text-muted-foreground">
+              {dashboardData.overview.total_sales.count} total sales
+            </p>
+          </CardContent>
+        </Card>
+      </div>
+
+      <div className="grid gap-4 md:grid-cols-2 lg:grid-cols-3">
+        <Card>
+          <CardHeader className="flex flex-row items-center justify-between space-y-0 pb-2">
+            <CardTitle className="text-sm font-medium">
+              Total Paid Withdrawals
+            </CardTitle>
+            <CreditCard className="h-4 w-4 text-muted-foreground" />
+          </CardHeader>
+          <CardContent>
+            <div className="text-2xl font-bold">
+              ₹
+              {dashboardData.withdrawals.total_paid_withdrawals.total_amount.toLocaleString()}
+            </div>
+            <p className="text-xs text-muted-foreground">
+              {dashboardData.withdrawals.total_paid_withdrawals.count}{" "}
+              withdrawals
+            </p>
           </CardContent>
         </Card>
         <Card>
@@ -67,28 +144,68 @@ const AdminDashboard = () => {
             <Wallet className="h-4 w-4 text-muted-foreground" />
           </CardHeader>
           <CardContent>
-            <div className="text-2xl font-bold">12</div>
-            <p className="text-xs text-muted-foreground">+4 new requests</p>
+            <div className="text-2xl font-bold">
+              ₹
+              {dashboardData.withdrawals.total_pending_withdrawals.total_amount.toLocaleString()}
+            </div>
+            <p className="text-xs text-muted-foreground">
+              {dashboardData.withdrawals.total_pending_withdrawals.count}{" "}
+              pending requests
+            </p>
+          </CardContent>
+        </Card>
+        <Card>
+          <CardHeader className="flex flex-row items-center justify-between space-y-0 pb-2">
+            <CardTitle className="text-sm font-medium">
+              Total Withdrawals
+            </CardTitle>
+            <ArrowUpRight className="h-4 w-4 text-muted-foreground" />
+          </CardHeader>
+          <CardContent>
+            <div className="text-2xl font-bold">
+              ₹
+              {dashboardData.withdrawals.total_withdrawals.total_amount.toLocaleString()}
+            </div>
+            <p className="text-xs text-muted-foreground">
+              {dashboardData.withdrawals.total_withdrawals.count} total
+              withdrawals
+            </p>
           </CardContent>
         </Card>
       </div>
 
-      {/* Charts */}
-      <Card className="mb-6">
-        <CardHeader>
-          <CardTitle>Growth Analytics</CardTitle>
-        </CardHeader>
-        <CardContent>
-          <div className="h-[400px]">
+      {/* Sales Chart */}
+      <Card>
+        <CardContent className="p-4 md:p-6">
+          <h3 className="text-lg font-semibold mb-4">Monthly sales overview</h3>
+          <div className="h-[400px] md:h-[300px] -mx-4 md:mx-0">
             <ResponsiveContainer width="100%" height="100%">
-              <LineChart data={data}>
-                <CartesianGrid strokeDasharray="3 3" />
-                <XAxis dataKey="name" />
-                <YAxis />
-                <Tooltip />
-                <Line type="monotone" dataKey="users" stroke="#8884d8" />
-                <Line type="monotone" dataKey="courses" stroke="#82ca9d" />
-                <Line type="monotone" dataKey="ebooks" stroke="#ffc658" />
+              <LineChart data={dashboardData.line_graph.total_users}>
+                <CartesianGrid strokeDasharray="3 3" className="stroke-muted" />
+                <XAxis
+                  dataKey="month"
+                  tickFormatter={formatMonth}
+                  tick={{ fontSize: 12 }}
+                  interval="preserveStartEnd"
+                />
+                <YAxis
+                  tickFormatter={(value) => `₹${value}`}
+                  tick={{ fontSize: 12 }}
+                />
+                <Tooltip
+                  labelFormatter={formatMonth}
+                  formatter={(value) => [`₹${value}`, "Sales"]}
+                  contentStyle={{ fontSize: 12 }}
+                />
+                <Line
+                  type="monotone"
+                  dataKey="sales"
+                  stroke="#0088FE"
+                  strokeWidth={2}
+                  dot={{ r: 4 }}
+                  activeDot={{ r: 6 }}
+                  animationDuration={5000}
+                />
               </LineChart>
             </ResponsiveContainer>
           </div>

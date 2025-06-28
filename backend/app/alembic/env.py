@@ -7,7 +7,7 @@ from alembic import context
 from models.course import *
 from models.user import *
 from models.ebook import *
-from backend.app.models.purchase import *
+from models.purchase import *
 # this is the Alembic Config object, which provides
 # access to the values within the .ini file in use.
 config = context.config
