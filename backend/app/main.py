@@ -25,4 +25,5 @@ app.include_router(routes_purchase.router , prefix='/api/v1/purchase',tags=['pur
 app.include_router(routes_user_dashboard.router , prefix='/api/v1/user-dashboard',tags=['user-dashboard'])
 app.include_router(routes_affiliate.router , prefix='/api/v1/affiliate',tags=['affiliate'])
 app.include_router(routes_admin_dashboard.router , prefix='/api/v1/admin',tags=['admin'])
-app.mount("/media", StaticFiles(directory=settings.MEDIA_PATH), name="media")
+if not settings.PRODUCTION:
+    app.mount("/media", StaticFiles(directory=settings.MEDIA_PATH), name="media")
