@@ -426,6 +426,10 @@ export function CourseListItem({ course, setCourses }: CourseListItemProps) {
       icon: "pi pi-exclamation-triangle",
       acceptClassName: "p-button-danger bg-red-500 text-white ml-4 px-3 py-1",
       rejectClassName: "p-button-secondary bg-gray-200 text-gray-800 px-3 py-1",
+      className: "max-w-[40%] w-[200px] max-sm:max-w-[40%]",
+      style: {
+        width: "200px",
+      },
       accept: () => {
         deleteCourseChapter(chapterId);
       },

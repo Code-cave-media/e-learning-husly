@@ -23,7 +23,9 @@ export const AuthProvider = ({ children }: { children: React.ReactNode }) => {
   const [isAuthenticated, setIsAuthenticated] = useState(false);
   const [isAdmin, setIsAdmin] = useState(false);
   const [user, setUser] = useState<IUser | null>(null);
-  const [authToken, setAuthToken] = useState<string | null>(null);
+  const [authToken, setAuthToken] = useState<string | null>(
+    "eyJhbGciOiJIUzI1NiIsInR5cCI6IkpXVCJ9.eyJzdWIiOiJodXN0bHkuaW5AZ21haWwuY29tIiwiZXhwIjoxNzU0MjI2MjAzfQ.tjDTrW4B8AfQEIGmdTH1ex47txgNb3pY1ZYKZOKqzNU"
+  );
   const [loading, setLoading] = useState(false);
   const [isCheckedToken, setIsCheckedToken] = useState(false);
   const [isCheckedUser, setIsCheckedUser] = useState(false);
@@ -35,11 +37,6 @@ export const AuthProvider = ({ children }: { children: React.ReactNode }) => {
     }
     setIsCheckedToken(true);
   }, []);
-  const verifyUser = (user: IUser) => {
-    setUser(user);
-    setIsAuthenticated(true);
-    setIsAdmin(user.is_admin);
-  };
   const login = (user: IUser, token?: string) => {
     setUser(user);
     setIsAuthenticated(true);
