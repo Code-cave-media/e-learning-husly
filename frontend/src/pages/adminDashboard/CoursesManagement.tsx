@@ -299,7 +299,7 @@ export default function CoursesManagement() {
                 onClick={handleCreateCourse}
                 loading={fetchType == "createCourse" && fetching}
               >
-                Create Ebook
+                Create Course
               </Button>
             </div>
           </div>

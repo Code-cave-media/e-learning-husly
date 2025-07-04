@@ -369,7 +369,6 @@ const UserVerification = ({ children }) => {
   const { makeApiCall } = useAPICall();
   const [fetching, setFetching] = useState(false);
   const { authToken, login, setIsCheckedUser } = useAuth();
-  const pathname = useLocation().pathname;
   useEffect(() => {
     const checkUser = async () => {
       if (authToken) {

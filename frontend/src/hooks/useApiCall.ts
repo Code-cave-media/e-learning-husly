@@ -46,9 +46,7 @@ export const useAPICall = () => {
         method: method,
         data: data,
         headers: header,
-        url: endpoint,
-        timeout: 10000,
-      });
+        url: endpoint      });
       responseData = {
         status: response.status,
         data: response.data,

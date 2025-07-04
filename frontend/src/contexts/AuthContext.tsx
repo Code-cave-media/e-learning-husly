@@ -35,11 +35,6 @@ export const AuthProvider = ({ children }: { children: React.ReactNode }) => {
     }
     setIsCheckedToken(true);
   }, []);
-  const verifyUser = (user: IUser) => {
-    setUser(user);
-    setIsAuthenticated(true);
-    setIsAdmin(user.is_admin);
-  };
   const login = (user: IUser, token?: string) => {
     setUser(user);
     setIsAuthenticated(true);

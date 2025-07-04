@@ -37,30 +37,38 @@ const Landing = () => {
 
   useEffect(() => {
     const fetchData = async () => {
-      let response;
-      if (type === "course") {
-        response = await makeApiCall(
-          "GET",
-          API_ENDPOINT.GET_COURSE_LANDING_PAGE(id),
-          null,
-          "application/json",
-          isAuthenticated ? authToken : ""
-        );
-      } else if (type == "ebook") {
-        response = await makeApiCall(
-          "GET",
-          API_ENDPOINT.GET_EBOOK_LANDING_PAGE(id),
-          null,
-          "application/json",
-          isAuthenticated ? authToken : ""
-        );
+      try {
+        let response;
+        if (type === "course") {
+          response = await makeApiCall(
+            "GET",
+            API_ENDPOINT.GET_COURSE_LANDING_PAGE(id),
+            null,
+            "application/json",
+            isAuthenticated ? authToken : ""
+          );
+        } else if (type == "ebook") {
+          response = await makeApiCall(
+            "GET",
+            API_ENDPOINT.GET_EBOOK_LANDING_PAGE(id),
+            null,
+            "application/json",
+            isAuthenticated ? authToken : ""
+          );
+        }
+        if (response && response.status == 200) {
+          const videoDuration = await getVideoDuration(
+            response.data.intro_video
+          );
+          setTimeLeft(parseInt(`${videoDuration as number}`));
+          setData(response.data);
+        }
+      } catch (error) {
+        console.log(error);
+        setData(null);
+      } finally {
+        setIsLoading(false);
       }
-      if (response.status == 200) {
-        const videoDuration = await getVideoDuration(response.data.intro_video);
-        setTimeLeft(parseInt(`${videoDuration as number}`));
-        setData(response.data);
-      }
-      setIsLoading(false);
     };
     fetchData();
   }, [ref, id, type]);
@@ -146,7 +154,7 @@ const Landing = () => {
       setIsPlaying(!video.paused);
     }
   };
-
+  console.log(isLoading);
   if (isLoading) {
     return (
       <div className="flex flex-col items-center bg-black text-white p-5 font-sans min-h-screen bg-gradient-to-b from-black to-[#1a2a4a]">
@@ -154,7 +162,7 @@ const Landing = () => {
       </div>
     );
   }
-
+  console.log(isLoading);
   if (!isLoading && data == null) {
     return (
       <div className="flex flex-col items-center justify-center min-h-screen bg-gradient-to-b from-black to-[#1a2a4a] text-white p-4">
