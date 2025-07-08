@@ -476,62 +476,55 @@ const Landing = () => {
           <div className="max-w-4xl mx-auto space-y-4 pt-8">
             <div className="flex justify-center gap-4 font-bold">
               <Link to="/terms" className="text-blue-400 hover:underline">
-                Terms Of Services
+                Terms & Conditions
               </Link>
               <Link
                 to="/refund-policy"
                 className="text-blue-400 hover:underline"
               >
-                Refund Policy
+                Refund & Cancellation
               </Link>
-              <Link to="/privacy" className="text-blue-400 hover:underline">
-                Privacy Policy
+              <Link to="/contact" className="text-blue-400 hover:underline">
+                Contact Us
               </Link>
             </div>
+
             <p>
               <span className="font-bold text-gray-200">Support Email:</span>{" "}
-              officialeternalservices@gmail.com
+              husly.in@gmail.com
             </p>
+
             <p className="font-bold text-gray-200">
-              Copyright {new Date().getFullYear()} - @Husly2.0
+              © {new Date().getFullYear()} - Husly.in
             </p>
+
             <div className="text-gray-500 space-y-3 text-justify">
               <p>
-                "These earnings are not representative of the average
-                participant's. The average participant will earn significantly
-                less or no money at all through this product or service."
+                <strong>Terms & Conditions:</strong> Husly.in is a digital
+                learning platform offering courses and eBooks. By using our
+                services, you agree not to reproduce, distribute, or misuse any
+                content. All users are responsible for maintaining the
+                confidentiality of their login credentials. Affiliates must
+                follow fair promotion practices, and commissions will be awarded
+                only for eligible, verified purchases.
               </p>
+
               <p>
-                This site is not part of the Facebook or Instagram website or
-                Facebook Inc. Additionally, this site is NOT endorsed by
-                Facebook or Instagram in any way. Facebook is a trademark of
-                FACEBOOK, Inc.
+                <strong>Refund & Cancellation:</strong> All products listed on
+                Husly.in, including courses and eBooks, are digital. Once
+                purchased, they are non-refundable and non-cancellable.
+                Exceptions will only be made for technical issues (e.g., file
+                not accessible) reported within 24 hours of purchase by emailing
+                us at <strong>husly.in@gmail.com</strong>. Each case will be
+                reviewed individually.
               </p>
+
               <p>
-                Earnings Disclaimer: Results may vary and testimonials are not
-                claimed to represent typical results. All testimonials are real.
-                These results are meant as a showcase of what the best, most
-                motivated and driven clients have done and should not be taken
-                as average or typical results. You should perform your own due
-                diligence and use your own best judgment prior to making any
-                investment decision pertaining to your business. By virtue of
-                visiting this site or interacting with any portion of this site,
-                you agree that you're fully responsible for the investments you
-                make and any outcomes that may result.
-              </p>
-              <p>
-                DISCLAIMER: The sales figures stated above are our personal
-                sales figures. Please understand my results are not typical, I'm
-                not implying you'll duplicate them (or do anything for that
-                matter). I have the benefit of practicing sales, marketing and
-                advertising for 2 years, and have an established following as a
-                result. The average person who buys any "how to" information
-                gets little to no results. I'm using these references for
-                example purposes only. Your results will vary and depend on many
-                factors ...including but not limited to your background,
-                experience, and work ethic. All business entails risk as well as
-                massive and consistent effort and action. If you're not willing
-                to accept that, please DO NOT GET THIS PRODUCT.
+                <strong>Contact Us:</strong> For any assistance, questions, or
+                partnership inquiries, you can reach out to us via email at{" "}
+                <strong>husly.in@gmail.com</strong>. We strive to respond within
+                1–2 business days and are committed to providing a smooth user
+                experience on our platform.
               </p>
             </div>
           </div>
