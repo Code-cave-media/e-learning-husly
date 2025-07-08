@@ -52,6 +52,7 @@ import "primeicons/primeicons.css"; // Required for icons
 import UserDashboardCoursesPage from "./pages/userDashboard/CoursesPage";
 import UserDashboardEbooksPage from "./pages/userDashboard/EbooksPage";
 import PaymentVerification from "./pages/PaymentVerification";
+import PolicyPage from "./pages/PolicyPage";
 
 const queryClient = new QueryClient();
 
@@ -359,6 +360,7 @@ const AppRoutes = () => {
         }
       />
 
+      <Route path="/policy" element={<PolicyPage />} />
       <Route path="*" element={<NotFound />} />
     </Routes>
   );
