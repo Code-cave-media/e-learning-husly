@@ -491,40 +491,40 @@ const Landing = () => {
 
             <p>
               <span className="font-bold text-gray-200">Support Email:</span>{" "}
-              husly.in@gmail.com
+              hustly.in@gmail.com
             </p>
 
             <p className="font-bold text-gray-200">
-              © {new Date().getFullYear()} - Husly.in
+              © {new Date().getFullYear()} - Hustly.in
             </p>
 
             <div className="text-gray-500 space-y-3 text-justify">
               <p>
-                <strong>Terms & Conditions:</strong> Husly.in is a digital
-                learning platform offering courses and eBooks. By using our
-                services, you agree not to reproduce, distribute, or misuse any
-                content. All users are responsible for maintaining the
-                confidentiality of their login credentials. Affiliates must
-                follow fair promotion practices, and commissions will be awarded
-                only for eligible, verified purchases.
+                <strong>Terms & Conditions:</strong> Hustly.in is a digital
+                platform that allows users to purchase courses and eBooks, and
+                also earn through affiliate links. By using this platform, you
+                agree to comply with all applicable laws and respect
+                intellectual property rights. Any misuse, unauthorized
+                distribution, or manipulation of affiliate features will result
+                in account termination.
               </p>
 
               <p>
-                <strong>Refund & Cancellation:</strong> All products listed on
-                Husly.in, including courses and eBooks, are digital. Once
-                purchased, they are non-refundable and non-cancellable.
-                Exceptions will only be made for technical issues (e.g., file
-                not accessible) reported within 24 hours of purchase by emailing
-                us at <strong>husly.in@gmail.com</strong>. Each case will be
-                reviewed individually.
+                <strong>Refunds and Cancellation:</strong> All purchases on
+                Hustly.in are final and non-refundable, as the products are
+                digital in nature. Refunds may only be considered in case of
+                technical issues that prevent access to the product and are
+                reported within 24 hours of purchase. To request support, email{" "}
+                <strong>hustly.in@gmail.com</strong> with your order details.
               </p>
 
               <p>
-                <strong>Contact Us:</strong> For any assistance, questions, or
-                partnership inquiries, you can reach out to us via email at{" "}
-                <strong>husly.in@gmail.com</strong>. We strive to respond within
-                1–2 business days and are committed to providing a smooth user
-                experience on our platform.
+                <strong>Contact Us:</strong> For any support, feedback, or
+                inquiries related to products, affiliate programs, or technical
+                issues, you can contact us at{" "}
+                <strong>hustly.in@gmail.com</strong>. Our team is available to
+                assist you during business hours and we aim to resolve all
+                issues promptly and professionally.
               </p>
             </div>
           </div>
