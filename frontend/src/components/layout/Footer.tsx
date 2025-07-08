@@ -9,7 +9,7 @@ const Footer = () => {
           <div className="col-span-1 md:col-span-2">
             <Link to="/" className="inline-block mb-6">
               <span className="text-2xl font-bold text-brand-primary">
-                LearnHub
+                Hustly
               </span>
             </Link>
             <p className="text-gray-600 mb-4 max-w-md">
@@ -81,7 +81,7 @@ const Footer = () => {
 
         <div className="border-t border-gray-200 mt-8 pt-8 flex flex-col md:flex-row justify-between items-center">
           <p className="text-gray-500 text-sm">
-            © {new Date().getFullYear()} LearnHub. All rights reserved.
+            © {new Date().getFullYear()} Hustly. All rights reserved.
           </p>
           <div className="mt-4 md:mt-0 flex space-x-4">
             <Link to="#" className="text-gray-500 hover:text-brand-primary">
