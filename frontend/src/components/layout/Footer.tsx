@@ -23,7 +23,7 @@ const Footer = () => {
             <ul className="space-y-2">
               <li>
                 <Link
-                  to="/courses"
+                  to=""
                   className="text-gray-600 hover:text-brand-primary transition-colors"
                 >
                   Courses
@@ -31,7 +31,7 @@ const Footer = () => {
               </li>
               <li>
                 <Link
-                  to="/ebooks"
+                  to=""
                   className="text-gray-600 hover:text-brand-primary transition-colors"
                 >
                   eBooks
@@ -39,7 +39,7 @@ const Footer = () => {
               </li>
               <li>
                 <Link
-                  to="/affiliate"
+                  to=""
                   className="text-gray-600 hover:text-brand-primary transition-colors"
                 >
                   Affiliate Dashboard
@@ -53,7 +53,7 @@ const Footer = () => {
             <ul className="space-y-2">
               <li>
                 <Link
-                  to="/help"
+                  to="/policy"
                   className="text-gray-600 hover:text-brand-primary transition-colors"
                 >
                   Help Center
@@ -61,7 +61,7 @@ const Footer = () => {
               </li>
               <li>
                 <Link
-                  to="/terms"
+                  to="/policy"
                   className="text-gray-600 hover:text-brand-primary transition-colors"
                 >
                   Terms of Service
@@ -69,7 +69,7 @@ const Footer = () => {
               </li>
               <li>
                 <Link
-                  to="/privacy"
+                  to="/policy"
                   className="text-gray-600 hover:text-brand-primary transition-colors"
                 >
                   Privacy Policy

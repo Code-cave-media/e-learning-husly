@@ -1,65 +1,50 @@
-import React from "react";
+import React, { useEffect, useState } from "react";
 import { Link } from "react-router-dom";
 import { Button } from "@/components/ui/button";
 import CourseCard from "@/components/shared/CourseCard";
 import EbookCard from "@/components/shared/EbookCard";
-
-// Mock data
-const featuredCourses = [
-  {
-    id: "1",
-    title: "Complete Web Development Bootcamp",
-    description:
-      "Learn HTML, CSS, JavaScript, React, Node.js and more with practical projects.",
-    price: 49.99,
-    thumbnail:
-      "https://images.unsplash.com/photo-1461749280684-dccba630e2f6?auto=format&w=800",
-    isFeatured: true,
-  },
-  {
-    id: "2",
-    title: "Advanced React & Redux",
-    description:
-      "Master React hooks, context API, Redux and build professional applications.",
-    price: 59.99,
-    thumbnail:
-      "https://images.unsplash.com/photo-1488590528505-98d2b5aba04b?auto=format&w=800",
-    isNew: true,
-  },
-  {
-    id: "3",
-    title: "Python Data Science Masterclass",
-    description:
-      "Learn Python for data analysis, visualization, machine learning and more.",
-    price: 69.99,
-    thumbnail:
-      "https://images.unsplash.com/photo-1518770660439-4636190af475?auto=format&w=800",
-  },
-];
-
-const featuredEbooks = [
-  {
-    id: "1",
-    title: "React Patterns & Best Practices",
-    description: "Practical guide to writing maintainable React applications.",
-    price: 19.99,
-    thumbnail:
-      "https://images.unsplash.com/photo-1581091226825-a6a2a5aee158?auto=format&w=800",
-    isFeatured: true,
-  },
-  {
-    id: "2",
-    title: "The Complete Guide to JavaScript",
-    description:
-      "Master modern JavaScript from fundamentals to advanced topics.",
-    price: 24.99,
-    thumbnail:
-      "https://images.unsplash.com/photo-1517022812141-23620dba5c23?auto=format&w=800",
-    isNew: true,
-  },
-];
+import { useAPICall } from "@/hooks/useApiCall";
+import { API_ENDPOINT } from "@/config/backend";
+import toast from "react-hot-toast";
+import { Loading } from "@/components/ui/loading";
 
 const HomePage = () => {
+  const { fetchType, fetching, isFetched, makeApiCall } = useAPICall();
+  const [courses, setCourses] = useState([]);
+  const [ebooks, setEbooks] = useState([]);
+  useEffect(() => {
+    const getAllItems = async () => {
+      try {
+        const courseResponse = await makeApiCall(
+          "GET",
+          API_ENDPOINT.LIST_COURSES(1, 20),
+          {},
+          "application/json"
+        );
+        if (courseResponse.status === 200) {
+          setCourses(courseResponse.data.items);
+        }
+        const ebookResponse = await makeApiCall(
+          "GET",
+          API_ENDPOINT.LIST_EBOOKS(1, 20),
+          {},
+          "application/json"
+        );
+        if (ebookResponse.status === 200) {
+          setEbooks(ebookResponse.data.items);
+        }
+      } catch (error) {
+        toast.error(
+          "Failed to fetch learning resources. Please try again later."
+        );
+      }
+    };
+    getAllItems();
+  }, []);
+
+  if ( !isFetched) {
+    return <Loading />;
+  }
   return (
     <>
       {/* Hero Section */}
@@ -132,10 +117,10 @@ const HomePage = () => {
             </Button>
           </div>
           <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-3 gap-6">
-            {featuredCourses.map((course) => (
+            {courses.map((course) => (
               <CourseCard key={course.id} {...course} isHomePage={true} />
             ))}
-            {featuredEbooks.map((ebook) => (
+            {ebooks.map((ebook) => (
               <EbookCard key={ebook.id} {...ebook} isHomePage={true} />
             ))}
           </div>
