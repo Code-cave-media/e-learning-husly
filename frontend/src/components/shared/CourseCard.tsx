@@ -28,6 +28,7 @@ interface CourseCardProps {
   isHomePage?: boolean;
   type?: "course" | "ebook";
   has_affiliate_link?: boolean;
+  affiliate_user_id?: string; // Optional prop for affiliate user ID
 }
 
 const CourseCard = ({
@@ -41,6 +42,7 @@ const CourseCard = ({
   is_purchased = false,
   isHomePage = false,
   has_affiliate_link = false,
+  affiliate_user_id = "", 
 }: CourseCardProps) => {
   const { isAuthenticated, user, authToken } = useAuth();
   const [affiliateLink, setAffiliateLink] = React.useState("");
@@ -153,7 +155,7 @@ const CourseCard = ({
 
         {isHomePage && (
           <Button asChild className="w-full">
-            <Link to={`/landing/course/${id}`}>Start your side hustle</Link>
+            <Link to={`/landing/course/${id}?ref=${affiliate_user_id}`}>Start your side hustle</Link>
           </Button>
         )}
       </CardFooter>

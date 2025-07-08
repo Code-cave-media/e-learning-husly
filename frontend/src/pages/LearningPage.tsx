@@ -96,9 +96,19 @@ const LearningPage = () => {
             <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-3 gap-6">
               {filteredContent.map((item) =>
                 item.contentType === "course" ? (
-                  <CourseCard key={item.id} {...item} isHomePage={true} />
+                  <CourseCard
+                    key={item.id}
+                    {...item}
+                    isHomePage={true}
+                    affiliate_user_id={affiliateUserId.current}
+                  />
                 ) : (
-                  <EbookCard key={item.id} {...item} isHomePage={true} />
+                  <EbookCard
+                    key={item.id}
+                    {...item}
+                    isHomePage={true}
+                    affiliate_user_id={affiliateUserId.current}
+                  />
                 )
               )}
             </div>
