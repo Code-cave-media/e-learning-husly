@@ -28,6 +28,7 @@ interface EbookCardProps {
   isHomePage?: boolean; // Optional prop to indicate if it's on the home page
   type?: "course" | "ebook";
   has_affiliate_link?: boolean;
+  affiliate_user_id?: string;
 }
 
 const EbookCard = ({
@@ -41,6 +42,7 @@ const EbookCard = ({
   is_purchased = false,
   isHomePage,
   has_affiliate_link = false,
+  affiliate_user_id = "",
 }: EbookCardProps) => {
   const { isAuthenticated, user, authToken } = useAuth();
   const [affiliateLink, setAffiliateLink] = React.useState("");
@@ -150,7 +152,7 @@ const EbookCard = ({
         )}
         {isHomePage && (
           <Button asChild className="w-full">
-            <Link to={`/landing/ebook/${id}`}>Start your side hustle</Link>
+            <Link to={`/landing/ebook/${id}?ref=${affiliate_user_id}`}>Start your side hustle</Link>
           </Button>
         )}
       </CardFooter>

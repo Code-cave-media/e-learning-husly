@@ -1,4 +1,4 @@
-import React, { useEffect, useState } from "react";
+import React, { useEffect, useRef, useState } from "react";
 import { Link } from "react-router-dom";
 import { Button } from "@/components/ui/button";
 import CourseCard from "@/components/shared/CourseCard";
@@ -12,6 +12,7 @@ const HomePage = () => {
   const { fetchType, fetching, isFetched, makeApiCall } = useAPICall();
   const [courses, setCourses] = useState([]);
   const [ebooks, setEbooks] = useState([]);
+  const affiliateUserId = useRef(null);
   useEffect(() => {
     const getAllItems = async () => {
       try {
@@ -22,6 +23,7 @@ const HomePage = () => {
           "application/json"
         );
         if (courseResponse.status === 200) {
+          affiliateUserId.current = courseResponse.data.affiliate_user_id;
           setCourses(courseResponse.data.items);
         }
         const ebookResponse = await makeApiCall(
@@ -118,10 +120,10 @@ const HomePage = () => {
           </div>
           <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-3 gap-6">
             {courses.map((course) => (
-              <CourseCard key={course.id} {...course} isHomePage={true} />
+              <CourseCard key={course.id} {...course} isHomePage={true}  affiliate_user_id={affiliateUserId.current} />
             ))}
             {ebooks.map((ebook) => (
-              <EbookCard key={ebook.id} {...ebook} isHomePage={true} />
+              <EbookCard key={ebook.id} {...ebook} isHomePage={true} affiliate_user_id={affiliateUserId.current} />
             ))}
           </div>
         </div>
