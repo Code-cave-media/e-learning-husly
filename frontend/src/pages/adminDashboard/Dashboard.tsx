@@ -57,7 +57,7 @@ const AdminDashboard = () => {
     });
   };
 
-  if (fetching && fetchType === "fetchDashboardData") {
+  if (fetching) {
     return <Loading />;
   }
 
