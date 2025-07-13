@@ -474,7 +474,7 @@ const Landing = () => {
 
         <footer className="bg-transparent text-gray-400 py-8 pt-0 px-4 text-center text-xs">
           <div className="max-w-4xl mx-auto space-y-4 pt-8">
-            <div className="flex justify-center gap-4 font-bold">
+            <div className="flex justify-center gap-4 font-bold max-sm:hidden">
               <Link to="/policy" className="text-blue-400 hover:underline">
                 Terms & Conditions
               </Link>
