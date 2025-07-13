@@ -38,7 +38,8 @@ const AdminDashboard = () => {
         API_ENDPOINT.GET_ADMIN_DASHBOARD,
         {},
         "application/json",
-        authToken
+        authToken,
+        "fetchDashboardData"
       );
       if (response.status === 200) {
         setDashboardData(response.data);
