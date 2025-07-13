@@ -206,7 +206,7 @@ export default function EbooksManagement() {
       </div>
 
       <Dialog open={isCreateDialogOpen} onOpenChange={setIsCreateDialogOpen}>
-        <DialogContent>
+        <DialogContent className="max-h-[90vh] overflow-y-auto">
           <DialogHeader>
             <DialogTitle>Create New Ebook</DialogTitle>
           </DialogHeader>
