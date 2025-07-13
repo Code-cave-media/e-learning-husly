@@ -41,7 +41,11 @@ export default function DashboardLayout({
     <div className="flex flex-col h-full">
       {/* Logo */}
       <div className="flex items-center h-16 px-4 border-b">
-        <h1 className="text-xl font-bold">Learn & Grow</h1>
+        <img
+          src="/images/logo/logo.png"
+          alt="Hustly Logo"
+          className="h-10 w-auto"
+        />
       </div>
 
       {/* Navigation */}
@@ -113,7 +117,11 @@ export default function DashboardLayout({
             <NavContent />
           </SheetContent>
         </Sheet>
-        <h1 className="text-xl font-bold">Learn & Grow</h1>
+        <img
+          src="/images/logo/logo.png"
+          alt="Hustly Logo"
+          className="h-10 w-auto"
+        />
         <div className="w-10" /> {/* Spacer for balance */}
       </header>
 
