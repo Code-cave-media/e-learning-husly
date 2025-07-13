@@ -42,9 +42,9 @@ export default function DashboardLayout({
       {/* Logo */}
       <div className="flex items-center h-16 px-4 border-b">
         <img
-          src="/images/logo/logo.png"
+          src="/images/logo/logo-blue.png"
           alt="Hustly Logo"
-          className="h-10 w-auto"
+          className="h-10 max-sm:h-7 w-auto "
         />
       </div>
 
@@ -120,7 +120,7 @@ export default function DashboardLayout({
         <img
           src="/images/logo/logo.png"
           alt="Hustly Logo"
-          className="h-10 w-auto"
+          className="h-24 w-auto"
         />
         <div className="w-10" /> {/* Spacer for balance */}
       </header>

@@ -9,16 +9,22 @@ const Footer = () => {
           <div className="col-span-1 md:col-span-2">
             <Link to="/" className="inline-block mb-6">
               <span className="text-2xl font-bold text-brand-primary">
-                Hustly
+                <img
+                  src="/images/logo/logo.png"
+                  alt="Hustly Logo"
+                  className="h-10 max-sm:h-7 w-auto "
+                />
               </span>
             </Link>
             <p className="text-gray-600 mb-4 max-w-md">
-              Your destination for high-quality courses and eBooks with
-              affiliate marketing opportunities.
+              Your platform to hustle smartly. Learn powerful systems and tools
+              designed to help you grow, build, and unlock new digital
+              possibilities. For creators, doers, and forward-thinkers ready to
+              take action. Built for those who take action.
             </p>
           </div>
 
-          <div>
+          {/* <div>
             <h3 className="font-semibold text-gray-800 mb-4">Quick Links</h3>
             <ul className="space-y-2">
               <li>
@@ -46,7 +52,7 @@ const Footer = () => {
                 </Link>
               </li>
             </ul>
-          </div>
+          </div> */}
 
           <div>
             <h3 className="font-semibold text-gray-800 mb-4">Support</h3>
