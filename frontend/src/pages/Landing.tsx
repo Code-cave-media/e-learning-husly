@@ -239,11 +239,11 @@ const Landing = () => {
           <div className="absolute bottom-[-100px] right-[-100px] w-96 h-96 bg-[#001a33]/80 rounded-full blur-[100px] animate-pulse"></div>
         </div>
         <header className="absolute top-0 left-0 right-0 p-4 flex justify-between items-center mx-auto z-10 max-w-3xl">
-          <div className="w-12 h-12 rounded-full bg-gray-700 flex justify-center items-center overflow-hidden">
+          <div className=" rounded-full  flex justify-center items-center overflow-hidden">
             <img
-              src="https://cdn-icons-png.flaticon.com/512/552/552721.png"
-              alt="Logo"
-              className="w-full h-full object-cover"
+              src="/images/logo/logo-blue.png"
+              alt="Hustly Logo"
+              className="h-10 max-sm:h-7 w-auto "
             />
           </div>
           {!isAuthenticated && (

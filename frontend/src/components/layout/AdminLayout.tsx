@@ -51,12 +51,16 @@ export default function AdminLayout({
   const NavContent = () => (
     <div className="flex flex-col h-full">
       {/* Logo */}
-      <div className="flex items-center h-16 px-4 border-b">
-        <h1 className="text-xl font-bold">Admin Panel</h1>
+      <div className="flex items-center pt-3 px-4 border-b">
+        <img
+          src="/images/logo/logo.png"
+          alt="Hustly Logo"
+          className="h-10 w-auto "
+        />
       </div>
 
       {/* Navigation */}
-      <ScrollArea className="flex-1 px-2 py-4">
+      <ScrollArea className="flex-1 px-2 py-6">
         <nav className="space-y-1">
           {navigation.map((item) => {
             const isActive = window.location.pathname === item.href;
