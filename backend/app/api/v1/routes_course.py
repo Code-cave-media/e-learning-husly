@@ -6,8 +6,8 @@ from db.session import get_db
 from schemas.common import Pagination,PaginationResponse
 from core.deps import is_admin_user,get_current_user,get_optional_current_user
 from crud.purchase import get_purchase_by_user_id_and_item_id_and_type
-router = APIRouter()
 from models.user import User
+router = APIRouter()
 @router.get('/get/watch/{course_id}')
 async def create_course(
   course_id:str,
@@ -46,12 +46,10 @@ async def get_course_landing_page(
     db_course.is_purchased = True
   return db_course
 
-@router.get('/list',response_model=PaginationResponse[CourseResponse])
+@router.get('/list')
 async def list_courses(
   db: Session = Depends(get_db),
-  data: Pagination = Depends(),
-  current_user: User = Depends(get_current_user)
-): 
+  data: Pagination = Depends()): 
   return crud_course.get_list_of_courses(db,data.page,data.page_size)
 
 @router.post('/create',response_model=CourseResponse)

@@ -1,4 +1,4 @@
-import React, { useState } from "react";
+import React, { useEffect, useState } from "react";
 import { Link, useLocation } from "react-router-dom";
 import { Button } from "@/components/ui/button";
 import { Menu, X } from "lucide-react";
@@ -10,7 +10,9 @@ const Navbar = () => {
   const isActive = (path: string) => {
     return location.pathname === path;
   };
-
+  useEffect(() => {
+    setIsMenuOpen(false);
+  }, [location.pathname]);
   const navLinks = [];
 
   return (
