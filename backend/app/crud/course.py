@@ -7,6 +7,7 @@ import os
 from core.config import settings
 from .utils import *
 from schemas.course import CourseResponse
+from models.user import User
 async def upload_thumbnail(file: UploadFile):
     folder = "course/thumbnail"
     return await upload_file(file,folder)
@@ -36,7 +37,11 @@ def get_course_chapter_by_id(db:Session,course_chapter_id:int):
 
 def get_list_of_courses(db:Session,page:int=1,limit:int=10):
     query = db.query(Course).order_by(Course.created_at.desc())
-    return to_pagination_response(query,CourseResponse,page,limit)
+    data =  to_pagination_response(query,CourseResponse,page,limit)
+    admin_user_id = db.query(User).filter(User.is_admin==True).first().user_id
+    print(f"Admin User ID: {admin_user_id}")
+    data['affiliate_user_id'] = admin_user_id
+    return data
 
 def create_course(db:Session,data:dict):
     db_course = Course(**data)

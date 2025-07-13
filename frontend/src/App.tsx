@@ -53,6 +53,7 @@ import UserDashboardCoursesPage from "./pages/userDashboard/CoursesPage";
 import UserDashboardEbooksPage from "./pages/userDashboard/EbooksPage";
 import PaymentVerification from "./pages/PaymentVerification";
 import PolicyPage from "./pages/PolicyPage";
+import ScrollToTop from "./components/ui/ScrollToTop";
 
 const queryClient = new QueryClient();
 
@@ -417,6 +418,7 @@ const App = () => (
       <Toaster position="top-center" />
       <AuthProvider>
         <Router>
+          <ScrollToTop />
           <UserVerification>
             <ConfirmDialog draggable={false} />
             <AppRoutes />
