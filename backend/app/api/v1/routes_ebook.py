@@ -7,8 +7,8 @@ from models.user import User
 from core.deps import is_admin_user,get_optional_current_user
 from schemas.common import Pagination,PaginationResponse
 from crud.purchase import get_purchase_by_user_id_and_item_id_and_type
-
-
+from permissions.permission import has_purchased_ebook
+from models.ebook import EBook
 router = APIRouter()
 
 @router.get('/get/{ebook_id}',response_model=EBookResponse)
@@ -25,12 +25,9 @@ async def create_ebook(
 @router.get('/get/read/{ebook_id}',response_model=EBookResponse)
 async def create_ebook(
   ebook_id:str,
-  db:Session=Depends(get_db)
+  db:Session=Depends(get_db),
+  db_ebook:EBook = Depends(has_purchased_ebook)
 ):
-  db_ebook = crud_ebook.get_ebook_by_id(db,ebook_id)
-  if not db_ebook:
-    raise HTTPException(status_code=404,detail="Ebook not found")
-  
   return db_ebook
 
 @router.get('/get/landing/{ebook_id}',response_model=EbookLandingResponse)

@@ -108,8 +108,10 @@ const DashboardPage = () => {
     <div className=" px-4 mx-auto py-8 max-sm:py-0">
       {/* Welcome Section */}
       <div className="mb-8">
-        <h1 className="text-3xl font-bold mb-2">Welcome back, {user.name}</h1>
-        <p className="text-gray-600">
+        <h1 className="text-2xl sm:text-3xl md:text-4xl font-bold mb-2">
+          Welcome back, {user.name}
+        </h1>
+        <p className="text-xs sm:text-sm md:text-base text-gray-600">
           Track your progress and continue learning.
         </p>
       </div>
@@ -118,45 +120,67 @@ const DashboardPage = () => {
         <Card>
           <CardHeader className="pb-2">
             <CardTitle className="text-sm text-gray-500 font-medium">
-              Total purchase
+              {/* Responsive text size for card titles */}
+              <span className="text-xs sm:text-sm md:text-base text-gray-500 font-medium">
+                Total purchase
+              </span>
             </CardTitle>
           </CardHeader>
           <CardContent>
             <span className="text-2xl font-bold">
-              {cardData.total_purchase}
+              {/* Responsive text size for card numbers */}
+              <span className="text-xl sm:text-2xl md:text-3xl font-bold">
+                {cardData.total_purchase}
+              </span>
             </span>
           </CardContent>
         </Card>
         <Card>
           <CardHeader className="pb-2">
             <CardTitle className="text-sm text-gray-500 font-medium">
-              Training Progress
+              <span className="text-xs sm:text-sm md:text-base text-gray-500 font-medium">
+                Training Progress
+              </span>
             </CardTitle>
           </CardHeader>
           <CardContent>
             <span className="text-2xl font-bold">
-              {cardData.total_progressing_course}
+              <span className="text-xl sm:text-2xl md:text-3xl font-bold">
+                {cardData.total_progressing_course}
+              </span>
             </span>
           </CardContent>
         </Card>
         <Card>
           <CardHeader className="pb-2">
             <CardTitle className="text-sm text-gray-500 font-medium">
-              Total Blueprints
+              <span className="text-xs sm:text-sm md:text-base text-gray-500 font-medium">
+                Total Blueprints
+              </span>
             </CardTitle>
           </CardHeader>
           <CardContent>
-            <span className="text-2xl font-bold">{cardData.total_ebooks}</span>
+            <span className="text-2xl font-bold">
+              <span className="text-xl sm:text-2xl md:text-3xl font-bold">
+                {cardData.total_ebooks}
+              </span>
+            </span>
           </CardContent>
         </Card>
         <Card>
           <CardHeader className="pb-2">
             <CardTitle className="text-sm text-gray-500 font-medium">
-              Total Trainings
+              <span className="text-xs sm:text-sm md:text-base text-gray-500 font-medium">
+                Total Trainings
+              </span>
             </CardTitle>
           </CardHeader>
           <CardContent>
-            <span className="text-2xl font-bold">{cardData.total_courses}</span>
+            <span className="text-2xl font-bold">
+              <span className="text-xl sm:text-2xl md:text-3xl font-bold">
+                {cardData.total_courses}
+              </span>
+            </span>
           </CardContent>
         </Card>
       </div>

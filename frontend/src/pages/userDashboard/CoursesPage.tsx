@@ -67,10 +67,12 @@ const UserDashboardCoursesPage = () => {
     }
   };
   return (
-    <div className=" px-2 sm:px-4 mx-auto py-4 sm:py-8">
+    <div className=" px-2 sm:px-4 mx-auto py-4 sm:py-8 max-sm:py-0">
       <div className="mb-6 sm:mb-8">
-        <h1 className="text-2xl sm:text-3xl font-bold mb-2">Trainings</h1>
-        <p className="text-sm sm:text-base text-gray-600">
+        <h1 className="text-xl sm:text-2xl md:text-3xl font-bold mb-2">
+          Trainings
+        </h1>
+        <p className="text-xs sm:text-sm md:text-base text-gray-600">
           Discover and learn with our professional courses.
         </p>
       </div>

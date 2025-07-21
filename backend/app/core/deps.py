@@ -32,6 +32,8 @@ def is_admin_user(current_user:User=Depends(get_current_user)):
       )
   return current_user
 
+
+
 def get_optional_current_user(
     authorization: str = Header(default=None),
     db: Session = Depends(get_db)

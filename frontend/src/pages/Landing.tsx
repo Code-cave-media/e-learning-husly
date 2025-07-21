@@ -284,7 +284,7 @@ const Landing = () => {
               letterSpacing: "-0.3px",
               lineHeight: 1.01,
             }}
-            className="text-white text-4xl md:text-6xl text-center mb-4 max-w-3xl mt-4 drop-shadow-lg max-sm:text-[1.3rem]"
+            className="text-white text-4xl md:text-6xl text-center mb-4 max-w-6xl mt-4 drop-shadow-lg max-sm:text-[1.3rem]"
           >
             {data?.landing_page?.main_heading ? (
               <span>

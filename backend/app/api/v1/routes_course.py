@@ -7,16 +7,15 @@ from schemas.common import Pagination,PaginationResponse
 from core.deps import is_admin_user,get_current_user,get_optional_current_user
 from crud.purchase import get_purchase_by_user_id_and_item_id_and_type
 from models.user import User
+from permissions.permission import has_purchased_course
+from models.course import Course
 router = APIRouter()
 @router.get('/get/watch/{course_id}')
 async def create_course(
-  course_id:str,
   db:Session=Depends(get_db),
+  db_course:Course = Depends(has_purchased_course),
   current_user:User = Depends(get_current_user)
 ):
-  db_course = crud_course.get_course_by_id(db,course_id)
-  if not db_course:
-    raise HTTPException(status_code=404,detail="Course not found")
   db_course_progress = crud_course.get_or_create_course_progress(db,current_user.id,db_course.id)
 
   res = CourseWatchResponse.from_orm(db_course).dict()
@@ -32,6 +31,8 @@ async def create_course(
     res['completed'] = False
   res['course_progress'] = CourseProgressResponse.from_orm(db_course_progress).dict()
   return res
+
+
 
 @router.get('/get/landing/{course_id}',response_model=CourseLandingResponse)
 async def get_course_landing_page(  

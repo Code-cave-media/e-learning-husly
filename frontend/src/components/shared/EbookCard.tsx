@@ -101,7 +101,7 @@ const EbookCard = ({
                 <LinkIcon className="w-4 h-4 text-gray-600" />
               </button>
             </DialogTrigger>
-            <DialogContent className="max-sm:max-w-[90%] w-full rounded-lg">
+            <DialogContent className="max-sm:max-w-[90%] rounded-lg">
               <DialogHeader>
                 <DialogTitle>Generate Affiliate Link</DialogTitle>
               </DialogHeader>
