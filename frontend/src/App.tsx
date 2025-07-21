@@ -25,7 +25,6 @@ import LoginPage from "./pages/LoginPage";
 import NotFound from "./pages/NotFound";
 import { AuthProvider, useAuth } from "@/contexts/AuthContext";
 import { LoadingScreen } from "@/components/ui/LoadingScreen";
-import AffiliateProgramPage from "./pages/AffiliateProgramPage";
 import CourseWatchPage from "./pages/userDashboard/CourseWatchPage";
 import EbookViewPage from "./pages/userDashboard/EbookViewPage";
 import toast, { Toaster } from "react-hot-toast";

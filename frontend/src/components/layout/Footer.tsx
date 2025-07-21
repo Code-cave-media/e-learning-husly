@@ -7,7 +7,7 @@ const Footer = () => {
       <div className="container px-4 mx-auto px-4 py-12">
         <div className="grid grid-cols-1 md:grid-cols-4 gap-8">
           <div className="col-span-1 md:col-span-2">
-            <Link to="/" className="inline-block mb-6">
+            <div  className="inline-block mb-6">
               <span className="text-2xl font-bold text-brand-primary">
                 <img
                   src="/images/logo/logo.png"
@@ -15,7 +15,7 @@ const Footer = () => {
                   className="h-10 max-sm:h-7 w-auto "
                 />
               </span>
-            </Link>
+            </div>
             <p className="text-gray-600 mb-4 max-w-md">
               Your platform to hustle smartly. Learn powerful systems and tools
               designed to help you grow, build, and unlock new digital

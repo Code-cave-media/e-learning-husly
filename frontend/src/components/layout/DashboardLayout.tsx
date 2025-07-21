@@ -44,7 +44,7 @@ export default function DashboardLayout({
         <img
           src="/images/logo/logo.png"
           alt="Hustly Logo"
-          className="h-10 max-sm:h-7 w-auto "
+          className="h-10 max-sm:h-6 w-auto "
         />
       </div>
 
@@ -117,7 +117,11 @@ export default function DashboardLayout({
             <NavContent />
           </SheetContent>
         </Sheet>
-        <img src="/images/logo/logo.png" alt="Hustly Logo" className="h-10" />
+        <img
+          src="/images/logo/logo.png"
+          alt="Hustly Logo"
+          className="h-10 max-sm:h-6 w-auto "
+        />
         <div className="w-10" /> {/* Spacer for balance */}
       </header>
 
@@ -129,9 +133,7 @@ export default function DashboardLayout({
 
         {/* Main Content */}
         <main className="flex-1 overflow-auto">
-          <div className="container px-4 mx-auto p-4 md:p-6 lg:p-8">
-            {children}
-          </div>
+          <div className=" px-8 py-4 md:py-6 lg:py-8">{children}</div>
         </main>
       </div>
     </div>

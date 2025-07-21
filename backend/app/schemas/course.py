@@ -24,6 +24,7 @@ class LandingPageResponse(BaseModel):
   top_heading: str
   highlight_words: str
   thumbnail: str
+  action_button :str | None
   class Config:
     orm_mode = True
 
@@ -55,6 +56,7 @@ class CourseWatchResponse(BaseModel):
 
   class Config:
     orm_mode = True
+
 
 
 class LandingPageCreate(BaseModel):

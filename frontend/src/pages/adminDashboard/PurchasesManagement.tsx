@@ -383,7 +383,7 @@ export default function PurchasesManagement() {
   };
 
   return (
-    <div className="container mx-auto py-4 sm:py-6 px-2 sm:px-4">
+    <div className="py-4 sm:py-6 px-2 sm:px-4">
       <div className="flex flex-col gap-4 mb-4 sm:mb-6">
         <div className="flex flex-col sm:flex-row sm:justify-between sm:items-center gap-4">
           <h1 className="text-xl sm:text-2xl font-bold">
@@ -403,7 +403,7 @@ export default function PurchasesManagement() {
             <Button
               variant="ghost"
               size="icon"
-              className="absolute right-2"
+              className="right-2 hover:bg-inherit"
               onClick={() => {
                 setCurrentPage(1);
                 fetchPurchases();

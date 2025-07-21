@@ -1,4 +1,5 @@
 
+from sqlalchemy import or_
 from sqlalchemy.orm import Session
 from models.ebook import EBook,EBookLandingPage,EBookTableContent
 from schemas.ebook import EBookResponse
@@ -6,6 +7,7 @@ from fastapi import UploadFile
 from .utils import delete_file,upload_file
 from core.config import settings
 from crud.utils import to_pagination_response
+from models.user import User
 async def upload_thumbnail(thumbnail:UploadFile):
     folder ='ebook/thumbnail'
     return await upload_file(thumbnail,folder)
@@ -48,9 +50,21 @@ async def delete_ebook_files(db_ebook:EBook):
 
 
 
-def get_list_of_ebooks(db:Session,page:int=1,limit:int=10):
-    query = db.query(EBook).order_by(EBook.created_at.desc())
-    return to_pagination_response(query,EBookResponse,page,limit)
+def get_list_of_ebooks(db: Session, page: int = 1, limit: int = 10, search: str = None):
+    query = db.query(EBook)
+
+    if search:
+        query = query.filter(
+            or_(
+                EBook.title.ilike(f"%{search}%"),
+                EBook.description.ilike(f"%{search}%")
+            )
+        )
+
+    query = query.order_by(EBook.created_at.desc())
+
+    data = to_pagination_response(query, EBookResponse, page, limit)
+    return data
 
 def get_ebook_by_id(db:Session,ebook_id:int,is_admin:bool=False):
     if is_admin:
@@ -80,7 +94,7 @@ def delete_ebook(db:Session,db_ebook:EBook):
 
 def create_ebook_landing_page(db:Session,ebook_id:int): 
     from models.ebook import EBookLandingPage
-    db_landing = EBookLandingPage(main_heading="",sub_heading="",top_heading="",highlight_words="",thumbnail="",ebook_id=ebook_id)
+    db_landing = EBookLandingPage(main_heading="",sub_heading="",top_heading="",highlight_words="",thumbnail="",ebook_id=ebook_id,action_button="")
     db.add(db_landing)
     db.commit()
     db.refresh(db_landing)

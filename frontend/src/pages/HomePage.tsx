@@ -1,3 +1,4 @@
+/* eslint-disable @typescript-eslint/no-explicit-any */
 import React, { useEffect, useRef, useState } from "react";
 import { Link } from "react-router-dom";
 import { Button } from "@/components/ui/button";
@@ -10,31 +11,22 @@ import { Loading } from "@/components/ui/loading";
 
 const HomePage = () => {
   const { fetchType, fetching, isFetched, makeApiCall } = useAPICall();
-  const [courses, setCourses] = useState([]);
-  const [ebooks, setEbooks] = useState([]);
   const affiliateUserId = useRef(null);
+  const [AllItems, setAllItems] = useState([]);
+
   useEffect(() => {
     const getAllItems = async () => {
       try {
-        const courseResponse = await makeApiCall(
-          "GET",
-          API_ENDPOINT.LIST_COURSES(1, 20),
-          {},
-          "application/json"
-        );
-        if (courseResponse.status === 200) {
-          affiliateUserId.current = courseResponse.data.affiliate_user_id;
-          setCourses(courseResponse.data.items);
-        }
-        const ebookResponse = await makeApiCall(
-          "GET",
-          API_ENDPOINT.LIST_EBOOKS(1, 20),
-          {},
-          "application/json"
-        );
-        if (ebookResponse.status === 200) {
-          setEbooks(ebookResponse.data.items);
-        }
+        const response = await makeApiCall(
+        "GET",
+        API_ENDPOINT.PUBLIC_ALL_ITEMS(1,6,"",'all'),
+        {},
+        "application/json"
+      );
+      if (response.status == 200) {
+        setAllItems(response.data.items);
+        affiliateUserId.current = response.data.affiliate_user_id;
+      }
       } catch (error) {
         toast.error(
           "Failed to fetch learning resources. Please try again later."
@@ -44,9 +36,6 @@ const HomePage = () => {
     getAllItems();
   }, []);
 
-  if ( !isFetched) {
-    return <Loading />;
-  }
   return (
     <>
       {/* Hero Section */}
@@ -118,13 +107,25 @@ const HomePage = () => {
               <Link to="/learning">View All</Link>
             </Button>
           </div>
+          {(fetching  || !isFetched) && <Loading  />}
           <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-3 gap-6">
-            {courses.map((course) => (
-              <CourseCard key={course.id} {...course} isHomePage={true}  affiliate_user_id={affiliateUserId.current} />
-            ))}
-            {ebooks.map((ebook) => (
-              <EbookCard key={ebook.id} {...ebook} isHomePage={true} affiliate_user_id={affiliateUserId.current} />
-            ))}
+            {AllItems.map((item) =>
+              item.type == "course" ? (
+                <CourseCard
+                  key={item.id}
+                  {...item}
+                  isHomePage={true}
+                  affiliate_user_id={affiliateUserId.current}
+                />
+              ) : (
+                <EbookCard
+                  key={item.id}
+                  {...item}
+                  isHomePage={true}
+                  affiliate_user_id={affiliateUserId.current}
+                />
+              )
+            )}
           </div>
         </div>
       </section>

@@ -239,7 +239,7 @@ const Landing = () => {
           <div className="absolute bottom-[-100px] right-[-100px] w-96 h-96 bg-[#001a33]/80 rounded-full blur-[100px] animate-pulse"></div>
         </div>
         <header className="absolute top-0 left-0 right-0 p-4 flex justify-between items-center mx-auto z-10 max-w-3xl">
-          <div className=" rounded-full  flex justify-center items-center overflow-hidden">
+          <div className="  flex justify-center items-center overflow-hidden">
             <img
               src="/images/logo/logo-blue.png"
               alt="Hustly Logo"
@@ -398,15 +398,14 @@ const Landing = () => {
                 showBuyButton ? "opacity-0 scale-95" : "opacity-100 scale-100"
               }`}
             >
-              <div className="flex justify-center items-center gap-x-6 md:gap-x-8 mb-5">
+              <div className="flex justify-center items-center gap-x-6 md:gap-x-8 mb-5 ">
                 {Object.entries(formatTime(timeLeft)).map(
                   ([unit, value], idx, arr) => (
                     <React.Fragment key={unit}>
                       <div className="flex flex-col items-center">
                         <div
-                          className="w-12 h-12 md:w-16 md:h-16 flex items-center justify-center rounded-full border-4 border-white font-bold text-base"
+                          className="w-12 h-12 md:w-16 md:h-16 flex items-center justify-center rounded-full border-4 border-white font-bold text-base bg-transparent"
                           style={{
-                            background: "#000",
                             boxShadow:
                               "0 0 8px 2px #1880ff55, 0 0 16px 4px #1880ff55",
                             fontWeight: 700,
@@ -465,7 +464,7 @@ const Landing = () => {
                   className="text-lg font-bold text-white"
                   style={{ lineHeight: 1 }}
                 >
-                  Get Started
+                  {data?.landing_page?.action_button || "Get Started"}
                 </span>
               </button>
             ) : null}

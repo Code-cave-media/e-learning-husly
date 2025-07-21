@@ -42,7 +42,7 @@ const CourseCard = ({
   is_purchased = false,
   isHomePage = false,
   has_affiliate_link = false,
-  affiliate_user_id = "", 
+  affiliate_user_id = "",
 }: CourseCardProps) => {
   const { isAuthenticated, user, authToken } = useAuth();
   const [affiliateLink, setAffiliateLink] = React.useState("");
@@ -90,7 +90,7 @@ const CourseCard = ({
         <img
           src={thumbnail}
           alt={title}
-          className="w-full h-full object-cover"
+          className=" aspect-video object-cover"
         />
         <div className="absolute top-2 right-2 flex flex-wrap gap-2">
           {is_new && <span className="tag-new">New</span>}
@@ -131,14 +131,14 @@ const CourseCard = ({
           </Dialog>
         )}
       </div>
-      <CardContent className="flex-grow pt-4">
+      <CardContent className="flex-grow pt-4 max-sm:p-4">
         <h3 className="font-semibold text-lg mb-2 line-clamp-1">{title}</h3>
         <p className="text-gray-600 text-sm line-clamp-2 mb-2">{description}</p>
         {!isHomePage && (
           <p className="font-bold text-brand-primary">₹{price.toFixed(2)}</p>
         )}
       </CardContent>
-      <CardFooter className="border-t pt-0 pb-4">
+      <CardFooter className="border-t pt-0 pb-4 max-sm:px-4">
         {isAuthenticated && !isHomePage && (
           <>
             {is_purchased ? (
@@ -155,7 +155,9 @@ const CourseCard = ({
 
         {isHomePage && (
           <Button asChild className="w-full">
-            <Link to={`/landing/course/${id}?ref=${affiliate_user_id}`}>Start your side hustle</Link>
+            <Link to={`/landing/course/${id}?ref=${affiliate_user_id}`}>
+              Start your side hustle
+            </Link>
           </Button>
         )}
       </CardFooter>

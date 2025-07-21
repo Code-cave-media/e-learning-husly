@@ -22,7 +22,8 @@ from crud.utils import to_pagination_response
 from models.affiliate import UPIDetails,BankDetails
 from schemas.affiliate import UPIDetailsResponse,BankAccountResponse
 from crud.course import get_or_create_course_progress
-
+from typing import Type, Union
+from sqlalchemy import or_
 def get_user_purchased_course_and_ebook(db: Session, user: User,page: int = 1, limit: int = 10):
     user_purchases = user.purchases
     res = []
@@ -64,13 +65,24 @@ def get_user_purchased_course_and_ebook(db: Session, user: User,page: int = 1, l
         "items": paginated_items
     }
 
-def get_user_purchased_courses(db: Session, user: User, page: int = 1, limit: int = 10):
+def get_user_purchased_courses(db: Session, user: User, page: int = 1, limit: int = 10, search: str = None):
     user_purchases = user.purchases
     res = []
+    
     for purchase in user_purchases:
         if purchase.item_type == 'course':
-            course = db.query(Course).filter(Course.id == purchase.item_id,Course.visible==True).first()
+            course = db.query(Course).filter(
+                Course.id == purchase.item_id,
+                Course.visible == True
+            ).first()
+
             if course:
+                # Apply search filter if needed
+                if search:
+                    search_lower = search.lower()
+                    if search_lower not in course.title.lower() and search_lower not in course.description.lower():
+                        continue
+                
                 course_data = CourseListResponse.from_orm(course).dict()
                 course_data['type'] = 'course'
                 course_data['purchased_at'] = purchase.created_at
@@ -79,13 +91,16 @@ def get_user_purchased_courses(db: Session, user: User, page: int = 1, limit: in
                     db, user.id, course.id, 'course'
                 ) is not None
                 res.append(course_data)
-    # sort by purchased_at date
-    res.sort(key=lambda x:x['purchased_at'], reverse=True)
-    # pagination
+    
+    # Sort by purchased_at date (newest first)
+    res.sort(key=lambda x: x['purchased_at'], reverse=True)
+    
+    # Paginate
     total = len(res)
     start = (page - 1) * limit
     end = start + limit
-    paginated_items = res[start:end] 
+    paginated_items = res[start:end]
+    
     return {
         "has_prev": page > 1,
         "has_next": end < total,
@@ -93,13 +108,24 @@ def get_user_purchased_courses(db: Session, user: User, page: int = 1, limit: in
         "items": paginated_items
     }
 
-def get_user_purchased_ebooks(db: Session, user: User, page: int = 1, limit: int = 10):
+def get_user_purchased_ebooks(db: Session, user: User, page: int = 1, limit: int = 10, search: str = None):
     user_purchases = user.purchases
     res = []
+
     for purchase in user_purchases:
         if purchase.item_type == 'ebook':
-            ebook = db.query(EBook).filter(EBook.id == purchase.item_id,EBook.visible==True).first()
+            ebook = db.query(EBook).filter(
+                EBook.id == purchase.item_id,
+                EBook.visible == True
+            ).first()
+
             if ebook:
+                # Apply search filter if provided
+                if search:
+                    search_lower = search.lower()
+                    if search_lower not in ebook.title.lower() and search_lower not in ebook.description.lower():
+                        continue
+
                 ebook_data = EbookListResponse.from_orm(ebook).dict()
                 ebook_data['type'] = 'ebook'
                 ebook_data['purchased_at'] = purchase.created_at
@@ -108,20 +134,22 @@ def get_user_purchased_ebooks(db: Session, user: User, page: int = 1, limit: int
                     db, user.id, ebook.id, 'ebook'
                 ) is not None
                 res.append(ebook_data)
-    # sort by purchased_at date
-    res.sort(key=lambda x:x['purchased_at'], reverse=True)
-    # pagination
+
+    # Sort by purchase date (newest first)
+    res.sort(key=lambda x: x['purchased_at'], reverse=True)
+
+    # Pagination
     total = len(res)
     start = (page - 1) * limit
     end = start + limit
-    paginated_items = res[start:end] 
+    paginated_items = res[start:end]
+
     return {
         "has_prev": page > 1,
         "has_next": end < total,
         "total": total,
         "items": paginated_items
     }
-
 def get_total_user_purchases(user: User):
     return len(user.purchases)
 
@@ -158,118 +186,59 @@ def get_total_purchased_courses(user: User):
             res += 1
     return res
 
-def get_all_courses(db: Session,user:User, page: int = 1, limit: int = 10):
-    courses = db.query(Course).all()
-    res = []
-    for course in courses:
-        if not course.visible:
-            continue
-        course_data = CourseListResponse.from_orm(course).dict()
-        course_data['type'] = 'course'
-        if db.query(Purchase).filter(
-            Purchase.item_type == 'course',
-            Purchase.item_id == course.id,
-            Purchase.purchased_user_id == user.id
-        ).first():
-            course_data['is_purchased'] = True
-        course_data['has_affiliate_link'] = get_affiliate_link_by_all(
-            db, user.id, course.id, 'course'
-        ) is not None
-        res.append(course_data)
-    total = len(res)
-    start = (page - 1) * limit
-    end = start + limit
-    paginated_items = res[start:end] 
-    return {
-        "has_prev": page > 1,
-        "has_next": end < total,
-        "total": total,
-        "items": paginated_items
-    }
+def get_items(
+    db: Session,
+    user: User,
+    model: Type[Union[Course, EBook]],
+    response_schema,
+    item_type: str,
+    page: int = 1,
+    limit: int = 10,
+    is_new: bool = False,
+    is_featured: bool = False,
+    search: str = None,
+):
+    query = db.query(model).filter(model.visible.is_(True))
 
-def get_new_courses(db: Session,user:User, page: int = 1, limit: int = 10):   
-    courses = db.query(Course).filter(
-        Course.is_new == True
-    ).all()
-    res = []
-    for course in courses:
-        if not course.visible:
-            continue
-        course_data = CourseListResponse.from_orm(course).dict()
-        course_data['type'] = 'course'
-        if db.query(Purchase).filter(
-            Purchase.item_type == 'course',
-            Purchase.item_id == course.id,
-            Purchase.purchased_user_id == user.id
-        ).first():
-            course_data['is_purchased'] = True
-        course_data['has_affiliate_link'] = get_affiliate_link_by_all(
-            db, user.id, course.id, 'course'
-        ) is not None
-        res.append(course_data)
-    total = len(res)
-    start = (page - 1) * limit
-    end = start + limit
-    paginated_items = res[start:end] 
-    return {
-        "has_prev": page > 1,
-        "has_next": end < total,
-        "total": total,
-        "items": paginated_items
-    }
+    if is_new:
+        query = query.filter(model.is_new.is_(True))
+    if is_featured:
+        query = query.filter(model.is_featured.is_(True))
+    if search:
+        search_str = f"%{search.lower()}%"
+        query = query.filter(
+            or_(
+                model.title.ilike(search_str),
+                model.description.ilike(search_str)
+            )
+        )
 
-def get_featured_courses(db: Session,user:User, page: int = 1, limit: int = 10):   
-    courses = db.query(Course).filter(
-        Course.is_featured == True
-    ).all()
+    items = query.all()
     res = []
-    for course in courses:
-        if not course.visible:
-            continue
-        course_data = CourseListResponse.from_orm(course).dict()
-        course_data['type'] = 'course'
-        if db.query(Purchase).filter(
-            Purchase.item_type == 'course',
-            Purchase.item_id == course.id,
-            Purchase.purchased_user_id == user.id
-        ).first():
-            course_data['is_purchased'] = True
-        course_data['has_affiliate_link'] = get_affiliate_link_by_all(
-            db, user.id, course.id, 'course'
-        ) is not None
-        res.append(course_data)
-    total = len(res)
-    start = (page - 1) * limit
-    end = start + limit
-    paginated_items = res[start:end] 
-    return {
-        "has_prev": page > 1,
-        "has_next": end < total,
-        "total": total,
-        "items": paginated_items
-    }
 
-def get_all_ebooks(db: Session, user: User, page: int = 1, limit: int = 10):
-    ebooks = db.query(EBook).all()
-    res = []
-    for ebook in ebooks:
-        if not ebook.visible:
-            continue
-        ebook_data = EbookListResponse.from_orm(ebook).dict()
-        ebook_data['type'] = 'ebook'
-        if db.query(Purchase).filter(
-            Purchase.item_type == 'ebook',
-            Purchase.item_id == ebook.id,
-            Purchase.purchased_user_id == user.id
-        ).first():
-            ebook_data['is_purchased'] = True
-        ebook_data['has_affiliate_link'] = get_affiliate_link_by_all(
-            db, user.id, ebook.id, 'ebook')
-        res.append(ebook_data)
+    for item in items:
+        item_data = response_schema.from_orm(item).dict()
+        item_data["type"] = item_type
+        if user.is_admin:
+            item_data["is_purchased"] = True
+        else : 
+            item_data["is_purchased"] = db.query(Purchase).filter(
+                Purchase.item_type == item_type,
+                Purchase.item_id == item.id,
+                Purchase.purchased_user_id == user.id
+            ).first() is not None
+
+        item_data["has_affiliate_link"] = get_affiliate_link_by_all(
+            db, user.id, item.id, item_type
+        ) is not None
+
+        res.append(item_data)
+
     total = len(res)
     start = (page - 1) * limit
     end = start + limit
     paginated_items = res[start:end]
+
     return {
         "has_prev": page > 1,
         "has_next": end < total,
@@ -277,61 +246,25 @@ def get_all_ebooks(db: Session, user: User, page: int = 1, limit: int = 10):
         "items": paginated_items
     }
 
-def get_new_ebooks(db: Session, user: User, page: int = 1, limit: int = 10):
-    ebooks = db.query(EBook).filter(EBook.is_new == True).all()
-    res = []
-    for ebook in ebooks:
-        if not ebook.visible:
-            continue
-        ebook_data = EbookListResponse.from_orm(ebook).dict()
-        ebook_data['type'] = 'ebook'
-        if db.query(Purchase).filter(
-            Purchase.item_type == 'ebook',
-            Purchase.item_id == ebook.id,
-            Purchase.purchased_user_id == user.id
-        ).first():
-            ebook_data['is_purchased'] = True
-        ebook_data['has_affiliate_link'] = get_affiliate_link_by_all(
-            db, user.id, ebook.id, 'ebook')
-        res.append(ebook_data)
-    total = len(res)
-    start = (page - 1) * limit
-    end = start + limit
-    paginated_items = res[start:end]
-    return {
-        "has_prev": page > 1,
-        "has_next": end < total,
-        "total": total,
-        "items": paginated_items
-    }
+# Courses
+def get_all_courses(db: Session, user: User, page=1, limit=10, search=None):
+    return get_items(db, user, Course, CourseListResponse, 'course', page, limit, search=search)
 
-def get_featured_ebooks(db: Session, user: User, page: int = 1, limit: int = 10):
-    ebooks = db.query(EBook).filter(EBook.is_featured == True).all()
-    res = []
-    for ebook in ebooks:    
-        if not ebook.visible:
-            continue
-        ebook_data = EbookListResponse.from_orm(ebook).dict()
-        ebook_data['type'] = 'ebook'
-        if db.query(Purchase).filter(
-            Purchase.item_type == 'ebook',
-            Purchase.item_id == ebook.id,
-            Purchase.purchased_user_id == user.id
-        ).first():
-            ebook_data['is_purchased'] = True
-        ebook_data['has_affiliate_link'] = get_affiliate_link_by_all(
-            db, user.id, ebook.id, 'ebook')
-        res.append(ebook_data)
-    total = len(res)
-    start = (page - 1) * limit
-    end = start + limit
-    paginated_items = res[start:end]
-    return {
-        "has_prev": page > 1,
-        "has_next": end < total,
-        "total": total,
-        "items": paginated_items
-    }
+def get_new_courses(db: Session, user: User, page=1, limit=10, search=None):
+    return get_items(db, user, Course, CourseListResponse, 'course', page, limit, is_new=True,search=search)
+
+def get_featured_courses(db: Session, user: User, page=1, limit=10, search=None):
+    return get_items(db, user, Course, CourseListResponse, 'course', page, limit, is_featured=True,search=search)
+
+# EBooks
+def get_all_ebooks(db: Session, user: User, page=1, limit=10, search=None):
+    return get_items(db, user, EBook, EbookListResponse, 'ebook', page, limit, search=search)
+
+def get_new_ebooks(db: Session, user: User, page=1, limit=10,search=None):
+    return get_items(db, user, EBook, EbookListResponse, 'ebook', page, limit, is_new=True,search=search)
+
+def get_featured_ebooks(db: Session, user: User, page=1, limit=10,search=None):
+    return get_items(db, user, EBook, EbookListResponse, 'ebook', page, limit, is_featured=True,search=search)
 
 def get_monthly_earnings(db: Session, user: User):
     link_ids = [link.id for link in user.affiliate_links]

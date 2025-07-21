@@ -53,7 +53,7 @@ export default function CouponsManagement() {
   const [isEdit, setIsEdit] = useState(false);
   const [selectedCoupon, setSelectedCoupon] = useState<Coupon | null>(null);
   const { authToken } = useAuth();
-  const { fetchType, fetching, makeApiCall } = useAPICall();
+  const { fetchType, fetching, makeApiCall,isFetched } = useAPICall();
   const [currentPage, setCurrentPage] = useState(1);
   const [hasNext, setHasNext] = useState(false);
   const [hasPrev, setHasPrev] = useState(false);
@@ -229,7 +229,7 @@ export default function CouponsManagement() {
             <Button
               variant="ghost"
               size="icon"
-              className="absolute right-2"
+              className="right-2 hover:bg-inherit"
               onClick={() => {
                 setSearchQuery(searchInput);
                 setCurrentPage(1);
@@ -292,7 +292,7 @@ export default function CouponsManagement() {
             </TableRow>
           </TableHeader>
           <TableBody>
-            {fetching && fetchType === "fetchCoupons" ? (
+            {fetching && (fetchType === "fetchCoupons"||!isFetched) ? (
               <TableRow>
                 <TableCell colSpan={6} className="text-center py-8">
                   <Loading />

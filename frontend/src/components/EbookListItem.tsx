@@ -206,6 +206,10 @@ export function EbookListItem({ ebook, setEbook }: EbookListItemProps) {
       "highlight_words",
       editingEbook.landing_page?.highlight_words || ""
     );
+    formData.append(
+      "action_button",
+      editingEbook.landing_page?.action_button || ""
+    );
 
     const response = await makeApiCall(
       "PUT",
@@ -1014,6 +1018,22 @@ export function EbookListItem({ ebook, setEbook }: EbookListItemProps) {
                           });
                         }}
                         placeholder="Enter highlight words separated by commas"
+                      />
+                    </div>
+                    <div>
+                      <Label>Action Button</Label>
+                      <Input
+                        value={editingEbook.landing_page?.action_button}
+                        onChange={(e) => {
+                          setEditingEbook({
+                            ...editingEbook,
+                            landing_page: {
+                              ...editingEbook.landing_page,
+                              action_button: e.target.value,
+                            },
+                          });
+                        }}
+                        placeholder="Enter action button text"
                       />
                     </div>
                   </div>

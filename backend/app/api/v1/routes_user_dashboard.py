@@ -1,4 +1,4 @@
-from fastapi import APIRouter, Depends, HTTPException
+from fastapi import APIRouter, Depends, HTTPException,Query
 from sqlalchemy.orm import Session
 from core.deps import get_current_user
 from db.session import get_db
@@ -7,11 +7,16 @@ from crud.affiliate import *
 from fastapi import Query
 from crud.affiliate import find_conversion_rate
 from crud.affiliate import *
-import time
 from core.deps import is_admin_user
 from schemas.course import ItemListResponse
 from crud.auth import get_user_by_user_id,get_user_by_id
 from schemas.user import UserResponse
+from schemas.course import CourseResponse   
+from schemas.ebook import EBookResponse
+from sqlalchemy import or_
+import math
+
+
 router = APIRouter()
 
 @router.get('/list')
@@ -43,16 +48,17 @@ def get_user_dashboard_courses(
     current_user=Depends(get_current_user),
     page: int = Query(1, ge=1),
     limit: int = Query(10, ge=1, le=100),
-    filter: str = Query('all', regex='^(all|my|new|featured)$')
+    filter: str = Query('all', regex='^(all|my|new|featured)$'),
+    search:str = Query("")
 ):
     if filter == 'all':
-        return get_all_courses(db, current_user, page, limit)
+        return get_all_courses(db, current_user, page, limit,search)
     elif filter == 'my':
-        return get_user_purchased_courses(db, current_user, page, limit)
+        return get_user_purchased_courses(db, current_user, page, limit,search)
     elif filter == 'new':
-        return get_new_courses(db, current_user, page, limit)
+        return get_new_courses(db, current_user, page, limit,search)
     elif filter == 'featured':
-        return get_featured_courses(db, current_user,page, limit)
+        return get_featured_courses(db, current_user,page, limit,search)
     return []
 
 @router.get('/ebooks')
@@ -61,16 +67,17 @@ def get_user_dashboard_ebooks(
     current_user=Depends(get_current_user),
     page: int = Query(1, ge=1),
     limit: int = Query(10, ge=1, le=100),
-    filter: str = Query('all', regex='^(all|my|new|featured)$')
+    filter: str = Query('all', regex='^(all|my|new|featured)$'),
+    search:str = Query("")
 ):
     if filter == 'all':
-        return get_all_ebooks(db, current_user, page, limit)
+        return get_all_ebooks(db, current_user, page, limit,search)
     elif filter == 'my':
-        return get_user_purchased_ebooks(db, current_user, page, limit)
+        return get_user_purchased_ebooks(db, current_user, page, limit,search)
     elif filter == 'new':
-        return get_new_ebooks(db, current_user, page, limit)
+        return get_new_ebooks(db, current_user, page, limit,search)
     elif filter == 'featured':
-        return get_featured_ebooks(db,current_user, page, limit)
+        return get_featured_ebooks(db,current_user, page, limit,search)
     return []   
 
 @router.get('/affiliate-dashboard')
@@ -105,7 +112,6 @@ def get_user_dashboard_courses(
 ):
     return get_withdraw_history(db,current_user,page,limit)
 
-
 @router.get('/product-history')
 def get_user_dashboard_product_history(
     db: Session = Depends(get_db), 
@@ -115,7 +121,6 @@ def get_user_dashboard_product_history(
     query:str = Query("")
 ):
     return get_all_products(db,current_user,query,page,limit)
-
 
 @router.get("/verify/item/{item_type}/{item_id}",response_model=ItemListResponse)
 def get_purchase_by_id(item_type:str,item_id:str,db:Session=Depends(get_db),current_user:User=Depends(is_admin_user)):
@@ -133,5 +138,71 @@ def verify_user(user_id:str,db:Session=Depends(get_db),current_user:User=Depends
             raise HTTPException(status_code=404,detail="User not found")
     return UserResponse.from_orm(db_user).dict()
 
+@router.get("/all-items")
+def get_combined_items(
+    db: Session=Depends(get_db),
+    page: int = 1,
+    size: int = 10,
+    search: str = "",
+    filter: str = "all",  
+):
+    search = search.strip()
+    filters = []
+    if search:
+        filters.append(or_(
+            Course.title.ilike(f"%{search}%"),
+            Course.description.ilike(f"%{search}%")
+        ))
+        ebook_filters = [or_(
+            EBook.title.ilike(f"%{search}%"),
+            EBook.description.ilike(f"%{search}%")
+        )]
+    else:
+        filters.append(True)
+        ebook_filters = [True]
 
+    items = []
 
+    if filter in ("all", "course"):
+        course_query = db.query(Course).filter(Course.visible == True, *filters)
+        items += [{
+            "id": course.id,
+            "title": course.title,
+            "description": course.description,
+            "price": course.price,
+            "commission": course.commission,
+            "thumbnail": course.thumbnail,
+            "intro_video": course.intro_video,
+            "type": "course"
+        } for course in course_query]
+
+    if filter in ("all", "ebook"):
+        ebook_query = db.query(EBook).filter(EBook.visible == True, *ebook_filters)
+        items += [{
+            "id": ebook.id,
+            "title": ebook.title,
+            "description": ebook.description,
+            "price": ebook.price,
+            "commission": ebook.commission,
+            "thumbnail": ebook.thumbnail,
+            "intro_video": ebook.intro_video,
+            "type": "ebook"
+        } for ebook in ebook_query]
+
+    # Sort by created_at descending (you can also sort by type then created_at if needed)
+    items.sort(key=lambda x: x.get("created_at", 0), reverse=True)
+
+    total = len(items)
+    start = (page - 1) * size
+    end = start + size
+    paginated = items[start:end]
+    admin_user_id = db.query(User).filter(User.is_admin == True).first().user_id
+    return   {
+        "total": total,
+        "limit": size,
+        "total_pages": math.ceil(total / size) if size else 1,
+        "has_prev": page > 1,
+        "has_next": end < total,
+        "items": paginated,
+        "affiliate_user_id":admin_user_id
+    }

@@ -11,6 +11,7 @@ class CourseLandingPage(TimestampMixin,Base):
     top_heading = Column(String, nullable=False)
     highlight_words = Column(String, nullable=False)
     thumbnail = Column(String, nullable=False)
+    action_button = Column(String, nullable=False)
     course_id = Column(Integer, ForeignKey("course.id"), unique=True)
 
 

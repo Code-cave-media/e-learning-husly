@@ -15,6 +15,8 @@ export interface Course {
     sub_heading: string;
     highlight_words: string;
     thumbnail: File | string | null;
+    action;
+    action_button: string;
   };
   created_at: string | null;
   updated_at: string | null;

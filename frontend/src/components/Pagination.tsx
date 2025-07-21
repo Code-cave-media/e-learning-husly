@@ -15,15 +15,15 @@ const Pagination = ({
   hasPrev: boolean;
   total: number;
   pageSize: number;
-  itemsSize: number;
+  itemsSize?: number;
   onPageChange: (page: number) => void;
 }) => {
   const totalPages = Math.ceil(total / pageSize);
   return (
-    <div className="flex items-center justify-between mt-4">
-      <div className="text-sm text-muted-foreground">
+    <div className="flex items-center justify-center mt-4">
+      {/* <div className="text-sm text-muted-foreground max-sm:hidden">
         Showing {itemsSize} of {total} purchases
-      </div>
+      </div> */}
       <div className="flex items-center gap-2">
         <Button
           variant="outline"

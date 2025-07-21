@@ -19,13 +19,13 @@ const Navbar = () => {
 
         {/* Auth Button for all screens */}
         <div className="flex items-center">
-          {/* <Button
+          <Button
             variant="default"
             className="bg-primary text-white hover:bg-blue-700"
             asChild
           >
             <Link to="/login">Login</Link>
-          </Button> */}
+          </Button>
         </div>
       </div>
     </header>

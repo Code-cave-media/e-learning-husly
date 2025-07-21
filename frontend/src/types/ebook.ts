@@ -16,6 +16,7 @@ export interface Ebook {
     sub_heading: string;
     highlight_words: string;
     thumbnail: File | null | string;
+    action_button: string;
   };
   chapters: {
     id: number;

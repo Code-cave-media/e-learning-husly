@@ -1,3 +1,4 @@
+/* eslint-disable @typescript-eslint/no-explicit-any */
 import { useEffect, useState } from "react";
 import {
   Table,
@@ -21,17 +22,27 @@ import { Textarea } from "@/components/ui/textarea";
 import { Switch } from "@/components/ui/switch";
 import { Label } from "@/components/ui/label";
 import { toast } from "react-hot-toast";
-import { Plus, BookOpen } from "lucide-react";
+import { Plus, BookOpen, Search } from "lucide-react";
 import { CourseListItem } from "@/components/CourseListItem";
 import { Course } from "@/types/course";
 import { useAPICall } from "@/hooks/useApiCall";
 import { API_ENDPOINT } from "@/config/backend";
 import { useAuth } from "@/contexts/AuthContext";
 import { Loading } from "@/components/ui/loading";
+import Pagination from "@/components/Pagination";
 
 export default function CoursesManagement() {
   const [isCreateDialogOpen, setIsCreateDialogOpen] = useState(false);
   const [courses, setCourses] = useState<Course[]>([]);
+  const [currentQuery, setCurrentQuery] = useState("");
+  const [search, setSearch] = useState("");
+  const [page, setPage] = useState(1);
+  const [pagination, setPagination] = useState({
+    hasNext: false,
+    hasPrev: false,
+    total: 0,
+    totalPages: 0,
+  });
   const [newCourse, setNewCourse] = useState<Partial<Course>>({
     title: "",
     description: "",
@@ -41,12 +52,12 @@ export default function CoursesManagement() {
     is_featured: false,
     is_new: false,
   });
-  const { makeApiCall, fetching, fetchType } = useAPICall();
+  const { makeApiCall, fetching, fetchType, isFetched } = useAPICall();
   const { authToken } = useAuth();
-
+  const pageSize = 20;
   useEffect(() => {
     getCourses();
-  }, []);
+  }, [page, search]);
 
   const handleCreateCourse = async () => {
     if (
@@ -98,7 +109,7 @@ export default function CoursesManagement() {
   const getCourses = async () => {
     const response = await makeApiCall(
       "GET",
-      API_ENDPOINT.LIST_COURSES(1, 10),
+      API_ENDPOINT.ADMIN_LIST_COURSES(page, pageSize, search),
       null,
       "application/json",
       authToken,
@@ -106,11 +117,26 @@ export default function CoursesManagement() {
     );
     if (response.status === 200) {
       setCourses(response.data.items);
+      setPagination({
+        hasNext: response.data.has_next,
+        hasPrev: response.data.has_prev,
+        total: response.data.total,
+        totalPages: response.data.total_pages,
+      });
     }
   };
-
+  const handleKeyPress = (e: any = null) => {
+    if (e && e.key === "Enter") {
+      setPage(1);
+      setSearch(currentQuery);
+    }
+    if (!e) {
+      setPage(1);
+      setSearch(currentQuery);
+    }
+  };
   return (
-    <div className="container mx-auto py-4 sm:py-6 px-2 sm:px-4">
+    <div className="py-4 sm:py-6 px-2 sm:px-4">
       <div className="flex flex-col sm:flex-row sm:justify-between sm:items-center gap-4 mb-4 sm:mb-6">
         <h1 className="text-xl sm:text-2xl font-bold">Courses Management</h1>
         <Button
@@ -120,6 +146,24 @@ export default function CoursesManagement() {
         >
           <Plus className="w-3 h-3 sm:w-4 sm:h-4 mr-1 sm:mr-2" />
           Create New Course
+        </Button>
+      </div>
+      <div className="relative flex items-center flex-1">
+        <Search className="absolute left-2 h-4 w-4 text-muted-foreground" />
+        <Input
+          placeholder="Search by courses"
+          value={currentQuery}
+          onChange={(e) => setCurrentQuery(e.target.value)}
+          onKeyPress={handleKeyPress}
+          className="pl-8 w-full sm:w-[300px]"
+        />
+        <Button
+          variant="ghost"
+          size="icon"
+          className="right-2 hover:bg-inherit"
+          onClick={(e) => handleKeyPress(e)}
+        >
+          <Search className="h-4 w-4" />
         </Button>
       </div>
 
@@ -137,7 +181,7 @@ export default function CoursesManagement() {
             </TableRow>
           </TableHeader>
           <TableBody>
-            {fetching && fetchType == "listCourses" && (
+            {fetching && (fetchType == "listCourses" || !isFetched) && (
               <TableRow>
                 <TableCell colSpan={7} className="text-center">
                   <Loading />
@@ -172,7 +216,17 @@ export default function CoursesManagement() {
           </TableBody>
         </Table>
       </div>
-
+      {!(fetching || !isFetched) && courses.length != 0 && (
+        <Pagination
+          currentPage={page}
+          hasNext={pagination.hasNext}
+          hasPrev={pagination.hasPrev}
+          itemsSize={pageSize}
+          onPageChange={setPage}
+          pageSize={pageSize}
+          total={pagination.total}
+        />
+      )}
       <Dialog open={isCreateDialogOpen} onOpenChange={setIsCreateDialogOpen}>
         <DialogContent className="max-h-[90vh] overflow-y-auto">
           <DialogHeader>

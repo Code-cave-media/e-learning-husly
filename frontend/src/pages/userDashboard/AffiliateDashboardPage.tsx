@@ -272,7 +272,7 @@ const AffiliateDashboardPage = () => {
 
   if (!dashboardData && isFetched) {
     return (
-      <div className="container px-4 py-8 max-sm:px-0">
+      <div className=" px-4 py-8 max-sm:px-0">
         <div className="flex flex-col items-center justify-center min-h-[60vh] text-center">
           <div className="p-4 bg-red-50 rounded-full mb-4">
             <AlertCircle className="h-12 w-12 text-red-500" />
@@ -321,7 +321,7 @@ const AffiliateDashboardPage = () => {
 
   if (dashboardData) {
     return (
-      <div className="container px-4 py-8 max-sm:px-0">
+      <div className=" px-4 py-8 max-sm:px-0">
         {/* Header */}
         <div className="flex flex-col md:flex-row justify-between items-start md:items-center gap-4 mb-8">
           <div>
@@ -602,35 +602,38 @@ const AffiliateDashboardPage = () => {
                 (day) => day.clicks > 0 || day.purchases > 0
               ) ? (
                 <div className="space-y-4">
-                  {dashboardData.performance.slice(-5).reverse().map((day, index) => (
-                    <div
-                      key={index}
-                      className="flex items-center justify-between"
-                    >
-                      <div className="flex items-center gap-4">
-                        <div className="p-2 bg-primary/10 rounded-full">
-                          <Calendar className="h-4 w-4 text-primary" />
+                  {dashboardData.performance
+                    .slice(-5)
+                    .reverse()
+                    .map((day, index) => (
+                      <div
+                        key={index}
+                        className="flex items-center justify-between"
+                      >
+                        <div className="flex items-center gap-4">
+                          <div className="p-2 bg-primary/10 rounded-full">
+                            <Calendar className="h-4 w-4 text-primary" />
+                          </div>
+                          <div>
+                            <p className="font-medium">
+                              {new Date(day.date).toLocaleDateString()}
+                            </p>
+                            <p className="text-sm text-muted-foreground">
+                              {day.clicks} clicks • {Math.ceil(day.conversions)}
+                              % conversions
+                            </p>
+                          </div>
                         </div>
-                        <div>
+                        <div className="text-right">
                           <p className="font-medium">
-                            {new Date(day.date).toLocaleDateString()}
+                            ₹{day.earnings.toFixed(2)}
                           </p>
-                          <p className="text-sm text-muted-foreground">
-                            {day.clicks} clicks • {Math.ceil(day.conversions)}%
-                            conversions
+                          <p className="text-sm text-green-600">
+                            +{day.purchases} sales
                           </p>
                         </div>
                       </div>
-                      <div className="text-right">
-                        <p className="font-medium">
-                          ₹{day.earnings.toFixed(2)}
-                        </p>
-                        <p className="text-sm text-green-600">
-                          +{day.purchases} sales
-                        </p>
-                      </div>
-                    </div>
-                  ))}
+                    ))}
                 </div>
               ) : (
                 <div className="text-center py-8">

@@ -14,14 +14,15 @@ class EBookChapterResponse(BaseModel):
 
 
 class LandingPageResponse(BaseModel):
-  id: int
-  main_heading: str
-  sub_heading: str
-  top_heading: str
-  highlight_words: str
-  thumbnail: str
-  class Config:
-    orm_mode = True
+    id: int
+    main_heading: str
+    sub_heading: str
+    top_heading: str
+    highlight_words: str
+    thumbnail: str
+    action_button :str | None
+    class Config:
+        orm_mode = True
 
 class EBookResponse(BaseModel):
     id: int

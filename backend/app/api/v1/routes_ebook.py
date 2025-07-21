@@ -46,12 +46,19 @@ async def get_ebook_landing_page(
     db_ebook.is_purchased = True
   return db_ebook
 
-@router.get('/list',response_model=PaginationResponse[EBookResponse])
+@router.get('/list')
 async def list_ebooks(
   db: Session = Depends(get_db),
   data: Pagination = Depends(),
 ): 
-  return crud_ebook.get_list_of_ebooks(db,data.page,data.page_size)
+  return crud_ebook.get_list_of_ebooks(db,data.page,data.size,data.search)
+@router.get('/admin/list')
+async def list_ebooks(
+  db: Session = Depends(get_db),
+  data: Pagination = Depends(),
+): 
+  
+  return crud_ebook.get_list_of_ebooks(db,data.page,data.size,data.search)
 
 @router.post('/create',response_model=EBookResponse)
 async def create_ebook(
@@ -98,6 +105,7 @@ async def update_ebook(
   intro_video: UploadFile | None = File(None),
   pdf: UploadFile | None = File(None),
   main_heading: str | None = Form(None),
+  action_button:str | None = Form(None),
   top_heading: str | None = Form(None),
   sub_heading: str | None = Form(None),
   highlight_words: str | None = Form(None),
@@ -140,6 +148,7 @@ async def update_ebook(
     "top_heading": top_heading if top_heading is not None else db_landing_page.top_heading,
     "highlight_words": highlight_words if highlight_words is not None else db_landing_page.highlight_words,
     "thumbnail": landing_thumbnail_url if landing_thumbnail is not None else db_landing_page.thumbnail,
+    "action_button":action_button if action_button is not None  else db_landing_page.action_button
   }
   crud_ebook.update_ebook_landing_page(db, db_landing_page, update_data)
   return ebook

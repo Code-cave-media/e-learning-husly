@@ -1,13 +1,8 @@
 from sqlalchemy.orm import Session
 from models.course import Course,CourseChapter,CourseLandingPage,CourseProgress,CourseCompletionChapter
 from fastapi import UploadFile 
-from core.config import settings
-import uuid
-import os
-from core.config import settings
 from .utils import *
 from schemas.course import CourseResponse
-from models.user import User
 async def upload_thumbnail(file: UploadFile):
     folder = "course/thumbnail"
     return await upload_file(file,folder)
@@ -35,13 +30,24 @@ def get_course_by_id(db:Session,course_id:int,is_admin:bool=False):
 def get_course_chapter_by_id(db:Session,course_chapter_id:int):
     return db.query(CourseChapter).filter(CourseChapter.id==course_chapter_id).first()
 
-def get_list_of_courses(db:Session,page:int=1,limit:int=10):
-    query = db.query(Course).order_by(Course.created_at.desc())
-    data =  to_pagination_response(query,CourseResponse,page,limit)
-    admin_user_id = db.query(User).filter(User.is_admin==True).first().user_id
-    print(f"Admin User ID: {admin_user_id}")
-    data['affiliate_user_id'] = admin_user_id
+from sqlalchemy import or_
+
+def get_list_of_courses(db: Session, page: int = 1, limit: int = 10, search: str = None):
+    query = db.query(Course)
+
+    if search:
+        query = query.filter(
+            or_(
+                Course.title.ilike(f"%{search}%"),
+                Course.description.ilike(f"%{search}%")
+            )
+        )
+
+    query = query.order_by(Course.created_at.desc())
+
+    data = to_pagination_response(query, CourseResponse, page, limit)
     return data
+
 
 def create_course(db:Session,data:dict):
     db_course = Course(**data)
@@ -117,7 +123,7 @@ def delete_course_chapter(db:Session,db_course_course:CourseChapter):
     return {'detail':"Course Chapter deleted successfully"}
 
 def create_landing_page(db:Session,course_id:int):
-    db_landing = CourseLandingPage(main_heading="",sub_heading="",top_heading="",highlight_words="",thumbnail="",course_id=course_id)
+    db_landing = CourseLandingPage(main_heading="",sub_heading="",top_heading="",highlight_words="",thumbnail="",course_id=course_id,action_button="")
     db.add(db_landing)
     db.commit() 
     db.refresh(db_landing)
