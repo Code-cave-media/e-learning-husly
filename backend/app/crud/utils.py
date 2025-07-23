@@ -20,8 +20,6 @@ async def upload_file(file: UploadFile, folder: str) -> str:
         shutil.copyfileobj(file.file, buffer)
     file_path = os.path.join(folder, filename)
     return absolute_media_url(file_path)
-    return upload_to_space(folder, filename, await file.read())
-
 async def delete_file(file_url: str):
     print(file_url,'-------------')
     parsed_url = urlparse(file_url)

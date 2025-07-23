@@ -38,7 +38,8 @@ const AdminDashboard = () => {
         API_ENDPOINT.GET_ADMIN_DASHBOARD,
         {},
         "application/json",
-        authToken
+        authToken,
+        "fetchDashboardData"
       );
       if (response.status === 200) {
         setDashboardData(response.data);
@@ -56,7 +57,7 @@ const AdminDashboard = () => {
     });
   };
 
-  if (fetching && fetchType === "fetchDashboardData") {
+  if (fetching) {
     return <Loading />;
   }
 
@@ -65,7 +66,7 @@ const AdminDashboard = () => {
   }
 
   return (
-    <div className="container mx-auto p-6">
+    <div className=" py-6 px-0">
       <div className="grid gap-4 md:grid-cols-2 lg:grid-cols-4 mb-6">
         <Card>
           <CardHeader className="flex flex-row items-center justify-between space-y-0 pb-2">

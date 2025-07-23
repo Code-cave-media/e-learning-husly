@@ -25,7 +25,6 @@ import LoginPage from "./pages/LoginPage";
 import NotFound from "./pages/NotFound";
 import { AuthProvider, useAuth } from "@/contexts/AuthContext";
 import { LoadingScreen } from "@/components/ui/LoadingScreen";
-import AffiliateProgramPage from "./pages/AffiliateProgramPage";
 import CourseWatchPage from "./pages/userDashboard/CourseWatchPage";
 import EbookViewPage from "./pages/userDashboard/EbookViewPage";
 import toast, { Toaster } from "react-hot-toast";
@@ -52,6 +51,8 @@ import "primeicons/primeicons.css"; // Required for icons
 import UserDashboardCoursesPage from "./pages/userDashboard/CoursesPage";
 import UserDashboardEbooksPage from "./pages/userDashboard/EbooksPage";
 import PaymentVerification from "./pages/PaymentVerification";
+import PolicyPage from "./pages/PolicyPage";
+import ScrollToTop from "./components/ui/ScrollToTop";
 
 const queryClient = new QueryClient();
 
@@ -359,6 +360,7 @@ const AppRoutes = () => {
         }
       />
 
+      <Route path="/policy" element={<PolicyPage />} />
       <Route path="*" element={<NotFound />} />
     </Routes>
   );
@@ -369,7 +371,6 @@ const UserVerification = ({ children }) => {
   const { makeApiCall } = useAPICall();
   const [fetching, setFetching] = useState(false);
   const { authToken, login, setIsCheckedUser } = useAuth();
-  const pathname = useLocation().pathname;
   useEffect(() => {
     const checkUser = async () => {
       if (authToken) {
@@ -416,6 +417,7 @@ const App = () => (
       <Toaster position="top-center" />
       <AuthProvider>
         <Router>
+          <ScrollToTop />
           <UserVerification>
             <ConfirmDialog draggable={false} />
             <AppRoutes />

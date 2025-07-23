@@ -83,7 +83,7 @@ const WithdrawalsManagement = () => {
   const [totalPages, setTotalPages] = useState(0);
   const [totalItems, setTotalItems] = useState(0);
   const pageSize = 20;
-  const { makeApiCall, fetching, fetchType } = useAPICall();
+  const { makeApiCall, fetching, fetchType,isFetched } = useAPICall();
   const { authToken } = useAuth();
 
   const handleSearch = () => {
@@ -197,7 +197,7 @@ const WithdrawalsManagement = () => {
   };
 
   return (
-    <div className="container mx-auto py-4 sm:py-6 px-2 sm:px-4">
+    <div className="py-4 sm:py-6 px-2 sm:px-4">
       <div className="flex flex-col gap-4 mb-4 sm:mb-6">
         <div className="flex flex-col sm:flex-row sm:justify-between sm:items-center gap-4">
           <h1 className="text-xl sm:text-2xl font-bold">
@@ -218,7 +218,7 @@ const WithdrawalsManagement = () => {
             <Button
               variant="ghost"
               size="icon"
-              className="absolute right-2"
+              className="right-2 hover:bg-inherit"
               onClick={handleSearch}
             >
               <Search className="h-4 w-4" />
@@ -275,7 +275,7 @@ const WithdrawalsManagement = () => {
               </TableRow>
             </TableHeader>
             <TableBody>
-              {fetching && fetchType === "fetchWithdrawals" ? (
+              {fetching && (fetchType === "fetchWithdrawals" || !isFetched) ? (
                 <TableRow>
                   <TableCell colSpan={6} className="h-24 text-center">
                     <Loading />

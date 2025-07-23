@@ -121,7 +121,7 @@ export default function TransactionsManagement() {
     null
   );
   const pageSize = 20;
-  const { fetchType, fetching, makeApiCall } = useAPICall();
+  const { fetchType, fetching, makeApiCall ,isFetched} = useAPICall();
   const { authToken } = useAuth();
 
   const handleSearch = () => {
@@ -164,7 +164,7 @@ export default function TransactionsManagement() {
   };
 
   return (
-    <div className="container mx-auto py-4 sm:py-6 px-2 sm:px-4">
+    <div className="py-4 sm:py-6 px-2 sm:px-4">
       <div className="flex flex-col gap-4 mb-4 sm:mb-6">
         <div className="flex flex-col sm:flex-row sm:justify-between sm:items-center gap-4">
           <h1 className="text-xl sm:text-2xl font-bold">
@@ -185,7 +185,7 @@ export default function TransactionsManagement() {
             <Button
               variant="ghost"
               size="icon"
-              className="absolute right-2"
+              className="right-2 hover:bg-inherit"
               onClick={handleSearch}
             >
               <Search className="h-4 w-4" />
@@ -232,7 +232,7 @@ export default function TransactionsManagement() {
             </TableRow>
           </TableHeader>
           <TableBody>
-            {fetching && (
+            {(fetching || !isFetched)  && (
               <TableRow>
                 <TableCell colSpan={7} className="text-center">
                   <Loading />

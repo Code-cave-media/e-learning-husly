@@ -6,17 +6,16 @@ from db.session import get_db
 from schemas.common import Pagination,PaginationResponse
 from core.deps import is_admin_user,get_current_user,get_optional_current_user
 from crud.purchase import get_purchase_by_user_id_and_item_id_and_type
-router = APIRouter()
 from models.user import User
+from permissions.permission import has_purchased_course
+from models.course import Course
+router = APIRouter()
 @router.get('/get/watch/{course_id}')
 async def create_course(
-  course_id:str,
   db:Session=Depends(get_db),
+  db_course:Course = Depends(has_purchased_course),
   current_user:User = Depends(get_current_user)
 ):
-  db_course = crud_course.get_course_by_id(db,course_id)
-  if not db_course:
-    raise HTTPException(status_code=404,detail="Course not found")
   db_course_progress = crud_course.get_or_create_course_progress(db,current_user.id,db_course.id)
 
   res = CourseWatchResponse.from_orm(db_course).dict()
@@ -32,6 +31,8 @@ async def create_course(
     res['completed'] = False
   res['course_progress'] = CourseProgressResponse.from_orm(db_course_progress).dict()
   return res
+
+
 
 @router.get('/get/landing/{course_id}',response_model=CourseLandingResponse)
 async def get_course_landing_page(  
@@ -49,9 +50,9 @@ async def get_course_landing_page(
 @router.get('/list')
 async def list_courses(
   db: Session = Depends(get_db),
-  data: Pagination = Depends()
-): 
-  return crud_course.get_list_of_courses(db,data.page,data.page_size)
+  data: Pagination = Depends()): 
+  return crud_course.get_list_of_courses(db,data.page,data.size,data.search)
+
 
 @router.post('/create',response_model=CourseResponse)
 async def create_course(
@@ -98,6 +99,7 @@ async def update_course(
   main_heading: str | None = Form(None),
   top_heading: str | None = Form(None),
   sub_heading: str | None = Form(None),
+  action_button:str | None = Form(None),
   highlight_words: str | None = Form(None),
   landing_thumbnail: UploadFile | None = File(None),
   is_featured: bool = Form(False),
@@ -139,6 +141,7 @@ async def update_course(
     "top_heading": top_heading if top_heading is not None  else db_landing_page.top_heading ,
     "highlight_words": highlight_words if highlight_words is not None else db_landing_page.highlight_words ,
     "thumbnail": landing_thumbnail_url if landing_thumbnail is not None else db_landing_page.thumbnail,
+    "action_button":action_button if action_button is not None  else db_landing_page.action_button
   }
   crud_course.update_landing_page(db,db_landing_page,update_data)
   return course

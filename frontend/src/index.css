@@ -393,3 +393,9 @@
     opacity: 1;
   }
 }
+@media (max-width: 768px) {
+  html {
+    letter-spacing: -0.01em;
+    word-spacing: -0.05em;
+  }
+}

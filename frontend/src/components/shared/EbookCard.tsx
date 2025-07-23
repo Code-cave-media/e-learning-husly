@@ -28,6 +28,7 @@ interface EbookCardProps {
   isHomePage?: boolean; // Optional prop to indicate if it's on the home page
   type?: "course" | "ebook";
   has_affiliate_link?: boolean;
+  affiliate_user_id?: string;
 }
 
 const EbookCard = ({
@@ -41,6 +42,7 @@ const EbookCard = ({
   is_purchased = false,
   isHomePage,
   has_affiliate_link = false,
+  affiliate_user_id = "",
 }: EbookCardProps) => {
   const { isAuthenticated, user, authToken } = useAuth();
   const [affiliateLink, setAffiliateLink] = React.useState("");
@@ -82,7 +84,7 @@ const EbookCard = ({
   };
   return (
     <Card className="overflow-hidden h-full flex flex-col transition-all hover:shadow-md">
-      <div className="relative h-[200px] overflow-hidden bg-gray-100">
+      <div className="relative aspect-video overflow-hidden bg-gray-100">
         <img
           src={thumbnail}
           alt={title}
@@ -95,11 +97,11 @@ const EbookCard = ({
         {isAuthenticated && (
           <Dialog>
             <DialogTrigger asChild>
-              <button className="absolute bottom-2 right-2 p-2 bg-gray-100 rounded-full hover:bg-white transition-colors">
+              <button className="absolute  bottom-2 right-2 p-2 bg-gray-100 rounded-full hover:bg-white transition-colors">
                 <LinkIcon className="w-4 h-4 text-gray-600" />
               </button>
             </DialogTrigger>
-            <DialogContent>
+            <DialogContent className="max-sm:max-w-[90%] rounded-lg">
               <DialogHeader>
                 <DialogTitle>Generate Affiliate Link</DialogTitle>
               </DialogHeader>
@@ -127,14 +129,14 @@ const EbookCard = ({
           </Dialog>
         )}
       </div>
-      <CardContent className="flex-grow pt-4">
+      <CardContent className="flex-grow pt-4 max-sm:p-4">
         <h3 className="font-semibold text-lg mb-2 line-clamp-1">{title}</h3>
         <p className="text-gray-600 text-sm line-clamp-2 mb-2">{description}</p>
         {!isHomePage && (
           <p className="font-bold text-brand-primary">₹{price.toFixed(2)}</p>
         )}
       </CardContent>
-      <CardFooter className="border-t pt-0 pb-4">
+      <CardFooter className="border-t pt-0 pb-4 max-sm:px-4">
         {isAuthenticated && !isHomePage && (
           <>
             {is_purchased ? (
@@ -150,7 +152,9 @@ const EbookCard = ({
         )}
         {isHomePage && (
           <Button asChild className="w-full">
-            <Link to={`/landing/ebook/${id}`}>Start your side hustle</Link>
+            <Link to={`/landing/ebook/${id}?ref=${affiliate_user_id}`}>
+              Start your side hustle
+            </Link>
           </Button>
         )}
       </CardFooter>

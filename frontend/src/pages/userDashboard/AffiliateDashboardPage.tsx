@@ -20,6 +20,8 @@ import {
   ChevronLeft,
   ChevronRight,
   Package,
+  Eye,
+  EyeOff,
 } from "lucide-react";
 import {
   Table,
@@ -101,6 +103,8 @@ const AffiliateDashboardPage = () => {
   });
   const { fetching, makeApiCall, isFetched, fetchType } = useAPICall();
   const { user } = useAuth();
+  // Show/hide overview cards on mobile
+  const [showOverviewCards, setShowOverviewCards] = useState(true);
   const fetchProducts = async () => {
     const response = await makeApiCall(
       "GET",
@@ -272,7 +276,7 @@ const AffiliateDashboardPage = () => {
 
   if (!dashboardData && isFetched) {
     return (
-      <div className="container px-4 py-8 max-sm:px-0">
+      <div className=" px-4 pb-8 max-sm:px-0">
         <div className="flex flex-col items-center justify-center min-h-[60vh] text-center">
           <div className="p-4 bg-red-50 rounded-full mb-4">
             <AlertCircle className="h-12 w-12 text-red-500" />
@@ -321,30 +325,60 @@ const AffiliateDashboardPage = () => {
 
   if (dashboardData) {
     return (
-      <div className="container px-4 py-8 max-sm:px-0">
+      <div className=" px-4 pb-8 max-sm:px-0">
         {/* Header */}
-        <div className="flex flex-col md:flex-row justify-between items-start md:items-center gap-4 mb-8">
+        <div className="relative flex flex-col md:flex-row justify-between items-start md:items-center gap-4 mb-8">
           <div>
-            <h1 className="text-3xl font-bold">Dashboard</h1>
-            <p className="text-muted-foreground">
+            <h1 className="text-2xl sm:text-3xl md:text-4xl font-bold">
+              Dashboard
+            </h1>
+            <p className="text-sm sm:text-base md:text-lg text-muted-foreground">
               Track your performance and earnings
             </p>
+          </div>
+          <div className="md:hidden flex justify-end mb-2 absolute right-0 ">
+            <Button
+              variant="outline"
+              size="sm"
+              aria-label={
+                showOverviewCards
+                  ? "Hide Overview Cards"
+                  : "Show Overview Cards"
+              }
+              onClick={() => setShowOverviewCards((prev) => !prev)}
+            >
+              {showOverviewCards ? (
+                <EyeOff className="h-5 w-5" />
+              ) : (
+                <Eye className="h-5 w-5" />
+              )}
+              {/* <span className="ml-2 text-xs font-medium">
+                {showOverviewCards ? "Hide Overview" : "Show Overview"}
+              </span> */}
+            </Button>
           </div>
         </div>
 
         {/* Overview Cards */}
-        <div className="md:grid md:grid-cols-4 md:gap-6 mb-8 max-sm:px-4">
+        {/* Mobile toggle button for overview cards */}
+
+        <div className="md:grid md:grid-cols-4 md:gap-6 mb-8 max-sm:px-4 ">
           {/* Mobile Scroll Container */}
-          <div className="md:contents">
+          {/* On mobile, show cards only if showOverviewCards is true. On desktop, always show. */}
+          <div
+            className={`md:contents ${
+              showOverviewCards ? "" : "hidden"
+            } md:block`}
+          >
             <div className="flex overflow-x-auto snap-x snap-mandatory md:contents gap-4 pb-4 -mx-4 px-4 md:mx-0 md:px-0 md:pb-0">
               <Card className="w-[calc(100vw-2rem)] flex-shrink-0 snap-start md:w-auto md:min-w-0">
                 <CardContent className="p-6">
                   <div className="flex items-center justify-between">
                     <div>
-                      <p className="text-sm text-muted-foreground">
+                      <p className="text-xs sm:text-sm md:text-base text-muted-foreground">
                         Total Earnings
                       </p>
-                      <h3 className="text-2xl font-bold">
+                      <h3 className="text-xl sm:text-2xl md:text-3xl font-bold">
                         ₹
                         {dashboardData.overview.total_earnings.value.toFixed(2)}
                       </h3>
@@ -354,7 +388,7 @@ const AffiliateDashboardPage = () => {
                     </div>
                   </div>
                   <div
-                    className={`mt-4 flex items-center text-sm text-${
+                    className={`mt-4 flex items-center text-xs sm:text-sm md:text-base text-${
                       dashboardData.overview.total_earnings.hike > 0
                         ? "green"
                         : "red"
@@ -377,10 +411,10 @@ const AffiliateDashboardPage = () => {
                 <CardContent className="p-6">
                   <div className="flex items-center justify-between">
                     <div>
-                      <p className="text-sm text-muted-foreground">
+                      <p className="text-xs sm:text-sm md:text-base text-muted-foreground">
                         Total Clicks
                       </p>
-                      <h3 className="text-2xl font-bold">
+                      <h3 className="text-xl sm:text-2xl md:text-3xl font-bold">
                         {dashboardData.overview.total_clicks.value}
                       </h3>
                     </div>
@@ -389,7 +423,7 @@ const AffiliateDashboardPage = () => {
                     </div>
                   </div>
                   <div
-                    className={`mt-4 flex items-center text-sm ${
+                    className={`mt-4 flex items-center text-xs sm:text-sm md:text-base ${
                       dashboardData.overview.total_clicks.hike > 0
                         ? "text-green-600"
                         : "text-red-600"
@@ -412,10 +446,10 @@ const AffiliateDashboardPage = () => {
                 <CardContent className="p-6">
                   <div className="flex items-center justify-between">
                     <div>
-                      <p className="text-sm text-muted-foreground">
+                      <p className="text-xs sm:text-sm md:text-base text-muted-foreground">
                         Conversion Rate
                       </p>
-                      <h3 className="text-2xl font-bold">
+                      <h3 className="text-xl sm:text-2xl md:text-3xl font-bold">
                         {dashboardData.overview.conversion_rate.value}%
                       </h3>
                     </div>
@@ -428,7 +462,7 @@ const AffiliateDashboardPage = () => {
                     </div>
                   </div>
                   <div
-                    className={`mt-4 flex items-center text-sm text-${
+                    className={`mt-4 flex items-center text-xs sm:text-sm md:text-base text-${
                       dashboardData.overview.conversion_rate.hike > 0
                         ? "green"
                         : "red"
@@ -451,10 +485,10 @@ const AffiliateDashboardPage = () => {
                 <CardContent className="p-6">
                   <div className="flex items-center justify-between">
                     <div>
-                      <p className="text-sm text-muted-foreground">
+                      <p className="text-xs sm:text-sm md:text-base text-muted-foreground">
                         Active Links
                       </p>
-                      <h3 className="text-2xl font-bold">
+                      <h3 className="text-xl sm:text-2xl md:text-3xl font-bold">
                         {dashboardData.overview.total_active_links}
                       </h3>
                     </div>
@@ -473,7 +507,7 @@ const AffiliateDashboardPage = () => {
           {/* 12 Month Earnings Chart */}
           <Card>
             <CardContent className="p-4 md:p-6">
-              <h3 className="text-lg font-semibold mb-4">
+              <h3 className="text-base sm:text-lg md:text-xl font-semibold mb-4">
                 12 Month Earnings Overview
               </h3>
               {dashboardData.monthly_earnings.length > 0 ? (
@@ -515,10 +549,10 @@ const AffiliateDashboardPage = () => {
                 <div className="text-center py-12">
                   <div className="flex flex-col items-center justify-center gap-2">
                     <BarChart3 className="h-12 w-12 text-muted-foreground" />
-                    <p className="text-muted-foreground font-medium">
+                    <p className="text-xs sm:text-sm md:text-base text-muted-foreground font-medium">
                       No earnings data available
                     </p>
-                    <p className="text-sm text-muted-foreground">
+                    <p className="text-xs sm:text-sm md:text-base text-muted-foreground">
                       Start promoting products to see your earnings chart.
                     </p>
                   </div>
@@ -530,7 +564,7 @@ const AffiliateDashboardPage = () => {
           {/* Clicks and Conversions Chart */}
           <Card>
             <CardContent className="p-4 md:p-6">
-              <h3 className="text-lg font-semibold mb-4">
+              <h3 className="text-base sm:text-lg md:text-xl font-semibold mb-4">
                 Clicks & Conversions
               </h3>
               {dashboardData.performance.length > 0 &&
@@ -580,10 +614,10 @@ const AffiliateDashboardPage = () => {
                 <div className="text-center py-12">
                   <div className="flex flex-col items-center justify-center gap-2">
                     <BarChart3 className="h-12 w-12 text-muted-foreground" />
-                    <p className="text-muted-foreground font-medium">
+                    <p className="text-xs sm:text-sm md:text-base text-muted-foreground font-medium">
                       No performance data available
                     </p>
-                    <p className="text-sm text-muted-foreground">
+                    <p className="text-xs sm:text-sm md:text-base text-muted-foreground">
                       Start sharing your affiliate links to see clicks and
                       conversions.
                     </p>
@@ -596,50 +630,55 @@ const AffiliateDashboardPage = () => {
           {/* Recent Activity */}
           <Card>
             <CardContent className="p-6">
-              <h3 className="text-lg font-semibold mb-4">Recent Activity</h3>
+              <h3 className="text-base sm:text-lg md:text-xl font-semibold mb-4">
+                Recent Activity
+              </h3>
               {dashboardData.performance.length > 0 &&
               dashboardData.performance.some(
                 (day) => day.clicks > 0 || day.purchases > 0
               ) ? (
                 <div className="space-y-4">
-                  {dashboardData.performance.slice(-5).reverse().map((day, index) => (
-                    <div
-                      key={index}
-                      className="flex items-center justify-between"
-                    >
-                      <div className="flex items-center gap-4">
-                        <div className="p-2 bg-primary/10 rounded-full">
-                          <Calendar className="h-4 w-4 text-primary" />
+                  {dashboardData.performance
+                    .slice(-5)
+                    .reverse()
+                    .map((day, index) => (
+                      <div
+                        key={index}
+                        className="flex items-center justify-between"
+                      >
+                        <div className="flex items-center gap-4">
+                          <div className="p-2 bg-primary/10 rounded-full">
+                            <Calendar className="h-4 w-4 text-primary" />
+                          </div>
+                          <div>
+                            <p className="font-medium text-xs sm:text-sm md:text-base">
+                              {new Date(day.date).toLocaleDateString()}
+                            </p>
+                            <p className="text-xs sm:text-sm md:text-base text-muted-foreground">
+                              {day.clicks} clicks • {Math.ceil(day.conversions)}
+                              % conversions
+                            </p>
+                          </div>
                         </div>
-                        <div>
-                          <p className="font-medium">
-                            {new Date(day.date).toLocaleDateString()}
+                        <div className="text-right">
+                          <p className="font-medium text-xs sm:text-sm md:text-base">
+                            ₹{day.earnings.toFixed(2)}
                           </p>
-                          <p className="text-sm text-muted-foreground">
-                            {day.clicks} clicks • {Math.ceil(day.conversions)}%
-                            conversions
+                          <p className="text-xs sm:text-sm md:text-base text-green-600">
+                            +{day.purchases} sales
                           </p>
                         </div>
                       </div>
-                      <div className="text-right">
-                        <p className="font-medium">
-                          ₹{day.earnings.toFixed(2)}
-                        </p>
-                        <p className="text-sm text-green-600">
-                          +{day.purchases} sales
-                        </p>
-                      </div>
-                    </div>
-                  ))}
+                    ))}
                 </div>
               ) : (
                 <div className="text-center py-8">
                   <div className="flex flex-col items-center justify-center gap-2">
                     <Calendar className="h-12 w-12 text-muted-foreground" />
-                    <p className="text-muted-foreground font-medium">
+                    <p className="text-xs sm:text-sm md:text-base text-muted-foreground font-medium">
                       No recent activity
                     </p>
-                    <p className="text-sm text-muted-foreground">
+                    <p className="text-xs sm:text-sm md:text-base text-muted-foreground">
                       Your recent affiliate activity will appear here.
                     </p>
                   </div>
@@ -684,7 +723,7 @@ const AffiliateDashboardPage = () => {
             {/* Top Products Table */}
             <Card>
               <CardContent className="p-6">
-                <h3 className="text-lg font-semibold mb-4">
+                <h3 className="text-base sm:text-lg md:text-xl font-semibold mb-4">
                   Performing Products
                 </h3>
                 {dashboardData.products.items.length > 0 ? (
@@ -752,10 +791,10 @@ const AffiliateDashboardPage = () => {
                   <div className="text-center py-8">
                     <div className="flex flex-col items-center justify-center gap-2">
                       <Package className="h-12 w-12 text-muted-foreground" />
-                      <p className="text-muted-foreground font-medium">
+                      <p className="text-xs sm:text-sm md:text-base text-muted-foreground font-medium">
                         No products found
                       </p>
-                      <p className="text-sm text-muted-foreground">
+                      <p className="text-xs sm:text-sm md:text-base text-muted-foreground">
                         {searchQuery
                           ? `No products matching "${searchQuery}"`
                           : "No products available for promotion yet."}
@@ -787,7 +826,7 @@ const AffiliateDashboardPage = () => {
             {(!dashboardData.withdraw_summary.balance ||
               dashboardData.withdraw_summary.balance <= 0) && (
               <div className="mb-6 p-4 bg-yellow-50 border border-yellow-200 rounded-lg">
-                <p className="text-sm text-yellow-800">
+                <p className="text-xs sm:text-sm md:text-base text-yellow-800">
                   <span className="font-medium">No balance available:</span> You
                   need to earn commissions before you can withdraw.
                 </p>
@@ -795,7 +834,7 @@ const AffiliateDashboardPage = () => {
             )}
             {!dashboardData.withdraw_account_details && (
               <div className="mb-6 p-4 bg-blue-50 border border-blue-200 rounded-lg">
-                <p className="text-sm text-blue-800">
+                <p className="text-xs sm:text-sm md:text-base text-blue-800">
                   <span className="font-medium">Account details required:</span>{" "}
                   Please add your withdrawal account details before making a
                   withdrawal.
@@ -807,10 +846,10 @@ const AffiliateDashboardPage = () => {
                 <CardContent className="p-6">
                   <div className="flex items-center justify-between">
                     <div>
-                      <p className="text-sm text-muted-foreground">
+                      <p className="text-xs sm:text-sm md:text-base text-muted-foreground">
                         Total Balance
                       </p>
-                      <h3 className="text-2xl font-bold">
+                      <h3 className="text-xl sm:text-2xl md:text-3xl font-bold">
                         ₹
                         {(dashboardData.withdraw_summary.balance || 0).toFixed(
                           2
@@ -827,10 +866,10 @@ const AffiliateDashboardPage = () => {
                 <CardContent className="p-6">
                   <div className="flex items-center justify-between">
                     <div>
-                      <p className="text-sm text-muted-foreground">
+                      <p className="text-xs sm:text-sm md:text-base text-muted-foreground">
                         Total Withdrawn
                       </p>
-                      <h3 className="text-2xl font-bold">
+                      <h3 className="text-xl sm:text-2xl md:text-3xl font-bold">
                         ₹
                         {(
                           dashboardData.withdraw_summary.total_withdrawn || 0
@@ -847,10 +886,10 @@ const AffiliateDashboardPage = () => {
                 <CardContent className="p-6">
                   <div className="flex items-center justify-between">
                     <div>
-                      <p className="text-sm text-muted-foreground">
+                      <p className="text-xs sm:text-sm md:text-base text-muted-foreground">
                         Pending Withdraw
                       </p>
-                      <h3 className="text-2xl font-bold">
+                      <h3 className="text-xl sm:text-2xl md:text-3xl font-bold">
                         ₹
                         {(
                           dashboardData.withdraw_summary.pending_withdraw || 0
@@ -868,7 +907,9 @@ const AffiliateDashboardPage = () => {
             {/* Withdraw History Table */}
             <Card>
               <CardContent className="p-6">
-                <h3 className="text-lg font-semibold mb-4">Withdraw History</h3>
+                <h3 className="text-base sm:text-lg md:text-xl font-semibold mb-4">
+                  Withdraw History
+                </h3>
                 {dashboardData.withdraw_history.items.length > 0 ? (
                   <>
                     <Table>
@@ -943,10 +984,10 @@ const AffiliateDashboardPage = () => {
                   <div className="text-center py-8">
                     <div className="flex flex-col items-center justify-center gap-2">
                       <Wallet className="h-12 w-12 text-muted-foreground" />
-                      <p className="text-muted-foreground font-medium">
+                      <p className="text-xs sm:text-sm md:text-base text-muted-foreground font-medium">
                         No withdrawal history
                       </p>
-                      <p className="text-sm text-muted-foreground">
+                      <p className="text-xs sm:text-sm md:text-base text-muted-foreground">
                         You haven't made any withdrawal requests yet.
                       </p>
                     </div>
@@ -1132,21 +1173,27 @@ const AffiliateDashboardPage = () => {
               <div className="space-y-4">
                 <div className="grid grid-cols-2 gap-4">
                   <div>
-                    <p className="text-sm text-muted-foreground">Date</p>
-                    <p className="font-medium">
+                    <p className="text-xs sm:text-sm md:text-base text-muted-foreground">
+                      Date
+                    </p>
+                    <p className="font-medium text-xs sm:text-sm md:text-base">
                       {new Date(
                         selectedWithdrawal.created_at
                       ).toLocaleDateString()}
                     </p>
                   </div>
                   <div>
-                    <p className="text-sm text-muted-foreground">Amount</p>
-                    <p className="font-medium">
+                    <p className="text-xs sm:text-sm md:text-base text-muted-foreground">
+                      Amount
+                    </p>
+                    <p className="font-medium text-xs sm:text-sm md:text-base">
                       ₹{selectedWithdrawal.amount.toFixed(2)}
                     </p>
                   </div>
                   <div>
-                    <p className="text-sm text-muted-foreground">Status</p>
+                    <p className="text-xs sm:text-sm md:text-base text-muted-foreground">
+                      Status
+                    </p>
                     <Badge
                       className={getStatusColor(selectedWithdrawal.status)}
                     >
@@ -1159,19 +1206,23 @@ const AffiliateDashboardPage = () => {
                   (selectedWithdrawal.status === "failed" &&
                     selectedWithdrawal.explanation && (
                       <div className="bg-red-50 border border-red-200 rounded-lg p-4">
-                        <p className="text-sm font-medium text-red-800">
+                        <p className="text-xs sm:text-sm md:text-base font-medium text-red-800">
                           Failure Explanation
                         </p>
-                        <p className="text-sm text-red-700 mt-1">
+                        <p className="text-xs sm:text-sm md:text-base text-red-700 mt-1">
                           {selectedWithdrawal.explanation}
                         </p>
                       </div>
                     ))}
 
                 <div className="border rounded-lg p-4">
-                  <p className="text-sm font-medium mb-2">Account Details</p>
-                  <p className="text-sm text-muted-foreground">Details</p>
-                  <p className="font-medium">
+                  <p className="text-xs sm:text-sm md:text-base font-medium mb-2">
+                    Account Details
+                  </p>
+                  <p className="text-xs sm:text-sm md:text-base text-muted-foreground">
+                    Details
+                  </p>
+                  <p className="font-medium text-xs sm:text-sm md:text-base">
                     {selectedWithdrawal.account_details}
                   </p>
                 </div>

@@ -5,7 +5,8 @@ from pydantic.generics import GenericModel
 T = TypeVar("T")
 class Pagination(BaseModel):
   page : int
-  page_size: int
+  size: int
+  search:str | None = None
 
 class PaginationResponse(GenericModel, Generic[T]):
   has_next:bool

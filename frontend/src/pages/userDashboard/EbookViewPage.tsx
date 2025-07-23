@@ -105,7 +105,7 @@ const EbookViewPage = () => {
               <AlertCircle className="h-8 w-8 sm:h-12 sm:w-12 text-destructive" />
               <h2 className="text-xl sm:text-2xl font-bold">Ebook Not Found</h2>
               <p className="text-sm sm:text-base text-muted-foreground">
-                This ebook is either not visible or doesn't exist.
+                This ebook is either not visible or haven't purchased yet.
               </p>
               <Button
                 size="sm"

@@ -9,6 +9,7 @@ import { useAuth } from "@/contexts/AuthContext";
 import toast from "react-hot-toast";
 import { Loading } from "@/components/ui/loading";
 import EbookCard from "@/components/shared/EbookCard";
+import Pagination from "@/components/Pagination";
 
 // Mock data for demonstration
 
@@ -44,6 +45,13 @@ const DashboardPage = () => {
     total_ebooks: -1,
     total_courses: -1,
   });
+  const [pagination, setPagination] = useState({
+    hasNext: false,
+    hasPrev: false,
+    total: 0,
+    totalPages: 0,
+  });
+  const pageSize = 20;
   const [courseEbookData, setCourseEbookData] = useState<CourseEbookData[]>([]);
 
   useEffect(() => {
@@ -62,13 +70,19 @@ const DashboardPage = () => {
   const fetchCourseEbook = async () => {
     const response = await makeApiCall(
       "GET",
-      API_ENDPOINT.GET_USER_DASHBOARD_LIST(currentFilter, page, 20),
+      API_ENDPOINT.GET_USER_DASHBOARD_LIST(currentFilter, page, pageSize),
       {},
       "application/json",
       authToken
     );
     if (response.status === 200) {
       setCourseEbookData(response.data.items);
+      setPagination({
+        hasNext: response.data.has_next,
+        hasPrev: response.data.has_prev,
+        total: response.data.total,
+        totalPages: response.data.total_pages,
+      });
     } else {
       toast.error("Error fetching user dashboard");
     }
@@ -91,11 +105,13 @@ const DashboardPage = () => {
     return <Loading />;
   }
   return (
-    <div className="container px-4 mx-auto py-8">
+    <div className=" px-4 mx-auto py-8 max-sm:py-0">
       {/* Welcome Section */}
       <div className="mb-8">
-        <h1 className="text-3xl font-bold mb-2">Welcome back, {user.name}</h1>
-        <p className="text-gray-600">
+        <h1 className="text-2xl sm:text-3xl md:text-4xl font-bold mb-2">
+          Welcome back, {user.name}
+        </h1>
+        <p className="text-xs sm:text-sm md:text-base text-gray-600">
           Track your progress and continue learning.
         </p>
       </div>
@@ -104,45 +120,67 @@ const DashboardPage = () => {
         <Card>
           <CardHeader className="pb-2">
             <CardTitle className="text-sm text-gray-500 font-medium">
-              Total purchase
+              {/* Responsive text size for card titles */}
+              <span className="text-xs sm:text-sm md:text-base text-gray-500 font-medium">
+                Total purchase
+              </span>
             </CardTitle>
           </CardHeader>
           <CardContent>
             <span className="text-2xl font-bold">
-              {cardData.total_purchase}
+              {/* Responsive text size for card numbers */}
+              <span className="text-xl sm:text-2xl md:text-3xl font-bold">
+                {cardData.total_purchase}
+              </span>
             </span>
           </CardContent>
         </Card>
         <Card>
           <CardHeader className="pb-2">
             <CardTitle className="text-sm text-gray-500 font-medium">
-              Training Progress
+              <span className="text-xs sm:text-sm md:text-base text-gray-500 font-medium">
+                Training Progress
+              </span>
             </CardTitle>
           </CardHeader>
           <CardContent>
             <span className="text-2xl font-bold">
-              {cardData.total_progressing_course}
+              <span className="text-xl sm:text-2xl md:text-3xl font-bold">
+                {cardData.total_progressing_course}
+              </span>
             </span>
           </CardContent>
         </Card>
         <Card>
           <CardHeader className="pb-2">
             <CardTitle className="text-sm text-gray-500 font-medium">
-              Total Blueprints
+              <span className="text-xs sm:text-sm md:text-base text-gray-500 font-medium">
+                Total Blueprints
+              </span>
             </CardTitle>
           </CardHeader>
           <CardContent>
-            <span className="text-2xl font-bold">{cardData.total_ebooks}</span>
+            <span className="text-2xl font-bold">
+              <span className="text-xl sm:text-2xl md:text-3xl font-bold">
+                {cardData.total_ebooks}
+              </span>
+            </span>
           </CardContent>
         </Card>
         <Card>
           <CardHeader className="pb-2">
             <CardTitle className="text-sm text-gray-500 font-medium">
-              Total Trainings
+              <span className="text-xs sm:text-sm md:text-base text-gray-500 font-medium">
+                Total Trainings
+              </span>
             </CardTitle>
           </CardHeader>
           <CardContent>
-            <span className="text-2xl font-bold">{cardData.total_courses}</span>
+            <span className="text-2xl font-bold">
+              <span className="text-xl sm:text-2xl md:text-3xl font-bold">
+                {cardData.total_courses}
+              </span>
+            </span>
           </CardContent>
         </Card>
       </div>
@@ -210,6 +248,16 @@ const DashboardPage = () => {
           )}
         </TabsContent>
       </Tabs>
+      {!fetching && courseEbookData.length > 0 && (
+        <Pagination
+          currentPage={page}
+          hasNext={pagination.hasNext}
+          hasPrev={pagination.hasPrev}
+          total={pagination.total}
+          pageSize={pageSize}
+          onPageChange={setPage}
+        />
+      )}
     </div>
   );
 };

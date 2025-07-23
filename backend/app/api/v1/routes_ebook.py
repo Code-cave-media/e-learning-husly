@@ -7,8 +7,8 @@ from models.user import User
 from core.deps import is_admin_user,get_optional_current_user
 from schemas.common import Pagination,PaginationResponse
 from crud.purchase import get_purchase_by_user_id_and_item_id_and_type
-
-
+from permissions.permission import has_purchased_ebook
+from models.ebook import EBook
 router = APIRouter()
 
 @router.get('/get/{ebook_id}',response_model=EBookResponse)
@@ -25,12 +25,9 @@ async def create_ebook(
 @router.get('/get/read/{ebook_id}',response_model=EBookResponse)
 async def create_ebook(
   ebook_id:str,
-  db:Session=Depends(get_db)
+  db:Session=Depends(get_db),
+  db_ebook:EBook = Depends(has_purchased_ebook)
 ):
-  db_ebook = crud_ebook.get_ebook_by_id(db,ebook_id)
-  if not db_ebook:
-    raise HTTPException(status_code=404,detail="Ebook not found")
-  
   return db_ebook
 
 @router.get('/get/landing/{ebook_id}',response_model=EbookLandingResponse)
@@ -46,12 +43,19 @@ async def get_ebook_landing_page(
     db_ebook.is_purchased = True
   return db_ebook
 
-@router.get('/list',response_model=PaginationResponse[EBookResponse])
+@router.get('/list')
 async def list_ebooks(
   db: Session = Depends(get_db),
-  data: Pagination = Depends()
+  data: Pagination = Depends(),
 ): 
-  return crud_ebook.get_list_of_ebooks(db,data.page,data.page_size)
+  return crud_ebook.get_list_of_ebooks(db,data.page,data.size,data.search)
+@router.get('/admin/list')
+async def list_ebooks(
+  db: Session = Depends(get_db),
+  data: Pagination = Depends(),
+): 
+  
+  return crud_ebook.get_list_of_ebooks(db,data.page,data.size,data.search)
 
 @router.post('/create',response_model=EBookResponse)
 async def create_ebook(
@@ -98,6 +102,7 @@ async def update_ebook(
   intro_video: UploadFile | None = File(None),
   pdf: UploadFile | None = File(None),
   main_heading: str | None = Form(None),
+  action_button:str | None = Form(None),
   top_heading: str | None = Form(None),
   sub_heading: str | None = Form(None),
   highlight_words: str | None = Form(None),
@@ -140,6 +145,7 @@ async def update_ebook(
     "top_heading": top_heading if top_heading is not None else db_landing_page.top_heading,
     "highlight_words": highlight_words if highlight_words is not None else db_landing_page.highlight_words,
     "thumbnail": landing_thumbnail_url if landing_thumbnail is not None else db_landing_page.thumbnail,
+    "action_button":action_button if action_button is not None  else db_landing_page.action_button
   }
   crud_ebook.update_ebook_landing_page(db, db_landing_page, update_data)
   return ebook

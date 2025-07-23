@@ -7,23 +7,28 @@ const Footer = () => {
       <div className="container px-4 mx-auto px-4 py-12">
         <div className="grid grid-cols-1 md:grid-cols-4 gap-8">
           <div className="col-span-1 md:col-span-2">
-            <Link to="/" className="inline-block mb-6">
+            <div className="inline-block mb-6">
               <span className="text-2xl font-bold text-brand-primary">
-                LearnHub
+                <img
+                  src="/images/logo/logo.png"
+                  alt="Hustly Logo"
+                  className="h-10 max-sm:h-7 w-auto "
+                />
               </span>
-            </Link>
+            </div>
             <p className="text-gray-600 mb-4 max-w-md">
-              Your destination for high-quality courses and eBooks with
-              affiliate marketing opportunities.
+              Your platform to hustle smartly. Learn powerful systems and tools
+              designed to help you grow, build, and unlock new
+              digital possibilities.
             </p>
           </div>
 
-          <div>
+          {/* <div>
             <h3 className="font-semibold text-gray-800 mb-4">Quick Links</h3>
             <ul className="space-y-2">
               <li>
                 <Link
-                  to="/courses"
+                  to=""
                   className="text-gray-600 hover:text-brand-primary transition-colors"
                 >
                   Courses
@@ -31,7 +36,7 @@ const Footer = () => {
               </li>
               <li>
                 <Link
-                  to="/ebooks"
+                  to=""
                   className="text-gray-600 hover:text-brand-primary transition-colors"
                 >
                   eBooks
@@ -39,21 +44,21 @@ const Footer = () => {
               </li>
               <li>
                 <Link
-                  to="/affiliate"
+                  to=""
                   className="text-gray-600 hover:text-brand-primary transition-colors"
                 >
                   Affiliate Dashboard
                 </Link>
               </li>
             </ul>
-          </div>
+          </div> */}
 
           <div>
             <h3 className="font-semibold text-gray-800 mb-4">Support</h3>
             <ul className="space-y-2">
               <li>
                 <Link
-                  to="/help"
+                  to="/policy"
                   className="text-gray-600 hover:text-brand-primary transition-colors"
                 >
                   Help Center
@@ -61,7 +66,7 @@ const Footer = () => {
               </li>
               <li>
                 <Link
-                  to="/terms"
+                  to="/policy"
                   className="text-gray-600 hover:text-brand-primary transition-colors"
                 >
                   Terms of Service
@@ -69,7 +74,7 @@ const Footer = () => {
               </li>
               <li>
                 <Link
-                  to="/privacy"
+                  to="/policy"
                   className="text-gray-600 hover:text-brand-primary transition-colors"
                 >
                   Privacy Policy
@@ -81,7 +86,7 @@ const Footer = () => {
 
         <div className="border-t border-gray-200 mt-8 pt-8 flex flex-col md:flex-row justify-between items-center">
           <p className="text-gray-500 text-sm">
-            © {new Date().getFullYear()} LearnHub. All rights reserved.
+            © {new Date().getFullYear()} Hustly. All rights reserved.
           </p>
           <div className="mt-4 md:mt-0 flex space-x-4">
             <Link to="#" className="text-gray-500 hover:text-brand-primary">

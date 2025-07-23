@@ -269,7 +269,7 @@ const CourseWatchPage = () => {
                 Course Not Found
               </h2>
               <p className="text-sm sm:text-base text-muted-foreground">
-                This course is either not visible or doesn't exist.
+                This course is either not visible or haven't purchased yet.
               </p>
               <Button
                 size="sm"

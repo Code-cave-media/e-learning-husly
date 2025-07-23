@@ -41,7 +41,11 @@ export default function DashboardLayout({
     <div className="flex flex-col h-full">
       {/* Logo */}
       <div className="flex items-center h-16 px-4 border-b">
-        <h1 className="text-xl font-bold">Learn & Grow</h1>
+        <img
+          src="/images/logo/logo.png"
+          alt="Hustly Logo"
+          className="h-10 max-sm:h-6 w-auto "
+        />
       </div>
 
       {/* Navigation */}
@@ -102,7 +106,7 @@ export default function DashboardLayout({
   return (
     <div className="min-h-screen bg-background">
       {/* Mobile Header */}
-      <header className="lg:hidden flex items-center justify-between h-16 px-4 border-b">
+      <header className="lg:hidden flex items-center justify-between h-16 pr-4 px-2 border-b">
         <Sheet open={isMobileMenuOpen} onOpenChange={setIsMobileMenuOpen}>
           <SheetTrigger asChild>
             <Button variant="ghost" size="icon">
@@ -113,7 +117,11 @@ export default function DashboardLayout({
             <NavContent />
           </SheetContent>
         </Sheet>
-        <h1 className="text-xl font-bold">Learn & Grow</h1>
+        <img
+          src="/images/logo/logo.png"
+          alt="Hustly Logo"
+          className="h-10 max-sm:h-6 w-auto "
+        />
         <div className="w-10" /> {/* Spacer for balance */}
       </header>
 
@@ -125,7 +133,7 @@ export default function DashboardLayout({
 
         {/* Main Content */}
         <main className="flex-1 overflow-auto">
-          <div className="container px-4 mx-auto p-4 md:p-6 lg:p-8">
+          <div className=" px-8 max-sm:px-5 py-4 md:py-6 lg:py-8">
             {children}
           </div>
         </main>

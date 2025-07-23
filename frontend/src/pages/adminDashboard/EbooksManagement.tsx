@@ -1,3 +1,4 @@
+/* eslint-disable @typescript-eslint/no-explicit-any */
 import { useEffect, useState } from "react";
 import {
   Table,
@@ -13,24 +14,34 @@ import {
   DialogContent,
   DialogHeader,
   DialogTitle,
-  DialogFooter,
 } from "@/components/ui/dialog";
 import { Input } from "@/components/ui/input";
 import { Textarea } from "@/components/ui/textarea";
 import { Switch } from "@/components/ui/switch";
 import { Label } from "@/components/ui/label";
 import { toast } from "react-hot-toast";
-import { Plus, FileText } from "lucide-react";
+import { Plus, FileText, Search } from "lucide-react";
 import { EbookListItem } from "@/components/EbookListItem";
 import { Ebook } from "@/types/ebook";
 import { useAPICall } from "@/hooks/useApiCall";
 import { API_ENDPOINT } from "@/config/backend";
 import { useAuth } from "@/contexts/AuthContext";
 import { Loading } from "@/components/ui/loading";
+import Pagination from "@/components/Pagination";
 
 export default function EbooksManagement() {
   const [isCreateDialogOpen, setIsCreateDialogOpen] = useState(false);
   const [ebooks, setEbooks] = useState<Ebook[]>([]);
+  const [currentQuery, setCurrentQuery] = useState("");
+  const [search, setSearch] = useState("");
+  const [page, setPage] = useState(1);
+  const pageSize = 20;
+  const [pagination, setPagination] = useState({
+    hasNext: false,
+    hasPrev: false,
+    total: 0,
+    totalPages: 0,
+  });
   const [newEbook, setNewEbook] = useState<Partial<Ebook>>({
     title: "",
     description: "",
@@ -48,15 +59,16 @@ export default function EbooksManagement() {
       sub_heading: "",
       highlight_words: "",
       thumbnail: null,
+      action_button: "",
     },
     chapters: [],
   });
-  const { makeApiCall, fetching, fetchType } = useAPICall();
+  const { makeApiCall, fetching, fetchType, isFetched } = useAPICall();
   const { authToken } = useAuth();
 
   useEffect(() => {
     getEbooks();
-  }, []);
+  }, [page, search]);
 
   const handleCreateEbook = async () => {
     if (
@@ -111,6 +123,7 @@ export default function EbooksManagement() {
           sub_heading: "",
           highlight_words: "",
           thumbnail: null,
+          action_button: "",
         },
         chapters: [],
       });
@@ -122,7 +135,7 @@ export default function EbooksManagement() {
   const getEbooks = async () => {
     const response = await makeApiCall(
       "GET",
-      API_ENDPOINT.LIST_EBOOKS(1, 10),
+      API_ENDPOINT.ADMIN_LIST_EBOOKS(page, pageSize, search),
       null,
       "application/json",
       authToken,
@@ -130,21 +143,28 @@ export default function EbooksManagement() {
     );
     if (response.status === 200) {
       setEbooks(response.data.items);
+      setPagination({
+        hasNext: response.data.has_next,
+        hasPrev: response.data.has_prev,
+        total: response.data.total,
+        totalPages: response.data.total_pages,
+      });
     } else {
       toast.error("Failed to fetch ebooks");
     }
   };
-
-  const handleUpdateEbook = (updatedEbook: Ebook) => {
-    setEbooks(
-      ebooks.map((ebook) =>
-        ebook.id === updatedEbook.id ? updatedEbook : ebook
-      )
-    );
+  const handleKeyPress = (e: any = null) => {
+    if (e && e.key === "Enter") {
+      setPage(1);
+      setSearch(currentQuery);
+    }
+    if (!e) {
+      setPage(1);
+      setSearch(currentQuery);
+    }
   };
-
   return (
-    <div className="container mx-auto py-4 sm:py-6 px-2 sm:px-4">
+    <div className="py-4 sm:py-6 px-2 sm:px-4">
       <div className="flex flex-col sm:flex-row sm:justify-between sm:items-center gap-4 mb-4 sm:mb-6">
         <h1 className="text-xl sm:text-2xl font-bold">Ebooks Management</h1>
         <Button
@@ -156,7 +176,24 @@ export default function EbooksManagement() {
           Create New Ebook
         </Button>
       </div>
-
+      <div className="relative flex items-center flex-1">
+        <Search className="absolute left-2 h-4 w-4 text-muted-foreground" />
+        <Input
+          placeholder="Search by courses"
+          value={currentQuery}
+          onChange={(e) => setCurrentQuery(e.target.value)}
+          onKeyPress={handleKeyPress}
+          className="pl-8 w-full sm:w-[300px]"
+        />
+        <Button
+          variant="ghost"
+          size="icon"
+          className="right-2 hover:bg-inherit"
+          onClick={(e) => handleKeyPress(e)}
+        >
+          <Search className="h-4 w-4" />
+        </Button>
+      </div>
       <div className="bg-white rounded-lg shadow">
         <Table>
           <TableHeader>
@@ -171,7 +208,7 @@ export default function EbooksManagement() {
             </TableRow>
           </TableHeader>
           <TableBody>
-            {fetching && fetchType === "listEbooks" && (
+            {fetching && (fetchType === "listEbooks" || !isFetched) && (
               <TableRow>
                 <TableCell colSpan={7} className="text-center">
                   <Loading />
@@ -194,9 +231,11 @@ export default function EbooksManagement() {
                   <div className="flex flex-col items-center justify-center gap-2">
                     <FileText className="h-8 w-8 text-muted-foreground" />
                     <p className="text-muted-foreground">No ebooks found</p>
-                    <p className="text-sm text-muted-foreground">
-                      Create your first ebook to get started.
-                    </p>
+                    {!search && (
+                      <p className="text-sm text-muted-foreground">
+                        Create your first ebook to get started.
+                      </p>
+                    )}
                   </div>
                 </TableCell>
               </TableRow>
@@ -204,9 +243,20 @@ export default function EbooksManagement() {
           </TableBody>
         </Table>
       </div>
+      {!(fetching || !isFetched) && ebooks.length != 0 && (
+        <Pagination
+          currentPage={page}
+          hasNext={pagination.hasNext}
+          hasPrev={pagination.hasPrev}
+          itemsSize={pageSize}
+          onPageChange={setPage}
+          pageSize={pageSize}
+          total={pagination.total}
+        />
+      )}
 
       <Dialog open={isCreateDialogOpen} onOpenChange={setIsCreateDialogOpen}>
-        <DialogContent>
+        <DialogContent className="max-h-[90vh] overflow-y-auto">
           <DialogHeader>
             <DialogTitle>Create New Ebook</DialogTitle>
           </DialogHeader>

@@ -11,6 +11,7 @@ class EBookLandingPage(TimestampMixin, Base):
     top_heading = Column(String, nullable=False)
     highlight_words = Column(String, nullable=False)
     thumbnail = Column(String, nullable=False)
+    action_button = Column(String, nullable=False)
     ebook_id = Column(Integer, ForeignKey("e_book.id"), unique=True)
 
 class EBookTableContent(TimestampMixin,Base):

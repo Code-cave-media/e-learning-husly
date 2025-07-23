@@ -37,30 +37,38 @@ const Landing = () => {
 
   useEffect(() => {
     const fetchData = async () => {
-      let response;
-      if (type === "course") {
-        response = await makeApiCall(
-          "GET",
-          API_ENDPOINT.GET_COURSE_LANDING_PAGE(id),
-          null,
-          "application/json",
-          isAuthenticated ? authToken : ""
-        );
-      } else if (type == "ebook") {
-        response = await makeApiCall(
-          "GET",
-          API_ENDPOINT.GET_EBOOK_LANDING_PAGE(id),
-          null,
-          "application/json",
-          isAuthenticated ? authToken : ""
-        );
+      try {
+        let response;
+        if (type === "course") {
+          response = await makeApiCall(
+            "GET",
+            API_ENDPOINT.GET_COURSE_LANDING_PAGE(id),
+            null,
+            "application/json",
+            isAuthenticated ? authToken : ""
+          );
+        } else if (type == "ebook") {
+          response = await makeApiCall(
+            "GET",
+            API_ENDPOINT.GET_EBOOK_LANDING_PAGE(id),
+            null,
+            "application/json",
+            isAuthenticated ? authToken : ""
+          );
+        }
+        if (response && response.status == 200) {
+          const videoDuration = await getVideoDuration(
+            response.data.intro_video
+          );
+          setTimeLeft(parseInt(`${videoDuration as number}`));
+          setData(response.data);
+        }
+      } catch (error) {
+        console.log(error);
+        setData(null);
+      } finally {
+        setIsLoading(false);
       }
-      if (response.status == 200) {
-        const videoDuration = await getVideoDuration(response.data.intro_video);
-        setTimeLeft(parseInt(`${videoDuration as number}`));
-        setData(response.data);
-      }
-      setIsLoading(false);
     };
     fetchData();
   }, [ref, id, type]);
@@ -146,7 +154,7 @@ const Landing = () => {
       setIsPlaying(!video.paused);
     }
   };
-
+  console.log(isLoading);
   if (isLoading) {
     return (
       <div className="flex flex-col items-center bg-black text-white p-5 font-sans min-h-screen bg-gradient-to-b from-black to-[#1a2a4a]">
@@ -154,7 +162,7 @@ const Landing = () => {
       </div>
     );
   }
-
+  console.log(isLoading);
   if (!isLoading && data == null) {
     return (
       <div className="flex flex-col items-center justify-center min-h-screen bg-gradient-to-b from-black to-[#1a2a4a] text-white p-4">
@@ -231,11 +239,11 @@ const Landing = () => {
           <div className="absolute bottom-[-100px] right-[-100px] w-96 h-96 bg-[#001a33]/80 rounded-full blur-[100px] animate-pulse"></div>
         </div>
         <header className="absolute top-0 left-0 right-0 p-4 flex justify-between items-center mx-auto z-10 max-w-3xl">
-          <div className="w-12 h-12 rounded-full bg-gray-700 flex justify-center items-center overflow-hidden">
+          <div className="  flex justify-center items-center overflow-hidden">
             <img
-              src="https://cdn-icons-png.flaticon.com/512/552/552721.png"
-              alt="Logo"
-              className="w-full h-full object-cover"
+              src="/images/logo/logo-blue.png"
+              alt="Hustly Logo"
+              className="h-10 max-sm:h-7 w-auto "
             />
           </div>
           {!isAuthenticated && (
@@ -276,7 +284,7 @@ const Landing = () => {
               letterSpacing: "-0.3px",
               lineHeight: 1.01,
             }}
-            className="text-white text-4xl md:text-6xl text-center mb-4 max-w-3xl mt-4 drop-shadow-lg max-sm:text-[1.3rem]"
+            className="text-white text-4xl md:text-6xl text-center mb-4 max-w-6xl mt-4 drop-shadow-lg max-sm:text-[1.3rem]"
           >
             {data?.landing_page?.main_heading ? (
               <span>
@@ -390,15 +398,14 @@ const Landing = () => {
                 showBuyButton ? "opacity-0 scale-95" : "opacity-100 scale-100"
               }`}
             >
-              <div className="flex justify-center items-center gap-x-6 md:gap-x-8 mb-5">
+              <div className="flex justify-center items-center gap-x-6 md:gap-x-8 mb-5 ">
                 {Object.entries(formatTime(timeLeft)).map(
                   ([unit, value], idx, arr) => (
                     <React.Fragment key={unit}>
                       <div className="flex flex-col items-center">
                         <div
-                          className="w-12 h-12 md:w-16 md:h-16 flex items-center justify-center rounded-full border-4 border-white font-bold text-base"
+                          className="w-12 h-12 md:w-16 md:h-16 flex items-center justify-center rounded-full border-4 border-white font-bold text-base bg-transparent"
                           style={{
-                            background: "#000",
                             boxShadow:
                               "0 0 8px 2px #1880ff55, 0 0 16px 4px #1880ff55",
                             fontWeight: 700,
@@ -457,7 +464,7 @@ const Landing = () => {
                   className="text-lg font-bold text-white"
                   style={{ lineHeight: 1 }}
                 >
-                  Get Started
+                  {data?.landing_page?.action_button || "Get Started"}
                 </span>
               </button>
             ) : null}
@@ -466,64 +473,54 @@ const Landing = () => {
 
         <footer className="bg-transparent text-gray-400 py-8 pt-0 px-4 text-center text-xs">
           <div className="max-w-4xl mx-auto space-y-4 pt-8">
-            <div className="flex justify-center gap-4 font-bold">
-              <Link to="/terms" className="text-blue-400 hover:underline">
-                Terms Of Services
+            <div className="flex justify-center gap-4 font-bold max-sm:hidden">
+              <Link to="/policy" className="text-blue-400 hover:underline">
+                Terms & Conditions
               </Link>
-              <Link
-                to="/refund-policy"
-                className="text-blue-400 hover:underline"
-              >
-                Refund Policy
+              <Link to="/policy" className="text-blue-400 hover:underline">
+                Refund & Cancellation
               </Link>
-              <Link to="/privacy" className="text-blue-400 hover:underline">
-                Privacy Policy
+              <Link to="/policy" className="text-blue-400 hover:underline">
+                Contact Us
               </Link>
             </div>
+
             <p>
               <span className="font-bold text-gray-200">Support Email:</span>{" "}
-              officialeternalservices@gmail.com
+              hustly.in@gmail.com
             </p>
+
             <p className="font-bold text-gray-200">
-              Copyright {new Date().getFullYear()} - @Husly2.0
+              © {new Date().getFullYear()} - Hustly.in
             </p>
+
             <div className="text-gray-500 space-y-3 text-justify">
               <p>
-                "These earnings are not representative of the average
-                participant's. The average participant will earn significantly
-                less or no money at all through this product or service."
+                <strong>Terms & Conditions:</strong> Hustly.in is a digital
+                platform that allows users to purchase courses and eBooks, and
+                also earn through affiliate links. By using this platform, you
+                agree to comply with all applicable laws and respect
+                intellectual property rights. Any misuse, unauthorized
+                distribution, or manipulation of affiliate features will result
+                in account termination.
               </p>
+
               <p>
-                This site is not part of the Facebook or Instagram website or
-                Facebook Inc. Additionally, this site is NOT endorsed by
-                Facebook or Instagram in any way. Facebook is a trademark of
-                FACEBOOK, Inc.
+                <strong>Refunds and Cancellation:</strong> All purchases on
+                Hustly.in are final and non-refundable, as the products are
+                digital in nature. Refunds may only be considered in case of
+                technical issues that prevent access to the product and are
+                reported within 24 hours of purchase. To request support, email{" "}
+                <strong>hustly.in@gmail.com</strong> with your order details.
               </p>
+
               <p>
-                Earnings Disclaimer: Results may vary and testimonials are not
-                claimed to represent typical results. All testimonials are real.
-                These results are meant as a showcase of what the best, most
-                motivated and driven clients have done and should not be taken
-                as average or typical results. You should perform your own due
-                diligence and use your own best judgment prior to making any
-                investment decision pertaining to your business. By virtue of
-                visiting this site or interacting with any portion of this site,
-                you agree that you're fully responsible for the investments you
-                make and any outcomes that may result.
-              </p>
-              <p>
-                DISCLAIMER: The sales figures stated above are our personal
-                sales figures. Please understand my results are not typical, I'm
-                not implying you'll duplicate them (or do anything for that
-                matter). I have the benefit of practicing sales, marketing and
-                advertising for 2 years, and have an established following as a
-                result. The average person who buys any "how to" information
-                gets little to no results. I'm using these references for
-                example purposes only. Your results will vary and depend on many
-                factors ...including but not limited to your background,
-                experience, and work ethic. All business entails risk as well as
-                massive and consistent effort and action. If you're not willing
-                to accept that, please DO NOT GET THIS PRODUCT.
+                <strong>Contact Us:</strong> For any support, feedback, or
+                inquiries related to products, affiliate programs, or technical
+                issues, you can contact us at{" "}
+                <strong>hustly.in@gmail.com</strong>. Our team is available to
+                assist you during business hours and we aim to resolve all
+                issues promptly and professionally.
               </p>
             </div>
           </div>

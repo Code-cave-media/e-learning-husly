@@ -54,7 +54,7 @@ const UsersManagement = () => {
   const pageSize = 20;
 
   const { authToken } = useAuth();
-  const { fetchType, fetching, makeApiCall } = useAPICall();
+  const { fetchType, fetching, makeApiCall,isFetched } = useAPICall();
 
   useEffect(() => {
     fetchUsers();
@@ -98,8 +98,8 @@ const UsersManagement = () => {
   };
 
   return (
-    <div className="container mx-auto py-4 sm:py-6 px-2 sm:px-4">
-      <Card>
+    <div className="">
+      <div>
         <CardHeader className="flex flex-col sm:flex-row sm:items-center sm:justify-between gap-4">
           <CardTitle className="text-xl sm:text-2xl">
             Users Management
@@ -123,7 +123,7 @@ const UsersManagement = () => {
               <Button
                 variant="ghost"
                 size="icon"
-                className="absolute right-2"
+                className="right-2 hover:bg-inherit"
                 onClick={() => {
                   setSearchQuery(searchInput);
                   setCurrentPage(1);
@@ -150,7 +150,7 @@ const UsersManagement = () => {
               </TableRow>
             </TableHeader>
             <TableBody>
-              {fetching && fetchType === "fetchUsers" ? (
+              {fetching && (fetchType === "fetchUsers" || !isFetched) ? (
                 <TableRow>
                   <TableCell colSpan={8} className="text-center py-8">
                     <Loading />
@@ -264,7 +264,7 @@ const UsersManagement = () => {
             </form>
           </DialogContent>
         </Dialog>
-      </Card>
+      </div>
     </div>
   );
 };

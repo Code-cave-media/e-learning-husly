@@ -276,6 +276,7 @@ export function CourseListItem({ course, setCourses }: CourseListItemProps) {
     formData.append("main_heading", editingCourse.landing_page?.main_heading);
     formData.append("sub_heading", editingCourse.landing_page?.sub_heading);
     formData.append("top_heading", editingCourse.landing_page?.top_heading);
+    formData.append("action_button", editingCourse.landing_page?.action_button);
     formData.append(
       "highlight_words",
       editingCourse.landing_page?.highlight_words
@@ -426,6 +427,10 @@ export function CourseListItem({ course, setCourses }: CourseListItemProps) {
       icon: "pi pi-exclamation-triangle",
       acceptClassName: "p-button-danger bg-red-500 text-white ml-4 px-3 py-1",
       rejectClassName: "p-button-secondary bg-gray-200 text-gray-800 px-3 py-1",
+      className: "max-w-[40%] w-[200px] max-sm:max-w-[40%]",
+      style: {
+        width: "200px",
+      },
       accept: () => {
         deleteCourseChapter(chapterId);
       },
@@ -1001,6 +1006,22 @@ export function CourseListItem({ course, setCourses }: CourseListItemProps) {
                           });
                         }}
                         placeholder="Enter highlight words separated by commas"
+                      />
+                    </div>
+                    <div>
+                      <Label>Action Button</Label>
+                      <Input
+                        value={editingCourse.landing_page?.action_button}
+                        onChange={(e) => {
+                          setEditingCourse({
+                            ...editingCourse,
+                            landing_page: {
+                              ...editingCourse?.landing_page,
+                              action_button: e.target.value,
+                            },
+                          });
+                        }}
+                        placeholder="Enter sub heading"
                       />
                     </div>
                   </div>

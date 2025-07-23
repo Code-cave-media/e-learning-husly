@@ -12,8 +12,10 @@ export const API_ENDPOINT = {
     `${API_URL}/course/chapter/update/${chapter_id}`,
   DELETE_COURSE_CHAPTER: (chapter_id: number) =>
     `${API_URL}/course/chapter/delete/${chapter_id}`,
-  LIST_COURSES: (page: number, pageSize: number) =>
-    `${API_URL}/course/list?page=${page}&page_size=${pageSize}`,
+  // LIST_COURSES: (page: number, pageSize: number, search: string) =>
+  //   `${API_URL}/course/list?page=${page}&page_size=${pageSize}&search=${search}`,
+  ADMIN_LIST_COURSES: (page: number, pageSize: number, search) =>
+    `${API_URL}/course/list?page=${page}&size=${pageSize}&search=${search}`,
   UPDATE_COURSE: (course_id: number) => `${API_URL}/course/update/${course_id}`,
   DELETE_COURSE: (course_id: number) => `${API_URL}/course/delete/${course_id}`,
   CREATE_EBOOK: `${API_URL}/ebook/create`,
@@ -22,17 +24,35 @@ export const API_ENDPOINT = {
     `${API_URL}/ebook/chapter/update/${chapter_id}`,
   DELETE_EBOOK_CHAPTER: (chapter_id: number) =>
     `${API_URL}/ebook/chapter/delete/${chapter_id}`,
-  LIST_EBOOKS: (page: number, pageSize: number) =>
-    `${API_URL}/ebook/list?page=${page}&page_size=${pageSize}`,
+  PUBLIC_ALL_ITEMS: (
+    page: number,
+    pageSize: number,
+    search: string,
+    filter: string
+  ) =>
+    `${API_URL}/user-dashboard/all-items?page=${page}&size=${pageSize}&search=${search}&filter=${filter}`,
+
+  ADMIN_LIST_EBOOKS: (page: number, pageSize: number, search: string) =>
+    `${API_URL}/ebook/list?page=${page}&size=${pageSize}&search=${search}`,
   UPDATE_EBOOK: (ebook_id: number) => `${API_URL}/ebook/update/${ebook_id}`,
   DELETE_EBOOK: (ebook_id: number) => `${API_URL}/ebook/delete/${ebook_id}`,
   GET_USER_DASHBOARD_LIST: (filter: string, page: number, limit: number) =>
     `${API_URL}/user-dashboard/list?filter=${filter}&page=${page}&limit=${limit}`,
   GET_USER_DASHBOARD_CARD: `${API_URL}/user-dashboard/card`,
-  GET_USER_DASHBOARD_COURSES: (filter: string, page: number, limit: number) =>
-    `${API_URL}/user-dashboard/courses?filter=${filter}&page=${page}&limit=${limit}`,
-  GET_USER_DASHBOARD_EBOOKS: (filter: string, page: number, limit: number) =>
-    `${API_URL}/user-dashboard/ebooks?filter=${filter}&page=${page}&limit=${limit}`,
+  GET_USER_DASHBOARD_COURSES: (
+    filter: string,
+    page: number,
+    limit: number,
+    search: string
+  ) =>
+    `${API_URL}/user-dashboard/courses?filter=${filter}&page=${page}&limit=${limit}&search=${search}`,
+  GET_USER_DASHBOARD_EBOOKS: (
+    filter: string,
+    page: number,
+    limit: number,
+    search: string
+  ) =>
+    `${API_URL}/user-dashboard/ebooks?filter=${filter}&page=${page}&limit=${limit}&search=${search}`,
 
   GET_COURSE_LANDING_PAGE: (id: string) =>
     `${API_URL}/course/get/landing/${id}`,

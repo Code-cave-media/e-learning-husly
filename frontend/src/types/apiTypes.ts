@@ -24,6 +24,7 @@ export interface LandingPage {
     top_heading: string;
     thumbnail: string;
     highlight_words: string;
+    action_button:string
   };
 }
 

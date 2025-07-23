@@ -42,6 +42,7 @@ export default function AdminLayout({
   const navigate = useNavigate();
   const { logout } = useAuth();
   const [isMobileMenuOpen, setIsMobileMenuOpen] = useState(false);
+  const { user } = useAuth();
 
   const handleLogout = () => {
     logout();
@@ -51,12 +52,16 @@ export default function AdminLayout({
   const NavContent = () => (
     <div className="flex flex-col h-full">
       {/* Logo */}
-      <div className="flex items-center h-16 px-4 border-b">
-        <h1 className="text-xl font-bold">Admin Panel</h1>
+      <div className="flex items-center pt-5 px-4 border-b">
+        <img
+          src="/images/logo/logo.png"
+          alt="Hustly Logo"
+          className="h-10 w-auto max-sm:h-6"
+        />
       </div>
 
       {/* Navigation */}
-      <ScrollArea className="flex-1 px-2 py-4">
+      <ScrollArea className="flex-1 px-2 py-6">
         <nav className="space-y-1">
           {navigation.map((item) => {
             const isActive = window.location.pathname === item.href;
@@ -79,7 +84,6 @@ export default function AdminLayout({
             );
           })}
 
-          {/* Back to User Dashboard */}
           <Button
             variant="ghost"
             className="w-full justify-start gap-2 text-blue-600 hover:text-blue-700 hover:bg-blue-50"
@@ -134,9 +138,7 @@ export default function AdminLayout({
 
         {/* Main Content */}
         <main className="flex-1 overflow-auto">
-          <div className="container px-4 mx-auto p-4 md:p-6 lg:p-8">
-            {children}
-          </div>
+          <div className=" px-8  py-4 md:py-6 lg:py-8">{children}</div>
         </main>
       </div>
     </div>
