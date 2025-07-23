@@ -28,6 +28,8 @@ class Settings(BaseSettings):
     GMAIL_FROM_MAIL:str
     GMAIL_APP_PASSWORD:str
     FRONTEND_URL:str
+    RESEND_API_KEY:str
+    RESEND_FROM_ADDRESS:str
     class Config:
         env_file = ".env"
 

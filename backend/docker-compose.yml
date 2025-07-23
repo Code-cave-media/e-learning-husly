@@ -11,7 +11,7 @@ services:
     depends_on:
       - db
     restart: always
-    dns:
+    dns: # For SMTP EMAIL SENTING
       - 8.8.8.8
       - 1.1.1.1
     env_file:
