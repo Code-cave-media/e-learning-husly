@@ -14,6 +14,7 @@ const MainLayout = ({ children }: MainLayoutProps) => {
   useEffect(() => {
     if (pathname == '/'){
       navigate("/login");
+      setIsChecked(true)
     }else{
       setIsChecked(true)
     }
