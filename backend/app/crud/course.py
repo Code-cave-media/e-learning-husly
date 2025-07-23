@@ -3,6 +3,8 @@ from models.course import Course,CourseChapter,CourseLandingPage,CourseProgress,
 from fastapi import UploadFile 
 from .utils import *
 from schemas.course import CourseResponse
+from models.user import User
+from sqlalchemy import or_
 async def upload_thumbnail(file: UploadFile):
     folder = "course/thumbnail"
     return await upload_file(file,folder)
@@ -30,8 +32,6 @@ def get_course_by_id(db:Session,course_id:int,is_admin:bool=False):
 def get_course_chapter_by_id(db:Session,course_chapter_id:int):
     return db.query(CourseChapter).filter(CourseChapter.id==course_chapter_id).first()
 
-from sqlalchemy import or_
-
 def get_list_of_courses(db: Session, page: int = 1, limit: int = 10, search: str = None):
     query = db.query(Course)
 
@@ -47,6 +47,7 @@ def get_list_of_courses(db: Session, page: int = 1, limit: int = 10, search: str
 
     data = to_pagination_response(query, CourseResponse, page, limit)
     return data
+
 
 
 def create_course(db:Session,data:dict):

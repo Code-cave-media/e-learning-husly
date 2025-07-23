@@ -4,7 +4,8 @@ from db.session import engine
 from api.v1 import routes_coupon_code,routes_course,routes_ebook,routes_purchase,routes_affiliate,routes_user,routes_user_dashboard , routes_admin_dashboard
 from fastapi.staticfiles import StaticFiles
 from core.config import settings
-
+from models import user
+import models
 from fastapi.middleware.cors import CORSMiddleware
 app = FastAPI()
 
@@ -15,8 +16,7 @@ app.add_middleware(
     allow_methods=["*"],
     allow_headers=["*"],
 )
-# Base.metadata.drop_all(bind=engine)
-Base.metadata.create_all(bind=engine)
+
 app.include_router(routes_user.router , prefix='/api/v1/user',tags=['auth'])
 app.include_router(routes_coupon_code.router , prefix='/api/v1/coupon',tags=['coupon'])
 app.include_router(routes_course.router , prefix='/api/v1/course',tags=['course'])
@@ -27,3 +27,6 @@ app.include_router(routes_affiliate.router , prefix='/api/v1/affiliate',tags=['a
 app.include_router(routes_admin_dashboard.router , prefix='/api/v1/admin',tags=['admin'])
 if not settings.PRODUCTION:
     app.mount("/media", StaticFiles(directory=settings.MEDIA_PATH), name="media")
+@app.on_event("startup")
+def on_startup():
+    print("running")

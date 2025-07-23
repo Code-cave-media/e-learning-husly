@@ -1,11 +1,11 @@
-from pydantic  import BaseSettings
+from pydantic import BaseSettings
 
 class Settings(BaseSettings):
     DATABASE_URL: str
     SECRET_KEY: str
     ALGORITHM: str = "HS256"
     ACCESS_TOKEN_EXPIRE_DAYS: int = 30
-    BASE_URL: str = "http://localhost:8000"
+    BASE_URL: str = "https://backend.hustly.in"
     MEDIA_PATH: str = "media"
     MEDIA_DIR: str = "media"
     COUPONS_PER_PAGE:int = 10

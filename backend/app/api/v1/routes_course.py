@@ -53,6 +53,7 @@ async def list_courses(
   data: Pagination = Depends()): 
   return crud_course.get_list_of_courses(db,data.page,data.size,data.search)
 
+
 @router.post('/create',response_model=CourseResponse)
 async def create_course(
   db: Session = Depends(get_db),
