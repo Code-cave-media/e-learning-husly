@@ -27,6 +27,8 @@ async def delete_file(file_url: str):
     parsed_url = urlparse(file_url)
     file_path = parsed_url.path
     print(file_path,'==================')
+    if not file_path or not file_path.startswith("/media/"):
+        return False
     filename = file_path.replace("/media/", "", 1)
     full_path = os.path.join(settings.MEDIA_DIR, filename)
     # Delete the file if it exists

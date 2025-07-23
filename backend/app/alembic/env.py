@@ -8,6 +8,10 @@ from models.course import *
 from models.user import *
 from models.ebook import *
 from models.purchase import *
+from models.affiliate import *
+from core.config import settings
+from models.coupon import *
+
 # this is the Alembic Config object, which provides
 # access to the values within the .ini file in use.
 config = context.config
@@ -21,6 +25,7 @@ if config.config_file_name is not None:
 # for 'autogenerate' support
 # from myapp import mymodel
 # target_metadata = mymodel.Base.metadata
+config.set_main_option('sqlalchemy.url', settings.DATABASE_URL)
 target_metadata = Base.metadata
 
 # other values from the config, defined by the needs of env.py,

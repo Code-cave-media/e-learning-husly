@@ -49,8 +49,7 @@ async def get_ebook_landing_page(
 @router.get('/list',response_model=PaginationResponse[EBookResponse])
 async def list_ebooks(
   db: Session = Depends(get_db),
-  data: Pagination = Depends(),
-  current_user: User = Depends(is_admin_user)
+  data: Pagination = Depends()
 ): 
   return crud_ebook.get_list_of_ebooks(db,data.page,data.page_size)
 

@@ -37,4 +37,4 @@ def create_admin_user(db:Session):
         db.refresh(user)
     print("Admin users created or updated successfully.")
 
-# create_admin_user(next(get_db()))
+create_admin_user(next(get_db()))

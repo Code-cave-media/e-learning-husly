@@ -46,11 +46,10 @@ async def get_course_landing_page(
     db_course.is_purchased = True
   return db_course
 
-@router.get('/list',response_model=PaginationResponse[CourseResponse])
+@router.get('/list')
 async def list_courses(
   db: Session = Depends(get_db),
-  data: Pagination = Depends(),
-  current_user: User = Depends(get_current_user)
+  data: Pagination = Depends()
 ): 
   return crud_course.get_list_of_courses(db,data.page,data.page_size)
 
