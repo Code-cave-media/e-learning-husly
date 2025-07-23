@@ -11,6 +11,9 @@ services:
     depends_on:
       - db
     restart: always
+    dns:
+      - 8.8.8.8
+      - 1.1.1.1
     env_file:
     - app/.env   # ✅ ADD THIS LINE
 
