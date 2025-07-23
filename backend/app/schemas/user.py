@@ -32,3 +32,10 @@ class Token(BaseModel):
 class UpdatePassword(BaseModel):
   password: str
 
+class ForgotPassword(BaseModel):
+  email:str
+
+class ResetPassword(BaseModel):
+  password: str
+  token:str
+  

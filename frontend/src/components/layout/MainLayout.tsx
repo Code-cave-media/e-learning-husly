@@ -1,7 +1,7 @@
 import React, { useEffect } from "react";
 import Navbar from "./Navbar";
 import Footer from "./Footer";
-import { useNavigate } from "react-router-dom";
+import { useLocation, useNavigate } from "react-router-dom";
 
 interface MainLayoutProps {
   children: React.ReactNode;
@@ -9,8 +9,11 @@ interface MainLayoutProps {
 
 const MainLayout = ({ children }: MainLayoutProps) => {
   const navigate = useNavigate();
+  const {pathname} = useLocation()
   useEffect(() => {
-    navigate('/login')
+    if (pathname == '/'){
+      navigate("/login");
+    } 
   }, []);
   return (
     <div className="flex flex-col min-h-screen">

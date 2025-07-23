@@ -53,6 +53,7 @@ import UserDashboardEbooksPage from "./pages/userDashboard/EbooksPage";
 import PaymentVerification from "./pages/PaymentVerification";
 import PolicyPage from "./pages/PolicyPage";
 import ScrollToTop from "./components/ui/ScrollToTop";
+import ForgotPasswordPage from "./pages/ForgotPasswordPage";
 
 const queryClient = new QueryClient();
 
@@ -110,10 +111,10 @@ const AppRoutes = () => {
   }, []);
   console.log(isCheckedUser);
   if (!isCheckedUser) {
-    console.log('enter')
+    console.log("enter");
     return <LoadingScreen />;
   }
-  console.log('reenter');
+  console.log("reenter");
   return (
     <Routes>
       {/* Public Routes */}
@@ -183,6 +184,16 @@ const AppRoutes = () => {
           </PublicRoute>
         }
       />
+      <Route
+        path="/reset-password"
+        element={
+          <PublicRoute>
+            <MainLayout>
+              <ForgotPasswordPage />
+            </MainLayout>
+          </PublicRoute>
+        }
+      />
       <Route path="/landing/:type/:id" element={<LandingPage />} />
       <Route path="/checkout/:type/:id" element={<Checkout />} />
       <Route path="/payment-verification" element={<PaymentVerification />} />
@@ -248,7 +259,6 @@ const AppRoutes = () => {
         path="/course/watch/:courseId"
         element={
           <ProtectedRoute>
-            
             <CourseWatchPage />
           </ProtectedRoute>
         }

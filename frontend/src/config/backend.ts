@@ -5,6 +5,8 @@ export const API_ENDPOINT = {
   PURCHASE_NEW_USER: `${API_URL}/purchase/e-book-course`,
   VERIFY_USER: `${API_URL}/user/me `,
   LOGIN: `${API_URL}/user/login`,
+  FORGOT_PASSWORD: `${API_URL}/user/forgot-password`,
+  RESET_PASSWORD: `${API_URL}/user/reset-password`,
   REGISTER: `${API_URL}/user/register`,
   CREATE_COURSE: `${API_URL}/course/create`,
   CREATE_COURSE_CHAPTER: `${API_URL}/course/chapter/create`,

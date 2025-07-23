@@ -25,6 +25,9 @@ class Settings(BaseSettings):
     CASHFREE_PROD_BASE_URL: str
     ADMIN_EMAILS:str
     ADMIN_PASSWORDS:str
+    GMAIL_FROM_MAIL:str
+    GMAIL_APP_PASSWORD:str
+    FRONTEND_URL:str
     class Config:
         env_file = ".env"
 

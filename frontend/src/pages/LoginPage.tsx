@@ -16,38 +16,35 @@ import { useAPICall } from "@/hooks/useApiCall";
 import { API_ENDPOINT } from "@/config/backend";
 import { set } from "date-fns";
 import toast from "react-hot-toast";
+import { Loading } from "@/components/ui/loading";
 
 const LoginPage = () => {
   const navigate = useNavigate();
   const { login } = useAuth();
-  const {makeApiCall} = useAPICall()
-  const [isLoading, setIsLoading] = useState(false);
+  const { makeApiCall, fetching, fetchType } = useAPICall();
   const [formData, setFormData] = useState({
     email: "",
     password: "",
   });
 
-
-
   const handleSubmit = async (e: React.FormEvent) => {
     e.preventDefault();
-    setIsLoading(true);
-    
-      const response = await makeApiCall(
-        "POST",
-        API_ENDPOINT.LOGIN,
-        formData,"application/json"
-      );
-      if(response.status == 200){
-        login(response.data.user,response.data.token);
-        toast.success("Login successful!");
-        navigate("/user/dashboard", { replace: true });
-      }else{
-        toast.error("Login failed! Please check your credentials.");
 
-      }
-      setIsLoading(false);
-      
+    const response = await makeApiCall(
+      "POST",
+      API_ENDPOINT.LOGIN,
+      formData,
+      "application/json",
+      null,
+      "login"
+    );
+    if (response.status == 200) {
+      login(response.data.user, response.data.token);
+      toast.success("Login successful!");
+      navigate("/user/dashboard", { replace: true });
+    } else {
+      toast.error("Login failed! Please check your credentials.");
+    }
   };
 
   const handleChange = (e: React.ChangeEvent<HTMLInputElement>) => {
@@ -57,7 +54,27 @@ const LoginPage = () => {
       [name]: value,
     }));
   };
-
+  const handleForgotPassword = async () => {
+    if (!formData.email) {
+      toast.error("Please enter your email to reset password.");
+      return;
+    }
+    const response = await makeApiCall(
+      "post",
+      API_ENDPOINT.FORGOT_PASSWORD,
+      {
+        email: formData.email,
+      },
+      "application/json",
+      null,
+      "forgotPassword"
+    );
+    if (response.status == 200) {
+      toast.success("Reset link has been sent to your email");
+    } else {
+      toast.error("User with this email not exist");
+    }
+  };
   return (
     <div className="container px-4 max-w-md mx-auto py-12">
       <Card>
@@ -92,8 +109,29 @@ const LoginPage = () => {
                 required
               />
             </div>
-            <Button type="submit" className="w-full" disabled={isLoading}>
-              {isLoading ? "Logging in..." : "Login"}
+            <div className="flex items-center justify-between mb-2">
+              <span></span>
+              <button
+                type="button"
+                className="text-sm text-blue-600 hover:underline flex items-center cursor-pointer"
+                disabled={fetching}
+                onClick={handleForgotPassword}
+              >
+                Forgot Password?
+                {fetching && fetchType == "forgotPassword" && (
+                  <div className="pl-2 flex items-center justify-center h-full">
+                    <div className="animate-spin rounded-full h-3 w-3 border-t-2 border-b-2 border-primary"></div>
+                  </div>
+                )}
+              </button>
+            </div>
+            <Button
+              type="submit"
+              className="w-full"
+              disabled={fetching}
+              loading={fetching && fetchType == "login"}
+            >
+              Login
             </Button>
           </form>
         </CardContent>

@@ -10,6 +10,7 @@ from crud.utils import to_pagination_response
 from schemas.user import UserResponse
 from models.purchase import Purchase
 from sqlalchemy import cast, String
+from .utils import send_reset_email
 pwd_context = CryptContext(schemes=['bcrypt'],deprecated='auto')
 
 
@@ -110,3 +111,6 @@ def get_all_users(db:Session,page:int=1,limit:int=10,search:str=''):
   data['items'] = items
   return data
 
+def sent_reset_mail_to_user(db:Session,email:str):
+  ref_id = ''
+  pass

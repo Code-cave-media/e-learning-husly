@@ -6,6 +6,8 @@ from core.security import create_access_token
 from core.deps import get_current_user,is_admin_user
 from models.user import User
 from db.session import get_db
+from crud.utils import send_reset_email,get_frontend_url
+from core.security import  create_password_reset_token,verify_password_reset_token
 router = APIRouter()
 
 @router.post('/register',response_model=UserResponse)
@@ -42,6 +44,25 @@ def get_all_user(db:Session=Depends(get_db),current_user:User=Depends(is_admin_u
 @router.put('/update/password/{user_id}',response_model=UserResponse)
 def update_password(user_id:str,data:UpdatePassword,db:Session=Depends(get_db),current_user:User=Depends(is_admin_user)):
   db_user = crud_auth.get_user_by_id(db,user_id)
+  if not db_user:
+    raise HTTPException(status_code=404,detail="User not found")
+  return crud_auth.update_user_password(db,db_user,data.password)
+
+@router.post('/forgot-password')
+def forgot_password(data:ForgotPassword,db:Session=Depends(get_db)):
+  db_user = crud_auth.get_user_by_email(db,data.email)
+  if not db_user:
+    raise HTTPException(status_code=404,detail="User not found")
+  
+  token = create_password_reset_token(db_user.email)
+  reset_link = f"{get_frontend_url()}/reset-password?token={token}"
+  send_reset_email(db_user.email, reset_link)
+  return {"detail": "Reset email sent"}
+
+@router.post("/reset-password")
+def reset_password(data:ResetPassword,db:Session=Depends(get_db)):
+  email = verify_password_reset_token(data.token)
+  db_user = crud_auth.get_user_by_email(db,email)
   if not db_user:
     raise HTTPException(status_code=404,detail="User not found")
   return crud_auth.update_user_password(db,db_user,data.password)
