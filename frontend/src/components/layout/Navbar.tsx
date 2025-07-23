@@ -7,7 +7,7 @@ const Navbar = () => {
     <header className="w-full bg-white border-b border-gray-100 sticky top-0 z-50 shadow-sm">
       <div className="container px-4 mx-auto flex items-center justify-between h-16">
         {/* Logo */}
-        <Link to="/" className="flex items-center space-x-2">
+        <div  className="flex items-center space-x-2">
           <span className="text-2xl font-bold text-brand-primary">
             <img
               src="/images/logo/logo.png"
@@ -15,7 +15,7 @@ const Navbar = () => {
               className="h-10 max-sm:h-7 w-auto "
             />
           </span>
-        </Link>
+        </div>
 
         {/* Auth Button for all screens */}
         <div className="flex items-center">
